@@ -2313,10 +2313,10 @@ boxtopright
 	rts
 
 	;Routine to print the levels and waves
-showwave
+showwave ;$28f5
 
 	;Set up for the copy
-	lda #<(wavetext)
+	lda #<(wavetext) ;$2ce2
 	sta $70
 	lda #>(wavetext)
 	sta $71			; Origin text
@@ -3044,21 +3044,63 @@ levelwinsounddurations
 	dta 5,5,5,5,10
 
 
-wavetext
-.print "wavetext ",wavetext
-	incbin "/home/chris/bem/spriter/leveltext.bin"
-towers
-	iNCBIN "/home/chris/bem/spriter/towers.bin"
+wavetext	;2ce2
+.print "wavetext (supposed to be $2ce2): ",wavetext
+;	incbin "/home/chris/bem/spriter/leveltext.bin"
+towers	equ wavetext+$2d72-$2ce2 ;2d72
+;	iNCBIN "/home/chris/bem/spriter/towers.bin"
 .print "Towers ",towers
-notower
-	iNCBIN "/home/chris/bem/spriter/notower.bin"
+notower	equ wavetext+$2f22-$2ce2 ;2f22
+;	iNCBIN "/home/chris/bem/spriter/notower.bin"
 .print "notower ",notower
-	;.winlogo
-	;incbin "/home/chris/bem/spriter/WINB"
-	;.loselogo
-	;incbin "/home/chris/bem/spriter/LOSEB"
-	;.levlogo
-	;incbin "/home/chris/bem/spriter/LEVCOMPB"
+
+	dta $07,$02,$02,$02,$02,$02,$07,$00,$00,$00,$00
+	dta $00,$00,$02,$0E,$00,$00,$00,$06,$09,$0F,$08,$07,$00,$00,$00,$05
+	dta $05,$05,$05,$02,$00,$00,$00,$03,$04,$07,$04,$03,$00,$06,$02,$02
+	dta $0A,$0A,$02,$09,$00,$F0,$91,$91,$91,$91,$91,$F0,$00,$F0,$98,$98
+	dta $98,$98,$98,$F0,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+	dta $00,$00,$00,$00,$00,$03,$01,$01,$00,$00,$00,$00,$00,$08,$00,$00
+	dta $0A,$0A,$07,$05,$00,$0E,$04,$04,$09,$09,$01,$00,$00,$00,$00,$0C
+	dta $02,$02,$02,$0E,$00,$00,$00,$0A,$0A,$0A,$0A,$04,$00,$00,$00,$06
+	dta $09,$0F,$08,$07,$00,$F0,$91,$91,$91,$91,$91,$F0,$00,$F0,$98,$98
+	dta $98,$98,$98,$F0,$00,$F0,$F0,$F0,$E0,$E0,$E0,$E0,$E0,$F0,$80,$66
+	dta $CC,$8A,$05,$0B,$07,$C0,$D1,$C0,$01,$84,$4B,$2D,$5A,$10,$D8,$10
+	dta $0C,$01,$0F,$A5,$5A,$F0,$80,$B1,$10,$0A,$49,$A4,$5A,$F0,$F0,$70
+	dta $B8,$B0,$30,$38,$30,$E0,$E0,$E0,$E0,$E0,$E0,$E0,$E0,$8B,$DC,$66
+	dta $08,$86,$4A,$C3,$4A,$A5,$5A,$84,$59,$84,$41,$09,$0E,$A5,$5A,$01
+	dta $D8,$01,$1C,$0C,$03,$A4,$58,$B1,$08,$83,$02,$0F,$0A,$B0,$B8,$30
+	dta $38,$30,$38,$30,$38,$C0,$A0,$C0,$A0,$D0,$A0,$D0,$E0,$E0,$4A,$E0
+	dta $4B,$61,$43,$21,$80,$07,$07,$07,$0E,$0C,$1C,$0C,$10,$07,$0F,$07
+	dta $03,$01,$41,$81,$C0,$01,$02,$01,$0E,$0D,$0A,$0C,$00,$10,$28,$10
+	dta $28,$10,$20,$50,$B0,$80,$77,$00,$61,$43,$00,$27,$00,$70,$B8,$30
+	dta $38,$08,$06,$1D,$15,$F0,$E0,$D1,$B3,$66,$FE,$CC,$FE,$F0,$70,$B8
+	dta $D8,$20,$D8,$20,$D9,$E0,$D1,$C0,$D0,$10,$26,$93,$02,$10,$EE,$00
+	dta $86,$0E,$00,$0E,$00,$77,$77,$00,$43,$61,$43,$61,$43,$99,$8A,$23
+	dta $1B,$08,$0F,$0F,$03,$88,$FA,$00,$5F,$00,$0F,$1F,$2E,$22,$D8,$00
+	dta $0F,$00,$0F,$8F,$47,$91,$15,$0C,$1C,$10,$0F,$0F,$0C,$EE,$EE,$00
+	dta $86,$0C,$0E,$0C,$0A,$60,$42,$60,$42,$61,$83,$A1,$C0,$CD,$C9,$C1
+	dta $01,$0F,$0F,$0F,$00,$4C,$4C,$88,$88,$88,$A8,$98,$70,$23,$23,$11
+	dta $11,$11,$91,$51,$E0,$3B,$3A,$38,$08,$0F,$0E,$05,$00,$04,$02,$04
+	dta $02,$04,$18,$14,$30,$80,$77,$00,$70,$70,$00,$77,$77,$70,$B8,$30
+	dta $80,$F0,$77,$BB,$B9,$F0,$C0,$B3,$00,$F0,$FF,$CC,$BB,$F0,$30,$DC
+	dta $00,$F0,$FF,$33,$DD,$E0,$D1,$C0,$10,$F0,$EE,$DD,$DD,$10,$EE,$00
+	dta $E0,$E0,$00,$EE,$EE,$00,$75,$76,$75,$66,$44,$44,$44,$30,$B0,$88
+	dta $F5,$D8,$C4,$C8,$C4,$88,$B1,$32,$F5,$FA,$F5,$EB,$C6,$10,$D4,$C8
+	dta $F5,$FA,$F5,$7A,$35,$CC,$D5,$10,$F5,$BA,$31,$32,$31,$00,$E4,$EA
+	dta $EC,$66,$20,$22,$20,$47,$65,$56,$21,$54,$20,$90,$C0,$CB,$E5,$DA
+	dta $E5,$52,$A0,$50,$00,$8C,$80,$08,$00,$11,$22,$50,$F0,$12,$11,$01
+	dta $00,$44,$AA,$40,$F0,$3E,$B5,$7A,$B5,$7A,$A0,$50,$00,$2E,$A4,$48
+	dta $A4,$40,$A0,$50,$30,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
+	dta $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
+	dta $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
+	dta $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
+	dta $E0,$D0,$A0,$D0,$A0,$F0,$F0,$D0,$A0,$70,$F0,$E0,$F0,$F0,$F0,$50
+	dta $A0,$F0,$F0,$30,$F0,$F0,$F0,$F0,$B0,$50,$A0,$D0,$A0,$F0,$F0,$F0
+	dta $F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$D0,$E0,$F0
+	dta $F0,$F0,$F0,$F0,$F0,$70,$A0,$D0,$F0,$F0,$F0,$F0,$F0,$F0,$A0,$50
+	dta $F0,$F0,$F0,$F0,$F0,$50,$B0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
+	dta $F0,$F0,$F0,$F0,$F0
+
 
 endage
 
@@ -3243,9 +3285,18 @@ numberend
 eventend
 
 	org codeoffset+$100
+.print "org codeoffset+$100: ",codeoffset+$100
 ;	guard codeoffset+$1ff
-	INCBIN "/home/chris/bem/spriter/numbers.bin"
-
+	
+	;INCBIN "/home/chris/bem/spriter/numbers.bin"
+	dta     $44,$AA,$AA,$AA,$AA,$AA,$44,$00,$44,$CC,$44,$44,$44,$44,$EE
+	dta $00,$44,$AA,$22,$44,$88,$88,$EE,$00,$CC,$22,$22,$CC,$22,$22,$CC
+	dta $00,$88,$88,$88,$88,$AA,$EE,$22,$00,$EE,$88,$88,$CC,$22,$AA,$44
+	dta $00,$66,$88,$88,$CC,$AA,$AA,$44,$00,$EE,$22,$22,$44,$44,$44,$44
+	dta $00,$44,$AA,$AA,$44,$AA,$AA,$44,$00,$44,$AA,$AA,$66,$22,$22,$CC
+	dta $00,$00,$00,$00,$00,$00,$00,$00,$00,$99,$99,$99,$99,$99,$99,$77
+	dta $00,$66,$44,$00,$00,$00,$44,$66,$00,$33,$11,$00,$00,$00,$11,$33
+	dta $00			;0A6F 00
 
 	;.savedtowerdist
 	;  dta 100
@@ -3310,17 +3361,18 @@ squaretable
   ;next
 .endr
 
-/*
+
 spritefilename
-	equs "S."
+	dta "S."
 spritefilenumber
-	equs "1":dta $0d
+	dta "1"
+	dta $0d
 
 screenfilename
-	equs "L."
+	dta "L."
 screenfilenumber
-	equs "1":dta $0d
-*/
+	dta "1"
+	dta $0d
 
 printleft
 	; Routine to print number of enemies left to screen.
@@ -3391,8 +3443,8 @@ towerfiredisplayspeed       ; Time between reciprocal
   dta $33,$37,$45,$56
 
 towerlocations		; Locations of tower sprites
-  .word notower           ; Padding
-  .word towers
+  .word notower           ; Padding ;2f22
+  .word towers ;2d72
   .word towers+24*6 ; 24x24/4 ppb
   .word towers+24*6*2 ; 24x24/4 ppb
 
@@ -3413,12 +3465,38 @@ wavefilenumber
 	dta $0d
 
 
-levlogo
-	incbin "/home/chris/bem/spriter/LEVCOMPB"
-winlogo
-	incbin "/home/chris/bem/spriter/WINB"
-loselogo
-	incbin "/home/chris/bem/spriter/LOSEB"
+levlogo ;0b71
+.print "levlogo suppose to be $0b71: ",levlogo
+	;incbin "/home/chris/bem/spriter/LEVCOMPB"
+winlogo 	equ levlogo+$bb4-$b71 ;0bb5
+	;incbin "/home/chris/bem/spriter/WINB"
+loselogo  equ levlogo+$c5f-$b71 ;0c5f
+	;incbin "/home/chris/bem/spriter/LOSEB"
+
+	dta $00,$00,$AA,$00,$50,$CC,$A0,$A8,$A8,$E4,$D8,$55,$00,$54
+	dta $03,$06,$50,$0C,$A0,$AC,$AC,$A0,$54,$0C,$A0,$AA,$E4,$D8,$5D,$08
+	dta $E4,$D8,$00,$00,$00,$00,$0E,$0C,$01,$0C,$08,$05,$00,$06,$0C,$05
+	dta $00,$01,$0C,$09,$01,$0C,$02,$0A,$0A,$0A,$55,$0C,$02,$0A,$06,$0C
+	dta $01,$08,$06,$0C,$00,$00
+L_0BB5	dta $5C,$F8,$00,$00,$50,$BC,$14,$3C,$00,$00,$00,$00,$00,$00,$00,$54
+	dta $FC,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+	dta $FC,$A8,$01,$FF,$A8,$00,$FD,$0A,$55,$FF,$00,$D4,$BD,$0F,$7E,$E8
+	dta $05,$5F,$FF,$0F,$D4,$BD,$0F,$7E,$E8,$55,$FF,$B4,$0B,$15,$FE,$00
+	dta $54,$AA,$FF,$AA,$00,$15,$FF,$D5,$AB,$00,$55,$FF,$00,$FF,$AA,$00
+	dta $40,$C0,$00,$55,$FF,$00,$FF,$AA,$00,$55,$FF,$55,$FF,$00,$00,$00
+	dta $7F,$EA,$BF,$00,$3F,$2A,$00,$00,$1F,$3F,$00,$00,$15,$3F,$00,$05
+	dta $1F,$3C,$2F,$0A,$00,$05,$3F,$3C,$05,$1F,$3C,$2F,$0A,$15,$3F,$00
+	dta $00,$00,$05,$FF,$0A,$00,$3F,$2A,$00,$00,$00,$00,$00,$00,$00,$00
+	dta $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+	dta $00,$00,$00,$14,$3D,$0B,$00,$00,$00,$00,$54,$FC,$FC,$FC,$F8,$E0
+	dta $00,$00,$00,$00,$00,$00,$00,$FD,$AF,$0A,$00,$00,$00,$00,$00,$00
+	dta $00,$00,$00,$00,$00,$00,$FC,$A8,$00,$FC,$A8,$55,$FF,$00,$00,$07
+	dta $FF,$A8,$D4,$BD,$0F,$7E,$E8,$05,$FF,$AF,$0A,$D4,$BD,$0F,$7E,$E8
+	dta $10,$3D,$0F,$5F,$FC,$00,$0F,$FF,$AF,$0A,$FF,$AA,$55,$FF,$00,$00
+	dta $D0,$FF,$2A,$FF,$AF,$0F,$4F,$CF,$00,$FF,$AA,$00,$FF,$AF,$0F,$4F
+	dta $CF,$50,$FC,$0B,$57,$FF,$00,$00,$FF,$AA,$00,$3F,$2A,$15,$3F,$3F
+	dta $3F,$2F,$0B,$00,$05,$1F,$3C,$2F,$0A,$00,$3F,$2A,$00,$05,$1F,$3C
+	dta $2F,$0A,$05,$3F,$3C,$1F,$3F,$00,$00,$1F,$3E,$28,$3F,$2A
 
 gocolourmap
 	dta %00000000

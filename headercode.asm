@@ -125,6 +125,6 @@ spritecolours
 numberofenemies
 	dta 0
 etype			; Enemy type list - reserve bytes
-:256	dta 0 ;SKIP enemyno
+:enemyno	dta 0 ;SKIP enemyno
 wavedataend
 varend	
