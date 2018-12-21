@@ -76,6 +76,7 @@ setup
 	; Once per "Screen" setups
 
 newlevel
+.print "newlevel:",newlevel
 	jsr clearstatusbox
 	jsr showwave
 
@@ -136,7 +137,6 @@ drawblanktowersloop
 	jsr delay
 
 skipblanktowers
-
 	pla
 	tax
 	dex
@@ -215,6 +215,7 @@ clearspritesloop
 	ldx #towrno-1
 	lda #0
 setuptclear
+
 	sta tfcount,X 
 	sta tftarget,X
 	sta tftargetx,X
@@ -323,7 +324,6 @@ nopixelmatch
 	bmi finishloadsprites
 	jmp loadspriteloop
 finishloadsprites
-
 
 	;draw wave sprites
 	lda #1
