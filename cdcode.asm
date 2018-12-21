@@ -14,9 +14,9 @@
 
 	ORG $1b00
 ;  GUARD $3000-40	; So we can load code without losing it between screen modes.
-
-.print ""
-.print "Assembling for ",~codeoffset
+	icl "headercode.asm"
+codeoffset=$0900
+.print "Assembling for ",codeoffset
 
 	;38.12
 
@@ -95,8 +95,8 @@ ttypeclear
 
 	lda level
 	and #$07
-	asl A
-	asl A
+	asl @
+	asl @
 	tax
 	lda goldlevels-4,X
 	sta gold
@@ -158,8 +158,8 @@ skipblanktowers
 	ora #$30		; add '0' to make this ascii
 	sta wavefilenumber
 	lda #$40
-	ldx #lo(wavefilename)
-	ldy #hi(wavefilename)
+	ldx #<(wavefilename)
+	ldy #>(wavefilename)
 	jsr $ffce
 	sta openfile
 
@@ -198,9 +198,9 @@ clearspritesloop
 	jsr printleft
 
 	; Can this be called once per "wave"?
-	lDA #path MOD 256
+	lDA #path % 256
 	sTA enemyoffset
-	lDA #path DIV 256
+	lDA #path / 256
 	sTA enemyoffset+1
 	lda #1
 	sta enemyend
@@ -209,7 +209,7 @@ clearspritesloop
 	lda #255
 	sta lasthitsprite	; Reset last hit sprite
 	;cLC
-	;aSL A
+	;asl @
 	;sTA enemyspeed+1    ; Since the offset is x,y need to store a double speed
 	; clear out the fire target and counts
 	ldx #towrno-1
@@ -260,14 +260,14 @@ loadspriteloop
 	; Load sprites for wave
 	jsr loadspritefile
 
-	lda # lo(expl+(spritesize*3))
+	lda #<(expl+(spritesize*3))
 	sta $70
-	lda # hi(expl+(spritesize*3))
+	lda #>(expl+(spritesize*3))
 	sta $71         ; Store where sprites are coped from
 
 	lda $88
-	asl a
-	asl a     ; Multiply location by 4 for table
+	asl @
+	asl @     ; Multiply location by 4 for table
 	tax             ; Move to X for offset.
 	lda spritelowtable,X
 	sta $72
@@ -278,7 +278,7 @@ loadspriteloop
 	sta ($72),y      ; Clear destination
 colourcopyloop
 	lda $88
-	asl a
+	asl @
 	adc $88           ;Multiply offset by 3
 	adc #2          ; Add 2 to get to upper value in table
 	sta $87         ; Save offset for later
@@ -378,17 +378,21 @@ finishloadsprites
 	sta $74
 	lda #(enemystrengths+1) / 256
 	sta $75
-	ldx #0:jsr numberplot          
+	ldx #0
+	jsr numberplot          
 
-	lda #40:sta $70
+	lda #40
+	sta $70
 	;lda #27:sta $77
 	lda #(enemystrengths+2) % 256
 	sta $74
 	lda #(enemystrengths+2) / 256
 	sta $75
-	ldx #0:jsr numberplot          
+	ldx #0
+	jsr numberplot          
 
-	lda #56:sta $70
+	lda #56
+	sta $70
 	;lda #27:sta $77
 	lda #(enemystrengths+3) % 256
 	sta $74
@@ -478,7 +482,7 @@ skippopulatehs
 
 	;jmp gameover       ; this will be removed in normal operation
 
-.mainloop             ;Main processing loop
+mainloop             ;Main processing loop
 	lDA #0
 	sta vsynccount       ; Reset frame counter
 	sta leftupdaterequired	; Reset if we need up date the number left
@@ -527,7 +531,7 @@ noleftupdate
 	;lda #255
 wait
 	;lda vsynccount
-	;asl a:tax:lda #255
+	;asl @:tax:lda #255
 	;sta $7ff8,x
 	lda vsynccount
 	cmp gamespeed
@@ -819,14 +823,14 @@ plotter
 	sta zspos+1 ; screen offset divided by 2
 	lda sx                ; find X coordinate
 	and #%11111100        ; Clear bottom bits
-	asl A                 ; Multiply by 2 -> 512 bytes/line
+	asl @                 ; Multiply by 2 -> 512 bytes/line
 	sta zspos
   ;asl zspos               ; Multiply by 2 -> 512 bytes/line
 	rol zspos+1               ; Seems much simpler???
 	lda sy                ; Get y coordinate
 	and #%11111000        ; strip low bits
-	lsr A
-	lsr A           ; divide by 4 to give line positions
+	lsr @
+	lsr @           ; divide by 4 to give line positions
 	adc zspos+1               ; Add to high byte
 	sta zspos+1
 	lda sy
@@ -873,16 +877,16 @@ spritehighbitsnotset
 plotskipreset
 	sta etype,y            ; set enemy type as explosion frame or none
 	pla
-	lsr a
-	lsr a             ; divide by 4
+	lsr @
+	lsr @             ; divide by 4
 	clc
 	adc #1             
 	;lda#6
 plotskipshift
 	sEC                   
 	sBC #1                ; decrement by 1
-	aSL A
-	ASL A           ; multiply by 4 (4 bytes accoss)
+	asl @
+	asl @           ; multiply by 4 (4 bytes accoss)
 	aDC zt                ; and add in the horizontal shift
 	tAX                   ; X contains sprite number * 4 + HORIZONTAL SHIFT
 	lDA spritelowtable,X
@@ -1005,8 +1009,8 @@ towerloop
 	lDA sx                ; get enemy x position
 	cLC
 	aDC #6                ; add 6 to pu into cetre of enemy
-	lSR A
-	LSR A           ; Divide by 4 - Range is now 0-64
+	lsr @
+	lsr @           ; Divide by 4 - Range is now 0-64
 	sta $71               ; Save for later
 	lda txpos,Y           ; Get tower x position
 	cmp $71               ; See if tower position greater or less than x position
@@ -1025,8 +1029,8 @@ skipxswap
 	lda sy                ; Now do y azis
 	;clc
 	adc #7                ; Again middle of enemy assume 
-	lsr a
-	lsr a           ; Divide by 4
+	lsr @
+	lsr @           ; Divide by 4
 	sta $70               ; Store in 70 for later
 	lda typos,Y           ; Get ower y position
 	cmp $70               ; See if tower position greater of less that y position
@@ -1109,15 +1113,15 @@ canafford
 	lda txpos,X   ; a conains value 0-63 ish - assumed to be top left of tower.
 	sec
 	sbc #3    ; Find top left
-	asl A         ; multiply by 2 (since four pixles per byte)
-	asl A ;:asl A   ; Now multiply by 2 -
-	asl A         ; and finish multiplaction to 8 - first time we could wrap
+	asl @         ; multiply by 2 (since four pixles per byte)
+	asl @ ;:asl @   ; Now multiply by 2 -
+	asl @         ; and finish multiplaction to 8 - first time we could wrap
 	sta $70       ; Store result
 	rol $71       ; Set the bit in top byte if required
 	lda typos,X   ; Get y position - this will be 0 - 63 - does not need to be divided to 512 - towers can't be at half positions
 	sec
 	sbc #3    ; Find top left
-	;asl A
+	;asl @
 	clc
 	adc $71   ; Add to the x offset high byte 
 	sta $71       ; And save
@@ -1135,7 +1139,7 @@ starttowerplot
 	pha         ; Save x for later
   ; move the location of hte tower sprite data into $72,$73  
 	lda ttype,X   ; Get the tower type
-	lsr A         ; shift it to the right once
+	lsr @         ; shift it to the right once
 	and #%11111110 ;Clear the bottom bit
 	tax
 	lda towerlocations,X
@@ -1173,10 +1177,10 @@ towerdrawloop
 	tax         ; Get x back.
 	ldy ttype,X   ; Get the tower type
 	lda towercosts,Y        ; Get the gold cost - this is /10
-	asl A
-	asl A
-	asl A
-	asl A ; Multiply by 10 *BCD
+	asl @
+	asl @
+	asl @
+	asl @ ; Multiply by 10 *BCD
 	sta $72                 ; Save for later
 	sed
 	lda gold+2
@@ -1190,10 +1194,10 @@ towerdrawloop
 	sbc #0         ; subtract from gold - might be better way
 	sta gold
 	lda towercosts,Y
-	lsr a
-	lsr A
-	lsr A
-	lsr A ; Divide by 10
+	lsr @
+	lsr @
+	lsr @
+	lsr @ ; Divide by 10
 	sta $72
 	lda gold+1
 	sec
@@ -1215,10 +1219,10 @@ towerdrawloop
 	beq nodotstodraw		; Don't draw dots for level zero
 	sec
 	sbc #1		; Subtract 1 to give 0-2 index.
-	asl a
-	asl a
-	asl a
-	asl a	; Multiply by 16 to give byte offset (each column)
+	asl @
+	asl @
+	asl @
+	asl @	; Multiply by 16 to give byte offset (each column)
 	tay			; Store in index.
 
 	; draw dot. (c3, 3c)
@@ -1274,8 +1278,8 @@ towerfireloop
 	lda tftargety,X       ; Get y coordinate
 	;clc:adc #4            ; Find the middle
 	and #%11111000        ; strip low bits
-	lsr A
-	lsr A           ; divide by 4 to give line positions
+	lsr @
+	lsr @           ; divide by 4 to give line positions
 	adc $71               ; Add to high byte
 	sta $71
   ;lda tftargety,X
@@ -1359,17 +1363,17 @@ storehit
 	lda tftargetx,x
 	clc
 	adc #6              ; Get middle of target (0-255)
-	lsr a
-	lsr a             ; Divide by 4 (0-63)
+	lsr @
+	lsr @             ; Divide by 4 (0-63)
 	cmp $78                 ; Compare against tower x pos
 	bcs midxnoswap          ; if ge skip swap
 	ldy $78
 	sta $78
 	tya     ; Swap $78 and a
-.midxnoswap             ; a is now greater than $78
+midxnoswap             ; a is now greater than $78
 	sec
 	sbc $78             ; difference now in A
-	lsr A                   ; Divide by two
+	lsr @                   ; Divide by two
 	clc
 	adc $78             ; Add $78 - mid x position now in A
 	sta $78                 ; Save
@@ -1382,17 +1386,17 @@ storehit
 	lda tftargety,x
 	clc
 	adc #6              ; Get middle of target (0-255)
-	lsr a
-	lsr a             ; Divide by 4 (0-63)
+	lsr @
+	lsr @             ; Divide by 4 (0-63)
 	cmp $79                 ; Compare against tower y pos
 	bcs midynoswap          ; if ge skip swap
 	ldy $79
 	sta $79
 	tya     ; Swap $79 and a
-.midynoswap             ; a is now greater than $79
+midynoswap             ; a is now greater than $79
 	sec
 	sbc $79             ; difference now in A
-	lsr A                   ; Divide by two
+	lsr @                   ; Divide by two
 	clc
 	adc $79             ; Add $79 - mid x position now in A
 	sta $79                 ; Save
@@ -1402,9 +1406,9 @@ storehit
 	lda #0
 	sta $71
 	lda $78               ; move x (0-63) coordinate to A
-	asl A
-	asl A
-	asl A   ; A = 0 to 511 + carry
+	asl @
+	asl @
+	asl @   ; A = 0 to 511 + carry
 	sta $70
 	rol $71               ; Seems much simpler???
 	inc $70
@@ -1420,8 +1424,8 @@ storehit
 	sta $71       
 
 	lda $77                 ; get saved y into a
-	asl a
-	asl a
+	asl @
+	asl @
 	tax         ; Multiply by 4 and move to X - offset into FCSTORE
 	ldy #0
 	lda ($70),Y
@@ -1465,8 +1469,8 @@ bulletloop
 
 	stx $74         ; Save x for later
 	txa
-	asl A
-	asl A
+	asl @
+	asl @
 	sta $75 ; Store 4 time X for later
 
 	lda fctype,X             ; Vary "Hit" based on tower type
@@ -1516,7 +1520,8 @@ bls3
 bls4
 
 	ldx $74
-	lda #0:sta fctype,X
+	lda #0
+	sta fctype,X
 
 skipbullet
 	dex
@@ -1625,7 +1630,7 @@ press3
 	ldy #12
 	jmp maketower
 
-.escape			;Escape has been pressed.
+escape			;Escape has been pressed.
 
 	jsr readshift
 	bvc notescape ; Escape pressed - but not shift.
@@ -1771,7 +1776,7 @@ maketower
 	lda ttype,x
 	bne toweralreadyhere      ; Tower already at this location.
 	tya
-	;asl A:asl A             ; Muliply a by 4 to make tower type
+	;asl @:asl @             ; Muliply a by 4 to make tower type
 	sta ttype,X             ; Change tower type to be Y
 	jsr erasebox             ; Erase box
 	jsr buildsound		; Make tower being built sound (will be cancelled if not afforadable)
@@ -1824,8 +1829,8 @@ explodesound
 	tya
 	pha
 	lda #7
-	ldx #lo(explodesoundparams)
-	ldy #hi(explodesoundparams)
+	ldx #<(explodesoundparams)
+	ldy #>(explodesoundparams)
 	jsr $FFF1
 	pla
 	tay
@@ -1844,11 +1849,11 @@ firesound
 	lda firesoundtype
 	beq nofiresound
 	and #%00001100
-	asl a
+	asl @
 	ora #%11000000	; Pick high note
 	sta firesoundparams+4
-	ldx #lo(firesoundparams)
-	ldy #hi(firesoundparams)
+	ldx #<(firesoundparams)
+	ldy #>(firesoundparams)
 	lda #7
 	jsr $FFF1
 	;pla:tax:pla:tay
@@ -1863,8 +1868,8 @@ firesoundparams
 
 movesound
 	lda #7
-	ldx #lo(movesoundparams)
-	ldy #hi(movesoundparams)
+	ldx #<(movesoundparams)
+	ldy #>(movesoundparams)
 	jmp $FFF1
 
 movesoundparams
@@ -1875,8 +1880,8 @@ movesoundparams
 
 errorsound
 	lda #7
-	ldx #lo(errorsoundparams)
-	ldy #hi(errorsoundparams)
+	ldx #<(errorsoundparams)
+	ldy #>(errorsoundparams)
 	jmp $FFF1
 
 
@@ -1920,8 +1925,8 @@ playsound
 	stx bongparams+4
 	sty bongparams+6
 	lda #7
-	ldx #lo(bongparams)
-	ldy #hi(bongparams)
+	ldx #<(bongparams)
+	ldy #>(bongparams)
 	jmp $FFF1
 
 
@@ -2037,7 +2042,8 @@ updatetowerinfo
 	and #%11                        ; Tower level
 	ora #$a0
 	sta towertempnum
-	lda #29:sta $77
+	lda #29
+	sta $77
 	jsr printtoweractive            ; print one row of information
 
 	lda #$CD
@@ -2098,8 +2104,8 @@ printtowerbasicsloop
 	jsr printtoweractive            ; print one row of information
 
 	tya
-	lsr a
-	lsr a
+	lsr @
+	lsr @
 	ora #$a0
 	sta towertempnum
 	lda #19
@@ -2198,15 +2204,15 @@ drawbox
 	lda txpos,X   ; a conains value 0-63 ish - assumed to be top left of tower.
 	sec
 	sbc #3    ; Find top left
-	asl A         ; multiply by 2 (since four pixles per byte)
-	asl A ;:asl A   ; Now multiply by 2 -
-	asl A         ; and finish multiplaction to 8 - first time we could wrap
+	asl @         ; multiply by 2 (since four pixles per byte)
+	asl @ ;:asl @   ; Now multiply by 2 -
+	asl @         ; and finish multiplaction to 8 - first time we could wrap
 	sta $70       ; Store result
 	rol $71       ; Set the bit in top byte if required
 	lda typos,X   ; Get y position - this will be 0 - 63 - does not need to be divided to 512 - towers can't be at half positions
 	sec
 	sbc #3    ; Find top left
-	;asl A
+	;asl @
 	clc
 	adc $71   ; Add to the x offset high byte 
 	sta $71       ; And save $70 and $71 now point to the top left of the tower box
@@ -2257,7 +2263,8 @@ boxbotleft
 	lda $70
 	adc #8*5        ; Width of towers
 	sta $70
-	lda #0:adc $71
+	lda #0
+	adc $71
 	sta $71
 
 	ldy #3		; #3
@@ -2309,13 +2316,13 @@ boxtopright
 showwave
 
 	;Set up for the copy
-	lda #lo(wavetext)
+	lda #<(wavetext)
 	sta $70
-	lda #hi(wavetext)
+	lda #>(wavetext)
 	sta $71			; Origin text
-	lda #lo($8000-256-48-512)
+	lda #<($8000-256-48-512)
 	sta $72
-	lda #hi($8000-256-48-512)
+	lda #>($8000-256-48-512)
 	sta $73
 	ldy #144
 showwaveloop
@@ -2390,13 +2397,13 @@ loadwaveloop
 	rts
 
 loadspritefile
-	lda #lo(spritefilename)
+	lda #<(spritefilename)
 	sta loadfileblock
-	lda #hi(spritefilename)
+	lda #>(spritefilename)
 	sta loadfileblock+1
-	lda #lo(expl+(spritesize*3))
+	lda #<(expl+(spritesize*3))
 	sta loadfileblock+2
-	lda #hi(expl+(spritesize*3))
+	lda #>(expl+(spritesize*3))
 	sta loadfileblock+3
 	; NO JMP BECAUSE NEXT TO LOAD FILE CODE
 
@@ -2410,8 +2417,8 @@ clearloadblock
 	dey
 	bne clearloadblock
 
-	ldx #lo(loadfileblock)
-	ldy #hi(loadfileblock)
+	ldx #<(loadfileblock)
+	ldy #>(loadfileblock)
 	lda #$ff
 	jsr $ffdd
 
@@ -2506,32 +2513,32 @@ numberplot
 	sta $76
 
 	txa
-	asl A
+	asl @
 	adc $70          ;Add the length * 2 to the x coordinate
-	asl A
-	asl A     ; Multiply by 4 (%00111111 to %11111100)
+	asl @
+	asl @     ; Multiply by 4 (%00111111 to %11111100)
 	sta $72         ; Store in screen location
 	lda #$20        ; screen start / 2
 	;sta $73         ; Save in high byte
 	asl $72
-	rol A   ; Multiply by 2 (total 8)
+	rol @   ; Multiply by 2 (total 8)
 	sta $73
 	lda $77
-	asl A           ; Multiply by 2 to make 512
+	asl @           ; Multiply by 2 to make 512
 	adc $73
 	sta $73 ; Add to screen address and save
-.if codeoffset=$900
+;.if codeoffset=$900
 	lda #$a
 	sta $71 ; Number high byte
-.else
-	lda #$f
-	sta $71 ; Number high byte
-.endif
+;.else
+;	lda #$f
+;	sta $71 ; Number high byte
+;.endif
 numberloop
 	txa
 	tay         ; Transfer x to y
 	lda ($74),Y     ; Load number byte
-	lsr A           ; divide by 2
+	lsr @           ; divide by 2
 	and #%01111000 ; mask out low bits
 	sta $70         ; Store low byte location
 	ldy #7          ; Set plot loop
@@ -2544,9 +2551,9 @@ digit1loop
 	txa
 	tay         ; X to y
 	lda ($74),Y     ; Load number byte
-	asl A
-	asl A
-	asl A ; shift into location
+	asl @
+	asl @
+	asl @ ; shift into location
 	and #%01111000 ; mask out unused high bits
 	sta $70         ; Store loop byte location
 	lda $72
@@ -2619,9 +2626,9 @@ levellosesoundloop
 	lda #8		; Modify the second part of line amount
 	sta golinelength+1
 
-	lda #lo(loselogo)
+	lda #<(loselogo)
 	sta gologolocation+1
-	lda #hi(loselogo)	; Modify the code pointing to the logo
+	lda #>(loselogo)	; Modify the code pointing to the logo
 	sta gologolocation+2
 
 	;ldx #8
@@ -2629,13 +2636,13 @@ levellosesoundloop
 	;txa:pha
 
 	;and #1
-	;asl a:asl a
+	;asl @:asl @
 	lda #0
 	sta gocolflag
 
-	lda #lo($5678)
+	lda #<($5678)
 	sta golscreenaddress
-	lda #hi($5678)
+	lda #>($5678)
 	sta golscreenaddress+1
 
 	jsr gologo
@@ -2660,22 +2667,22 @@ showlevlogo
 	lda #16			; Modify the second part of line amount
 	sta golinelength+1
 
-	lda #lo(levlogo)
+	lda #<(levlogo)
 	sta gologolocation+1
-	lda #hi(levlogo)	; Modify the code pointing to the logo
+	lda #>(levlogo)	; Modify the code pointing to the logo
 	sta gologolocation+2
 
 	lda #0
 	sta gocolflag
 
-	lda #lo($6878)
+	lda #<($6878)
 	sta golscreenaddress
-	lda #hi($6878)
+	lda #>($6878)
 	sta golscreenaddress+1
 
-	lda #lo(levcolourmap)
+	lda #<(levcolourmap)
 	sta gocolourmaplocation+1
-	lda #hi(levcolourmap)
+	lda #>(levcolourmap)
 	sta gocolourmaplocation+2
 
 
@@ -2740,9 +2747,9 @@ gamewinsoundloop
 	lda #16			; Modify the second part of line amount
 	sta golinelength+1
 
-	lda #lo(winlogo)
+	lda #<(winlogo)
 	sta gologolocation+1
-	lda #hi(winlogo)	; Modify the code pointing to the logo
+	lda #>(winlogo)	; Modify the code pointing to the logo
 	sta gologolocation+2
 
 	ldx #15
@@ -2751,13 +2758,13 @@ winloop
 	pha
 
 	and #1
-	asl a
-	asl a
+	asl @
+	asl @
 	sta gocolflag
 
-	lda #lo($5670)
+	lda #<($5670)
 	sta golscreenaddress
-	lda #hi($5670)
+	lda #>($5670)
 	sta golscreenaddress+1
 
 	jsr gologo
@@ -2775,9 +2782,9 @@ winloop
 gologo
 	; Routine to display a pretty game over logo
 	; Set up colour map
-	lda #lo(gocolourmap)
+	lda #<(gocolourmap)
 	sta gocolourmaplocation+1
-	lda #hi(gocolourmap)
+	lda #>(gocolourmap)
 	sta gocolourmaplocation+2
 
 
@@ -2856,8 +2863,8 @@ createhitsprite
 	lda etype,y		; Get the type
 	sEC                   
 	sBC #1                ; decrement by 1
-	aSL A
-	ASL A           ; multiply by 4 (4 bytes accoss)
+	asl @
+	asl @           ; multiply by 4 (4 bytes accoss)
 	aDC zt                ; and add in the horizontal shift
 	cmp lasthitsprite
 	beq alreadydonehit	; We've done this work before - let's not repeat the effort. 
@@ -2894,9 +2901,9 @@ hitspritebitszero
 	bpl hitspriteloop	; Loop through the pixels
 
 alreadydonehit
-	lda #hi(tempsprite)
+	lda #>(tempsprite)
 	sta zsoff+1
-	lda #lo(tempsprite)
+	lda #<(tempsprite)
 	sta zsoff
 	pla
 	tax
@@ -2905,13 +2912,13 @@ alreadydonehit
 	rts
 
 loadexplosions
-	lda #lo(explosionfilename)
+	lda #<(explosionfilename)
 	sta loadfileblock
-	lda #hi(explosionfilename)
+	lda #>(explosionfilename)
 	sta loadfileblock+1
-	lda #lo(expl)
+	lda #<(expl)
 	sta loadfileblock+2
-	lda #hi(expl)
+	lda #>(expl)
 	sta loadfileblock+3
 	jmp loadfile
 
@@ -2923,9 +2930,9 @@ loadscreen
 	lda #$87
 	sta palt+2			; Set pallette to black
 
-	lda #((32*8*64-64)-512) div 256
+	lda #((32*8*64-64)-512) / 256
 	sta firsttime+1
-	lda #((7*4*64+32)+512) div 256
+	lda #((7*4*64+32)+512) / 256
 	sta secondtime+1
 
 
@@ -2936,13 +2943,13 @@ loadscreen
 	and #15
 	ora #$30				; Get ascii of of level number
 	sta screenfilenumber
-	lda #lo(screenfilename)
+	lda #<(screenfilename)
 	sta loadfileblock
-	lda #hi(screenfilename)
+	lda #>(screenfilename)
 	sta loadfileblock+1
-	lda #lo(typos)
+	lda #<(typos)
 	sta loadfileblock+2
-	lda #hi(typos)
+	lda #>(typos)
 	sta loadfileblock+3
 	jsr loadfile
 
@@ -2953,9 +2960,9 @@ loadscreen
 	lda #$85
 	sta palt+2
 
-	lda #((32*8*64-64)-2) div 256
+	lda #((32*8*64-64)-2) / 256
 	sta firsttime+1
-	lda #((7*4*64+32)-2) div 256
+	lda #((7*4*64+32)-2) / 256
 	sta secondtime+1		; Reset timers
 
 	lda #50
@@ -2963,7 +2970,7 @@ loadscreen
 
 	;rts
 
-.deletestatusrows		; Delete sprite status rows
+deletestatusrows		; Delete sprite status rows
 	; Store plot location in $8e and $8f.  8c,8d as line:8b as counter
 	lda #(13317+$4000) % 256
 	sta $8e
@@ -3038,14 +3045,14 @@ levelwinsounddurations
 
 
 wavetext
-.print "wavetext",~wavetext
+.print "wavetext ",wavetext
 	incbin "/home/chris/bem/spriter/leveltext.bin"
 towers
 	iNCBIN "/home/chris/bem/spriter/towers.bin"
-.print "Towers ",~towers
+.print "Towers ",towers
 notower
 	iNCBIN "/home/chris/bem/spriter/notower.bin"
-.print "notower",~notower
+.print "notower ",notower
 	;.winlogo
 	;incbin "/home/chris/bem/spriter/WINB"
 	;.loselogo
@@ -3053,7 +3060,7 @@ notower
 	;.levlogo
 	;incbin "/home/chris/bem/spriter/LEVCOMPB"
 
-;end
+endage
 
 	ORG codeoffset
 ;	guard codeoffset+$ff
@@ -3206,12 +3213,12 @@ palt
 	dta $85
 
 firsttime
-	dta ((32*8*64-64)-2) % 256
-	dta ((32*8*64-64)-2) / 256
+	dta [(32*8*64-64)-2] % 256
+	dta [(32*8*64-64)-2] / 256
 
 secondtime
-	dta ((7*4*64+32)-2) % 256
-	dta ((7*4*64+32)-2) / 256
+	dta [(7*4*64+32)-2] % 256
+	dta [(7*4*64+32)-2] / 256
 
 
 prev_irq 
@@ -3246,34 +3253,64 @@ eventend
 	;  dta 100
 
 spritelowtable
-  for x,0,nosprites-1
-  for y,0,3
-  dta (sprites+14*y*4+x*14*4*4) mod 256
-  next
-  next
-  for x,0,3
-  for y,0,3
-  dta (expl+14*y*4+x*14*4*4) mod 256
-  next
-  next
+  ;for x,0,nosprites-1
+  ;for y,0,3
+.rept nosprites
+?x=#
+.rept 4
+?y=#
+  dta [sprites+14*?y*4+?x*14*4*4] % 256
+  ;next
+  ;next
+.endr
+.endr
+  
+  ;for x,0,3
+  ;for y,0,3
+.rept 4
+?x=#
+.rept 4
+?y=#
+  dta [expl+14*?y*4+?x*14*4*4] % 256
+  ;next
+  ;next
+.endr
+.endr
 
 spritehightable
-  for x,0,nosprites-1
-  for y,0,3
-  dta (sprites+14*y*4+x*14*4*4) div 256
-  next
-  next
-  for x,0,3
-  for y,0,3
-  dta (expl+14*y*4+x*14*4*4) div 256
-  next
-  next
+  ;for x,0,nosprites-1
+  ;for y,0,3
+.rept nosprites
+?x=#
+.rept 4
+?y=#
+  dta [sprites+14*?y*4+?x*14*4*4] / 256
+  ;next
+  ;next
+.endr
+.endr
+  
+  ;for x,0,3
+  ;for y,0,3
+.rept 4
+?x=#
+.rept 4
+?y=#
+  dta [expl+14*?y*4+?x*14*4*4] / 256
+  ;next
+  ;next
+.endr
+.endr
 
 squaretable
-  for s,0,15
-  dta s*s
-  next
+  ;for s,0,15
+.rept 16
+?s=#
+  dta ?s*?s
+  ;next
+.endr
 
+/*
 spritefilename
 	equs "S."
 spritefilenumber
@@ -3283,68 +3320,81 @@ screenfilename
 	equs "L."
 screenfilenumber
 	equs "1":dta $0d
+*/
 
 printleft
 	; Routine to print number of enemies left to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
-	lda #%11111111:sta textcolour 
-	lda #61:sta $70
-	lda #31:sta $77
-	lda #numberofenemies mod 256:sta $74
-	lda #numberofenemies div 256:sta $75
-	ldx #0:jmp numberplot
+	lda #%11111111
+	sta textcolour 
+	lda #61
+	sta $70
+	lda #31
+	sta $77
+	lda #numberofenemies % 256
+	sta $74
+	lda #numberofenemies / 256
+	sta $75
+	ldx #0
+	jmp numberplot
 
 printlives
 	; Routine to print lives to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
-	lda #%11110000:sta textcolour 
-	lda #8:sta $70
-	lda #29:sta $77
-	lda #lives mod 256:sta $74
-	lda #lives div 256:sta $75
-	ldx #0:jmp numberplot          
+	lda #%11110000
+	sta textcolour 
+	lda #8
+	sta $70
+	lda #29
+	sta $77
+	lda #lives % 256
+	sta $74
+	lda #lives / 256
+	sta $75
+	ldx #0
+	jmp numberplot          
 	;rts
 apage
 
 	org codeoffset+$200
-	guard codeoffset+$3ff
+;	guard codeoffset+$3ff
   ; Tower cost/damage data structures
   ; Each tower has 4 levels - for each of the three towers
-.towercosts           ; Divided by 10 - stored as bcd
-  equd 0		; Zero padding for the blank tower to allow to be plotted
+towercosts           ; Divided by 10 - stored as bcd
+  dta 0,0,0,0	; Zero padding for the blank tower to allow to be plotted
   dta $14,$15,$22,$35
   dta $20,$23,$28,$40
   dta $37,$43,$55,$75
-.towerranges          ; BCD for displayt
+towerranges          ; BCD for displayt
   dta $15,$18,$21,$24
   dta $21,$23,$25,$27
   dta $25,$27,$29,$31
-.towerrangesactual    ; Hex for actual square of range/4
+towerrangesactual    ; Hex for actual square of range/4
   dta 72,90,110,144
   dta 132,144,156,169
   dta 156,182,210,240
-.towerphysical        ; PHysical damage
+towerphysical        ; PHysical damage
   dta $02,$03,$05,$07
   dta $00,$00,$00,$01
   dta $06,$11,$17,$25
-.towershield          ; Shield Damage
+towershield          ; Shield Damage
   dta $00,$00,$00,$01
   dta $04,$07,$10,$15
   dta $01,$02,$04,$07
-.towerfirespeed       ; Time between shots
+towerfirespeed       ; Time between shots
   dta $16,$15,$14,$13
   dta $20,$17,$15,$12
   dta $30,$27,$22,$18
-.towerfiredisplayspeed       ; Time between reciprocal
+towerfiredisplayspeed       ; Time between reciprocal
   dta $63,$67,$71,$77
   dta $50,$59,$67,$83
   dta $33,$37,$45,$56
 
-.towerlocations		; Locations of tower sprites
-  equw notower           ; Padding
-  equw towers
-  equw towers+24*6 ; 24x24/4 ppb
-  equw towers+24*6*2 ; 24x24/4 ppb
+towerlocations		; Locations of tower sprites
+  .word notower           ; Padding
+  .word towers
+  .word towers+24*6 ; 24x24/4 ppb
+  .word towers+24*6*2 ; 24x24/4 ppb
 
 colourtable
 	dta %0001,%10000,%10001
@@ -3353,12 +3403,14 @@ towertempnum
 	dta 00,$0a		; Needs to be defined because od $0a
 
 explosionfilename
-	equs "EXPLODE":dta $0d
+	dta "EXPLODE"
+	dta $0d
 
 wavefilename
-	equs "W."
+	dta "W."
 wavefilenumber
-	equs "1":dta $0d
+	dta "1"
+	dta $0d
 
 
 levlogo
@@ -3408,41 +3460,41 @@ firetypes
 
 lowcodeend
 
-	;  PRINT "Event Code End ",~eventend
-	;  PRINT "Enemy health ",~ehealth
-	;  PRINT "Enemy shield ",~eshield
-	;  PrINT "Enemy type ",~etype
-	;  PRINT "Tower x pos ",~txpos
-	;  PRINT "Tower y pos ",~typos
-	;  PRINT "Tower type ",~ttype
-	;  PRINT "Tower fire count ",~tfcount
-	;  PRINT "Tower fire target ",~tftarget
-	;  PRINT "Sprites ",~sprites
-	;  PRINT "Explosions ",~expl
-	;  print "Lives ",~lives
-	;  print "Score ",~score
-	;  print "Wave ",~wave
-	;  print "Level ",~level
+	;  PRINT "Event Code End ",eventend
+	;  PRINT "Enemy health ",ehealth
+	;  PRINT "Enemy shield ",eshield
+	;  PrINT "Enemy type ",etype
+	;  PRINT "Tower x pos ",txpos
+	;  PRINT "Tower y pos ",typos
+	;  PRINT "Tower type ",ttype
+	;  PRINT "Tower fire count ",tfcount
+	;  PRINT "Tower fire target ",tftarget
+	;  PRINT "Sprites ",sprites
+	;  PRINT "Explosions ",expl
+	;  print "Lives ",lives
+	;  print "Score ",score
+	;  print "Wave ",wave
+	;  print "Level ",level
 
-	;  PRINT ".setup ",~setup
-  ;PRINT ".mainloop ",~mainjump
-  ;PRINT ".plotlots ",~plotjump
-  ;print ".plottower ",~towerjump
-  ;print ".numberplot",~numberplot, " to ",~numberend
-  ;print ".drawbox",~boxjump
-.print "Main Code ",~start," - ",~end," (",end-start,")"
-.print "Low code ",~codeoffset," - ",~lowcodeend," (",lowcodeend-codeoffset,")"
-.print "Free space: Main = ",$3000-32-end," Variables = ",expl-varend," etype location = ",~etype,"-",~varend
-.print "interrupts $ Numbers = ",codeoffset+$ff-numberend," ",~numberend 
+	;  PRINT ".setup ",setup
+  ;PRINT ".mainloop ",mainjump
+  ;PRINT ".plotlots ",plotjump
+  ;print ".plottower ",towerjump
+  ;print ".numberplot",numberplot, " to ",numberend
+  ;print ".drawbox",boxjump
+.print "Main Code ",start," - ",endage," (",endage-start,")"
+.print "Low code ",codeoffset," - ",lowcodeend," (",lowcodeend-codeoffset,")"
+.print "Free space: Main = ",$3000-32-endage," Variables = ",expl-varend," etype location = ",etype,"-",varend
+.print "interrupts $ Numbers = ",codeoffset+$ff-numberend," ",numberend 
 .print "table data ",codeoffset+$3ff-lowcodeend
 .print "level data size = ",varend-wavedata
-.print "A Page",codeoffset+$1ff-apage," ",~apage
-.print "pal ",~palt
-.print "firsttime ",~firsttime
-.print "secondtime ",~secondtime
-.print "intflag",~intflag
+.print "A Page",codeoffset+$1ff-apage," ",apage
+.print "pal ",palt
+.print "firsttime ",firsttime
+.print "secondtime ",secondtime
+.print "intflag",intflag
 
-	if codeoffset=$900
+/*	if codeoffset=$900
 	save "CDCode",start,end
 	save "LowCode",$900,lowcodeend
 	else
@@ -3451,6 +3503,6 @@ lowcodeend
 	endif
 
 	clear start,end
-
+*/
 
 
