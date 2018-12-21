@@ -11,10 +11,10 @@
 	; Gold score bug (/10)
 
 
+	icl "headercode.asm"
 
 	ORG $1b00
 ;  GUARD $3000-40	; So we can load code without losing it between screen modes.
-	icl "headercode.asm"
 codeoffset=$0900
 .print "Assembling for ",codeoffset
 
@@ -769,8 +769,8 @@ notoffend
 	rts
 
 plotlots             ; Routine to plot all sprites
-//  \ USE 8E8F AS PLOT START
-//  \ USE 8D AS COUNTER
+;//  \ USE 8E8F AS PLOT START
+;//  \ USE 8D AS COUNTER
 	lDA enemyoffset       
 	sTA $8E
 	lDA enemyoffset+1
@@ -1893,26 +1893,34 @@ errorsoundparams
 
 
 loselifesound
-	/*
-	txa:pha:tya:pha
-	lda #$12:ldx #20:ldy #8
+	txa
+	pha
+	tya
+	pha
+	lda #$12
+	ldx #20
+	ldy #8
 	jsr bongsound
-	lda #2:ldx #4:ldy #16
+	lda #2
+	ldx #4
+	ldy #16
 	jsr bongsound
-	pla:tay:pla:tax
-	*/
+	pla
+	tay
+	pla
+	tax
 	rts
 
 sadsound	; Play sadder "string" sound
-	/*pha
-	lda #4:sta bongparams+2
-	*/
+	pha
+	lda #4
+	sta bongparams+2
 	jmp playsound
 
 longsound	; Play a longer "trumpet" sound
-	/*pha
-	lda #3:sta bongparams+2
-	*/
+	pha
+	lda #3
+	sta bongparams+2
 	jmp playsound
 
 bongsound	; Play a "bong" a - channel, x pitch, y duration
@@ -1931,32 +1939,57 @@ playsound
 
 
 bongparams
-	/*dta $10,0	; channel (with buffer flush)
+	dta $10,0	; channel (with buffer flush)
 	dta 1,0	; Envelope
 	dta 6,0	; Pitch
 	dta 15,0	; Duration
-	*/
+	
 buildsound
-	/*pha:tya:pha:txa:pha
-	lda #$12:ldx #128:ldy #5
+	pha
+	tya
+	pha
+	txa
+	pha
+	lda #$12
+	ldx #128
+	ldy #5
 	jsr bongsound
-	lda #$02:ldx #164:ldy #5
+	lda #$02
+	ldx #164
+	ldy #5
 	jsr bongsound
-	lda #$02:ldx #148:ldy #10
+	lda #$02
+	ldx #148
+	ldy #10
 	jsr bongsound
-	pla:tax:pla:tay:pla
-	*/
+	pla
+	tax
+	pla
+	tay
+	pla
 	rts
 
 
 upgradesound
-	/*pha:tya:pha:txa:pha
-	lda #$12:ldx #128:ldy #5
+	pha
+	tya
+	pha
+	txa
+	pha
+	lda #$12
+	ldx #128
+	ldy #5
 	jsr bongsound
-	lda #$02:ldx #164:ldy #10
+	lda #$02
+	ldx #164
+	ldy #10
 	jsr bongsound
-	pla:tax:pla:tay:pla
-	*/
+	pla
+	tax
+	pla
+	tay
+	pla
+	
 	rts
 
 levelstartsound
@@ -1965,19 +1998,22 @@ levelstartsound
 
 	ldx #0
 levelstartsoundloop
-	/*txa:pha
+	txa
+	pha
 	ldy levelstartsounddurations,x
 	lda levelstartsoundpitches,x
 	tax
-	lda #1:jsr longsound
-	pla:tax
+	lda #1
+	jsr longsound
+	pla
+	tax
 	inx
 	cpx #4
 	bne levelstartsoundloop
 
 	;lda #125
 	;jmp delay		; RTS implies
-*/
+
 	rts
 
 levelstartsoundpitches
@@ -2314,7 +2350,7 @@ boxtopright
 
 	;Routine to print the levels and waves
 showwave ;$28f5
-
+.print "showwave 28f5: ",showwave
 	;Set up for the copy
 	lda #<(wavetext) ;$2ce2
 	sta $70
@@ -3285,7 +3321,6 @@ numberend
 eventend
 
 	org codeoffset+$100
-.print "org codeoffset+$100: ",codeoffset+$100
 ;	guard codeoffset+$1ff
 	
 	;INCBIN "/home/chris/bem/spriter/numbers.bin"
