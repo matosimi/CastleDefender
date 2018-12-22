@@ -30,6 +30,18 @@ sprows=14
 lastplotidx=$82
 lastplot=$83
 
+	org expl
+	ins 'srcdata\$.Explode'
+	
+	org expl+(spritesize*3)
+	ins 'srcdata\S.1' ;workaround
+	
+	org wavedata ;wave file
+	ins 'srcdata\W.1'
+	
+	org typos ;level data+picture background
+	ins 'srcdata\L.1'
+
 	org $3012
 ;guard expl
 score	dta 00,00,00,00	; ,00

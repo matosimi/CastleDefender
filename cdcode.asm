@@ -23,11 +23,12 @@ codeoffset=$0900
 start
 
 	;; Turn sound on/off for attract mode
+/* atari off
 	ldy #0
 	ldx attractmode
 	lda #$d2
 	jsr $fff4
-
+*/
 	; ORG $1c20
 	;.setjump
 	;jMP setup
@@ -49,6 +50,8 @@ setup
 	;lda #$a1:sta pal2
 
 	;jsr initinterrupts
+
+/* atari off - explosions loaded as data block
 	lda #19
 	jsr $fff4
 	lda #1
@@ -56,6 +59,7 @@ setup
 	; One per Game setup
 
 	jsr loadexplosions
+*/
 
 	;Reset score
 	lda #0
@@ -72,11 +76,12 @@ setup
 	lda #$a1
 	sta wave
 	;sta level	; Level set by basic
-
+	;TODO:check the level stuff from acorn basic
+	
+	
 	; Once per "Screen" setups
 
 newlevel
-.print "newlevel:",newlevel
 	jsr clearstatusbox
 	jsr showwave
 
@@ -127,7 +132,7 @@ drawblanktowersloop
 	tax
 	ldy #5
 
-	lda attractmode
+	lda attractmode ;TODO: ???
 	bne skipblanktowers		; Don't plot towers in attact mode
 
 	lda #$13
@@ -160,7 +165,9 @@ skipblanktowers
 	lda #$40
 	ldx #<(wavefilename)
 	ldy #>(wavefilename)
+/* atari off - loaded as data block to $3000
 	jsr $ffce
+*/
 	sta openfile
 
 	; Wave base setups setups
@@ -193,7 +200,7 @@ clearspritesloop
 	jsr printscore
 
 	; Load wave data
-	jsr loadwave
+	jsr loadwave ;atari off - no operation ATM
 
 	jsr printleft
 
@@ -604,8 +611,9 @@ nextlevel
 	lda #0
 	ldy openfile
 	sta openfile
+/* atari off - TODO: handle next level load
 	jsr $ffce
-
+*/
 	; Add lives $ 10000 to score
 	lda lives
 	sta scoretoadd+1
@@ -625,7 +633,9 @@ gameover
 	ldy openfile
 	beq noopenfile
 	lda #0
+/* atari off
 	jsr $ffce
+*/
 noopenfile
 
 	;lda #50
@@ -1667,7 +1677,7 @@ keyboard
 	; Keyboard input routine and tower plot/update
 	lda #2
 	sta gamespeed
-	lda $ec
+	lda $ec ;atari note: $EC is supposed to be code of key just pressed
 	cmp #98+128		; Is Space being pressed?
 	bne nospacepressed	
 	lda #0
@@ -1831,8 +1841,9 @@ explodesound
 	lda #7
 	ldx #<(explodesoundparams)
 	ldy #>(explodesoundparams)
+/* atari off
 	jsr $FFF1
-	pla
+*/	pla
 	tay
 	pla
 	tax
@@ -1855,7 +1866,9 @@ firesound
 	ldx #<(firesoundparams)
 	ldy #>(firesoundparams)
 	lda #7
+/* atari off
 	jsr $FFF1
+*/
 	;pla:tax:pla:tay
 nofiresound
 	rts
@@ -1870,7 +1883,10 @@ movesound
 	lda #7
 	ldx #<(movesoundparams)
 	ldy #>(movesoundparams)
+/* atari off
 	jmp $FFF1
+*/	rts ;atari added
+
 
 movesoundparams
 	dta $13,0	; channel (with buffer flush)
@@ -1882,7 +1898,9 @@ errorsound
 	lda #7
 	ldx #<(errorsoundparams)
 	ldy #>(errorsoundparams)
+/* atari off
 	jmp $FFF1
+*/	rts
 
 
 errorsoundparams
@@ -1935,8 +1953,9 @@ playsound
 	lda #7
 	ldx #<(bongparams)
 	ldy #>(bongparams)
+/* atari off
 	jmp $FFF1
-
+*/	rts
 
 bongparams
 	dta $10,0	; channel (with buffer flush)
@@ -2421,6 +2440,8 @@ clearstatusboxloop
 
 
 loadwave
+/* atari off - loaded as data block in headercode
+
 	; Uses OSBGET to read byte so we can have multiples waves per file.
 	ldy openfile
 	ldx #0
@@ -2430,6 +2451,8 @@ loadwaveloop
 	inx
 	cpx #wavedataend-wavedata			; Level data structure size
 	bne loadwaveloop
+*/
+
 	rts
 
 loadspritefile
@@ -2456,8 +2479,11 @@ clearloadblock
 	ldx #<(loadfileblock)
 	ldy #>(loadfileblock)
 	lda #$ff
+/* atari off - loaded as data block
+   TODO: this is supposed to load several sprite types at the same location one after another
+         at this moment only sprite 1 is loaded, rest is not handled at all
 	jsr $ffdd
-
+*/
 	rts
 
 
@@ -2676,7 +2702,7 @@ levellosesoundloop
 	lda #0
 	sta gocolflag
 
-	lda #<($5678)
+	lda #<($5678)	;atari - ??? crazy absolute values
 	sta golscreenaddress
 	lda #>($5678)
 	sta golscreenaddress+1
@@ -2711,7 +2737,7 @@ showlevlogo
 	lda #0
 	sta gocolflag
 
-	lda #<($6878)
+	lda #<($6878)	;atari - ??? crazy absolute values
 	sta golscreenaddress
 	lda #>($6878)
 	sta golscreenaddress+1
@@ -2947,6 +2973,7 @@ alreadydonehit
 	tay
 	rts
 
+/* atari off - data block
 loadexplosions
 	lda #<(explosionfilename)
 	sta loadfileblock
@@ -2957,6 +2984,7 @@ loadexplosions
 	lda #>(expl)
 	sta loadfileblock+3
 	jmp loadfile
+*/
 
 loadscreen
 	lda #$27
@@ -2987,8 +3015,9 @@ loadscreen
 	sta loadfileblock+2
 	lda #>(typos)
 	sta loadfileblock+3
+/* atari off - loaded as data block
 	jsr loadfile
-
+*/
 	lda #$26			; Rest palette
 	sta palt
 	lda #$a1
@@ -3174,7 +3203,7 @@ initinterrupts
 	;.intwait
 	;dex
 	;bne intwait
-
+/* atari off
 	sei
 	lda $204
 	sta prev_irq
@@ -3197,11 +3226,13 @@ initinterrupts
 	lda #$26
 	sta $fe45
 	cli
+*/
 	rts
 
 	;vsynctotop=(32*8*64-64)-2
 	;secondtime=(7*4*64+32)-2
 
+/* atari off
 inthandler
 
 	lda $fe4d
@@ -3284,7 +3315,7 @@ set_palette_colour
 	eor #$10
 	sta $fe21
 	rts
-
+*/
 palt
 	dta $26
 	dta $a1
@@ -3603,10 +3634,10 @@ lowcodeend
 .print "level data size = ",varend-wavedata
 .print "A Page",codeoffset+$1ff-apage," ",apage
 .print "pal ",palt
-.print "firsttime ",firsttime
+/*.print "firsttime ",firsttime
 .print "secondtime ",secondtime
 .print "intflag",intflag
-
+*/
 /*	if codeoffset=$900
 	save "CDCode",start,end
 	save "LowCode",$900,lowcodeend
