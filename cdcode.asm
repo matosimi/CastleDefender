@@ -10,9 +10,109 @@
 	; Reload instead of rate
 	; Gold score bug (/10)
 
+hposp0	equ $d000
+hposm0	equ $d004
+sizep0	equ $d008
+sizem	equ $d00c
+trig0	equ $d010
+colpm0	equ $d012
+colpf0	equ $d016
+colbk	equ $d01a
+prior	equ $d01b
+vdelay	equ $d01c ;shift PM by 1 scanline, first missiles,then players(bits)
+gractl	equ $d01d ;BIT1-ACTIV.PMG
+consol	equ $d01f
+random	equ $d20a
+skctl	equ $d20f
+porta	equ $d300 ;stick 0,1
+portb	equ $d301
+dmactl	equ $d400
+dlistl	equ $d402
+hscrol	equ $d404
+pmbase	equ $d407
+chbase	equ $d409
+wsync	equ $d40a
+vcount	equ $d40b
+nmien	equ $d40e
+nmist	equ $d40f
 
+
+vbi_ptr	equ $b0 ;vbi vector
+dli_ptr	equ $b2 ;dli vector
+
+
+	icl "matosimi_macros.asx"
 	icl "headercode.asm"
 
+	org $0600
+	pause 5
+	mva #$ff portb ;turn on osrom a load next block
+	rts
+	
+	ini $0600
+	
+	org $8000 ;atari init code
+	pause 1
+	sei
+	mva #$00 nmien
+	mwa #dl dlistl
+	mwa #gameDli.dli1 dli_ptr ;vdslst
+	mwa #gameVbi.vbi vbi_ptr
+	mva #1+12+32 dmactl ;d400 = 559
+	mva #$fe portb	;turn off osrom and basicrom	
+	mwa #NMI $fffa		
+	mva #$c0 nmien ;80 dli, 40 vbi
+	rts
+	
+.align $100
+dl	dta $70
+	dta $42,a(vram),2,2,$82
+:5	dta $42,a(vram),2,2,$82
+	dta $41,a(dl)
+	
+.align $100
+vram
+:128	dta #
+
+NMI	bit nmist
+	bpl nmi_vbi	;vbi
+	jmp (dli_ptr)	;dli
+nmi_vbi	jmp (vbi_ptr)
+
+.local	gameVbi
+vbi	phr
+	inc 20
+	
+	;some unknown stuff from orig code
+	inc timerflag
+	inc vsynccount
+	
+	mva #>$4000 chbase
+	mwa #gameDli.dlix dli_ptr
+	plr
+	rti
+.endl
+
+.local	gameDli
+dlix	pha
+	sta wsync
+	mva #>[$4000+$400] chbase
+	mwa #dli0 dli_ptr
+	pla
+	rti
+dli5
+.rept 5,#,#+1,#+2
+dli:1	pha
+	sta wsync
+	mva #>[$4000+($400*:3)] chbase
+	mwa #dli:2 dli_ptr
+	pla
+	rti
+.endr
+.endl	
+	
+	run $1b00
+	
 	ORG $1b00
 ;  GUARD $3000-40	; So we can load code without losing it between screen modes.
 codeoffset=$0900
@@ -21,7 +121,8 @@ codeoffset=$0900
 	;38.12
 
 start
-
+	jsr $8000 ;atari init stuff
+	
 	;; Turn sound on/off for attract mode
 /* atari off
 	ldy #0
@@ -649,7 +750,9 @@ returntobasic
 	lda #0
 	sta intflag
 
-	rTS                   ; Return back to basic.
+;	rTS                   ; Return back to basic.
+	jmp *
+
 
 winner
 	;We've won.

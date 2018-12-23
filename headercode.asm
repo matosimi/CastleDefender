@@ -42,6 +42,9 @@ lastplot=$83
 	org typos ;level data+picture background
 	ins 'srcdata\L.1'
 
+	org $9400 ;default font
+	ins 'default.fnt'
+	
 	org $3012
 ;guard expl
 score	dta 00,00,00,00	; ,00
