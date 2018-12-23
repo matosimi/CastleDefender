@@ -39,6 +39,8 @@ nmist	equ $d40f
 
 vbi_ptr	equ $b0 ;vbi vector
 dli_ptr	equ $b2 ;dli vector
+w1	equ $b4 
+w2	equ $b6
 
 
 	icl "matosimi_macros.asx"
@@ -65,9 +67,10 @@ dli_ptr	equ $b2 ;dli vector
 	rts
 	
 .align $100
-dl	dta $70
+dl	;dta $70
 	dta $42,a(vram),2,2,$82
-:5	dta $42,a(vram),2,2,$82
+:6	dta $42,a(vram),2,2,$82
+	dta $42,a(vram)
 	dta $41,a(dl)
 	
 .align $100
@@ -100,8 +103,8 @@ dlix	pha
 	mwa #dli0 dli_ptr
 	pla
 	rti
-dli5
-.rept 5,#,#+1,#+2
+dli6
+.rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
 	mva #>[$4000+($400*:3)] chbase
@@ -367,7 +370,8 @@ loadspriteloop
 	sta spritefilenumber
 
 	; Load sprites for wave
-	jsr loadspritefile
+	;jsr loadspritefile
+	choose_sprites
 
 	lda #<(expl+(spritesize*3))
 	sta $70
@@ -383,6 +387,17 @@ loadspriteloop
 	lda spritehightable,x
 	sta $73         ; Store where the result needs to be put
 	ldy #spritesize-1
+	;ATARI add
+coolloop
+	mva ($70),y ($72),y
+	dey
+	bne coolloop
+	
+	dec $88
+	bmi finishloadsprites
+	jmp loadspriteloop
+	
+	;ATARI rest ignored (TEST)
 	lda #0
 	sta ($72),y      ; Clear destination
 colourcopyloop
@@ -2558,7 +2573,10 @@ loadwaveloop
 
 	rts
 
+.proc	choose_sprites
+/* atari off
 loadspritefile
+
 	lda #<(spritefilename)
 	sta loadfileblock
 	lda #>(spritefilename)
@@ -2568,6 +2586,30 @@ loadspritefile
 	lda #>(expl+(spritesize*3))
 	sta loadfileblock+3
 	; NO JMP BECAUSE NEXT TO LOAD FILE CODE
+*/
+	lda spritefilenumber
+	and #$0f
+	asl @
+	tax
+	
+	lda sprite_address_table,x
+	sta w1
+	lda sprite_address_table+1,x
+	sta w1+1
+	mwa #(expl+(spritesize*3)) w2
+	
+	ldy #223
+x1	mva (w1),y (w2),y
+	dey
+	bne x1	
+	
+	rts
+sprite_address_table
+.rept 8,#+1
+	dta a(spr:1)
+.endr
+
+.endp
 
 	;Load a file - assumes load address and filename already provided
 loadfile

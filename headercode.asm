@@ -40,10 +40,17 @@ lastplot=$83
 	ins 'srcdata\W.1'
 	
 	org typos ;level data+picture background
-	ins 'srcdata\L.1'
+	ins 'srcdata\L.1',0,$4000-typos
+	org $4000
+	ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
 
 	org $9400 ;default font
 	ins 'default.fnt'
+	
+	org $a000 ;sprites
+.rept 8,#+1
+spr:1	ins 'srcdata\S.:1'
+.endr
 	
 	org $3012
 ;guard expl
