@@ -106,7 +106,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$2000] chbase
+	mva #>[gamevram+($400*:3)+$2400] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -185,12 +185,11 @@ setup
 	; Once per "Screen" setups
 
 newlevel
-	jsr clearstatusbox ;3 lines at the bottom
-	jsr showwave
-
+	jsr clearstatusbox  ;3 lines at the bottom
+	jsr showwave 	;Level 1 Wave 1 (in the box)
 	;load screen (should include screen $ Path $ tower positions)
 	jsr loadscreen
-
+	jmp *
 	; Clear tower types structures
 	ldx #towrno-1
 	lda #0
