@@ -1,14 +1,14 @@
 <?php
 //converts bbc micro videodata mode 1 to atari mode $0f (gr.8)
 
-$name = getcwd() . "\..\srcdata\L.1";
+$name = getcwd() . "\..\srcdata\\loseb";
 $fi=fopen($name,"rb");
 if (!$fi) { echo "Can't open file $name.\n"; exit(); }
 $gfxsize=filesize($name);
 $mode1=@fread($fi,$gfxsize);
 fclose($fi);
 
-$name = getcwd() . "\L1.fnt";
+$name = getcwd() . "\\loseb.fnt";
 $fi=fopen($name,"wb");
 if (!$fi) { echo "Can't open file $name.\n"; exit(); }
 

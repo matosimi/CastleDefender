@@ -30,6 +30,8 @@ sprows=14
 lastplotidx=$82
 lastplot=$83
 
+gamevram	equ $4000
+
 	org expl
 	ins 'srcdata\$.Explode'
 	
@@ -41,11 +43,11 @@ lastplot=$83
 	
 	org typos ;level data+picture background
 	ins 'srcdata\L.1',0,$4000-typos
-	org $4000
-	ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
+	org gamevram
+	;ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
 
-	org $9400 ;default font
-	ins 'default.fnt'
+	;org $9400 ;default font
+	;ins 'default.fnt'
 	
 	org $a000 ;sprites
 .rept 8,#+1

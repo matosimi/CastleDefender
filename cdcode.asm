@@ -36,7 +36,6 @@ vcount	equ $d40b
 nmien	equ $d40e
 nmist	equ $d40f
 
-
 vbi_ptr	equ $b0 ;vbi vector
 dli_ptr	equ $b2 ;dli vector
 w1	equ $b4 
@@ -90,7 +89,7 @@ vbi	phr
 	inc timerflag
 	inc vsynccount
 	
-	mva #>$4000 chbase
+	mva #>gamevram chbase
 	mwa #gameDli.dlix dli_ptr
 	plr
 	rti
@@ -99,7 +98,7 @@ vbi	phr
 .local	gameDli
 dlix	pha
 	sta wsync
-	mva #>[$4000+$400] chbase
+	mva #>[gamevram+$400] chbase
 	mwa #dli0 dli_ptr
 	pla
 	rti
@@ -107,7 +106,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[$4000+($400*:3)] chbase
+	mva #>[gamevram+($400*:3)+$2000] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -186,7 +185,7 @@ setup
 	; Once per "Screen" setups
 
 newlevel
-	jsr clearstatusbox
+	jsr clearstatusbox ;3 lines at the bottom
 	jsr showwave
 
 	;load screen (should include screen $ Path $ tower positions)
