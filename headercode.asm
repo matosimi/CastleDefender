@@ -39,10 +39,10 @@ gamevram	equ $4000
 	ins 'srcdata\S.1' ;workaround
 	
 	org typos ;level data+picture background
-	ins 'srcdata\L.1' ;,0,$4000-typos
+	ins 'srcdata\L.1',0,$4000-typos
 
 	org gamevram
-	;ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
+	ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
 
 	;org $9400 ;default font
 	;ins 'default.fnt'

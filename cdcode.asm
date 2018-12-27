@@ -106,7 +106,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$2400] chbase
+	mva #>[gamevram+($400*:3)+$0000] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -249,7 +249,7 @@ skipblanktowers
 	dex
 	bpl drawblanktowersloop
 
-
+	jmp *
 	; Set initial variables. Ideally these should come from the level definition
 	ldx #0
 
@@ -1237,16 +1237,30 @@ canafford
 	lda #$20        
 	sta $71       ; clear screen start in high byte
 	lda txpos,X   ; a conains value 0-63 ish - assumed to be top left of tower.
+
 	sec
+/* atari remove
 	sbc #3    ; Find top left
 	asl @         ; multiply by 2 (since four pixles per byte)
+*/
+;atari add {
+	sbc #4    ; Find top left
+; }
 	asl @ ;:asl @   ; Now multiply by 2 -
 	asl @         ; and finish multiplaction to 8 - first time we could wrap
 	sta $70       ; Store result
 	rol $71       ; Set the bit in top byte if required
 	lda typos,X   ; Get y position - this will be 0 - 63 - does not need to be divided to 512 - towers can't be at half positions
+;atari add {
+	lsr @
+; }
 	sec
+/*atari remove
 	sbc #3    ; Find top left
+*/
+;atari add {
+	sbc #1    ; Find top left
+; }
 	;asl @
 	clc
 	adc $71   ; Add to the x offset high byte 
@@ -1278,26 +1292,51 @@ starttowerplot
   ; Now draw the damn thing!
 	ldx #3         ; 3 rows
 towerrowloop
+/*atari remove
 	ldy #47        ; 24/4*8
+*/
+;atari add {
+	ldy #23+8
+	mwa #towermask w1
+; }
 towerdrawloop
 	lda ($72),Y
-	;eor #$ff
+	;eor #$ff ;debug
+;atari add {
+	eor (w1),y     ;towermasking
+	eor ($70),y	
+; }	
 	sta ($70),Y    ; draw sprite
 	dey
 	bpl towerdrawloop
 	lda $71 
 	clc
+/*atari remove
 	adc #2    ; increase screen row
+*/
+;atari add
+	adc #1
+	
 	sta $71
 	lda $72       ; incrase offset into sprite
+/* atari remove
 	adc #48       ; number of bytes just plotted
+*/
+;atari add {
+	adc #24+8
+; }
 	sta $72
 	lda $73       ; Add the carry as necessary
 	adc #0
 	sta $73
+	
+;atari add {
+	;masking
+	inw w1
+; }	
 	dex
 	bne towerrowloop
-
+	
   ; Decrement the gold amount?
 	pla
 	tax         ; Get x back.
@@ -3793,4 +3832,11 @@ lowcodeend
 	clear start,end
 */
 
-
+	org notower
+	ins 'towers\notower_shifted.fnt'
+towermask	
+.rept 3
+:8	dta $0f
+:16	dta $ff
+:8	dta $f0
+.endr
