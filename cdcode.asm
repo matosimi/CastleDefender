@@ -249,7 +249,6 @@ skipblanktowers
 	dex
 	bpl drawblanktowersloop
 
-	jmp *
 	; Set initial variables. Ideally these should come from the level definition
 	ldx #0
 
@@ -2413,15 +2412,28 @@ drawbox
 	sta $71       ; clear screen start in high byte
 	lda txpos,X   ; a conains value 0-63 ish - assumed to be top left of tower.
 	sec
+/* atari remove
 	sbc #3    ; Find top left
 	asl @         ; multiply by 2 (since four pixles per byte)
+*/
+; atari add
+	sbc #4
+; }
 	asl @ ;:asl @   ; Now multiply by 2 -
 	asl @         ; and finish multiplaction to 8 - first time we could wrap
 	sta $70       ; Store result
 	rol $71       ; Set the bit in top byte if required
 	lda typos,X   ; Get y position - this will be 0 - 63 - does not need to be divided to 512 - towers can't be at half positions
+;atari add {
+	lsr @
+; }
 	sec
+/* atari remove
 	sbc #3    ; Find top left
+*/
+;atari add {
+	sbc #1
+; }
 	;asl @
 	clc
 	adc $71   ; Add to the x offset high byte 
@@ -2430,17 +2442,26 @@ drawbox
 	ldy #4		;#4
 boxtopleft
 	;lda #%10001000
-	lda #%11000000
+;atari replace {
+;	lda #%11000000
+	lda #%00001100
+; }
 	eor ($70),Y
 	sta ($70),Y
 	dey
 	bne boxtopleft
 	;lda #255
-	lda #%11110000
+; atari replace {
+;	lda #%11110000
+	lda #%00001111
+; }
 	eor ($70),Y
 	sta ($70),Y
 	iny
-	lda #%00110000
+; atari replace {
+;	lda #%00110000
+	lda #%00000011
+; }
 	eor ($70),Y
 	sta ($70),Y
 
@@ -2448,30 +2469,49 @@ boxtopleft
 	; Bottom left
 	lda $71
 	clc
+/* atari remove
 	adc #4      ; 2 lines down
-	sta $71
+*/
+;atari add {
+	adc #2
+; }
+	sta $71	
 	ldy #3		;3
 boxbotleft
 	;lda #%10001000
-	lda #%11000000
+;atari replace {
+;	lda #%11000000
+	lda #%00001100
+; }
 	eor ($70),Y
 	sta ($70),Y
 	iny
 	cpy #6
 	bne boxbotleft
 	;lda #255
-	lda #%11110000
+;atari replace {	
+;	lda #%11110000
+	lda #%00001111
+; }
 	eor ($70),Y
 	sta ($70),Y
 	iny
-	lda #%11110000
+;atari replace {	
+;	lda #%11110000
+	lda #%00001111
+; }
 	eor ($70),Y
 	sta ($70),Y
 
 	; bottom right
 	clc
 	lda $70
+/* atari remove
 	adc #8*5        ; Width of towers
+*/ 
+;atari add {
+	adc #8*3
+; }
 	sta $70
 	lda #0
 	adc $71
@@ -2498,7 +2538,12 @@ boxbotright
 	;Top Right
 	lda $71
 	sec
+/* atari remove
 	sbc #4      ; 2 lines up
+*/
+;atari add {
+	sbc #2
+;}
 	sta $71
 
 	ldy #4		;#4
@@ -3834,6 +3879,7 @@ lowcodeend
 
 	org notower
 	ins 'towers\notower_shifted.fnt'
+	;ins 'towers\towers_shifted.fnt'
 towermask	
 .rept 3
 :8	dta $0f
