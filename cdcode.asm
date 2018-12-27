@@ -86,7 +86,7 @@ vbi	phr
 	inc 20
 	
 	;some unknown stuff from orig code
-	inc timerflag
+	;inc timerflag ;had something to do with the palette change (like DLI) 
 	inc vsynccount
 	
 	mva #>gamevram chbase
@@ -178,7 +178,7 @@ setup
 
 	lda #$a1
 	sta wave
-	;sta level	; Level set by basic
+	sta level	; Level set by basic (not anymore)
 	;TODO:check the level stuff from acorn basic
 	
 	
@@ -189,7 +189,7 @@ newlevel
 	jsr showwave 	;Level 1 Wave 1 (in the box)
 	;load screen (should include screen $ Path $ tower positions)
 	jsr loadscreen
-	jmp *
+	
 	; Clear tower types structures
 	ldx #towrno-1
 	lda #0
@@ -303,7 +303,7 @@ clearspritesloop
 
 	; Load wave data
 	jsr loadwave ;atari off - no operation ATM
-
+	
 	jsr printleft
 
 	; Can this be called once per "wave"?
@@ -3130,19 +3130,20 @@ loadexplosions
 */
 
 loadscreen
+/*
 	lda #$27
 	sta palt
 	lda #$a7
 	sta palt+1
 	lda #$87
 	sta palt+2			; Set pallette to black
-
+					;for loading
 	lda #((32*8*64-64)-512) / 256
 	sta firsttime+1
 	lda #((7*4*64+32)+512) / 256
 	sta secondtime+1
 
-
+*/
 	jsr deletestatusrows
 
 
@@ -3747,21 +3748,21 @@ firetypes
 
 lowcodeend
 
-	;  PRINT "Event Code End ",eventend
-	;  PRINT "Enemy health ",ehealth
-	;  PRINT "Enemy shield ",eshield
-	;  PrINT "Enemy type ",etype
-	;  PRINT "Tower x pos ",txpos
-	;  PRINT "Tower y pos ",typos
-	;  PRINT "Tower type ",ttype
-	;  PRINT "Tower fire count ",tfcount
-	;  PRINT "Tower fire target ",tftarget
-	;  PRINT "Sprites ",sprites
-	;  PRINT "Explosions ",expl
-	;  print "Lives ",lives
-	;  print "Score ",score
-	;  print "Wave ",wave
-	;  print "Level ",level
+.pRINT "Event Code End ",eventend
+.pRINT "Enemy health ",ehealth
+.pRINT "Enemy shield ",eshield
+.prINT "Enemy type ",etype
+.pRINT "Tower x pos ",txpos
+.pRINT "Tower y pos ",typos
+.pRINT "Tower type ",ttype
+.pRINT "Tower fire count ",tfcount
+.pRINT "Tower fire target ",tftarget
+.pRINT "Sprites ",sprites
+.pRINT "Explosions ",expl
+.print "Lives ",lives
+.print "Score ",score
+.print "Wave ",wave
+.print "Level ",level
 
 	;  PRINT ".setup ",setup
   ;PRINT ".mainloop ",mainjump

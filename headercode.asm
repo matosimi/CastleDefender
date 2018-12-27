@@ -38,11 +38,9 @@ gamevram	equ $4000
 	org expl+(spritesize*3)
 	ins 'srcdata\S.1' ;workaround
 	
-	org wavedata ;wave file
-	ins 'srcdata\W.1'
-	
 	org typos ;level data+picture background
-	ins 'srcdata\L.1',0,$4000-typos
+	ins 'srcdata\L.1' ;,0,$4000-typos
+
 	org gamevram
 	;ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
 
@@ -152,3 +150,7 @@ etype			; Enemy type list - reserve bytes
 :enemyno	dta 0 ;SKIP enemyno
 wavedataend
 varend	
+
+	org wavedata ;wave file
+	ins 'srcdata\W.1',0,wavedataend-wavedata
+	
