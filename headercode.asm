@@ -1,5 +1,8 @@
 ; Set up some variables
-spritesize = 4*14*4   ; Size of sprites in bytes
+;atari replace {
+;spritesize = 4*14*4   ; Size of sprites in bytes
+spritesize = 2*14*4
+; }
 enemyno = 64          ; Number of enemies in a wave
 towrno = 16           ; Maximum number of towers
 ;sgsize = 32*28        ; Size of screen grid
@@ -48,10 +51,15 @@ gamevram	equ $4000
 	;ins 'default.fnt'
 	
 	org $a000 ;sprites
-.rept 8,#+1
-spr:1	ins 'srcdata\S.:1'
+/*.rept 8,#+1
+spr:1	ins 'sprites\S:1.fnt'
 .endr
-	
+*/
+; debug: only 1 sprite loaded, rest zeros
+spr1	ins 'sprites\S1.fnt'
+.rept 7, #+2
+spr:1	equ $c000
+.endr	
 	org $3012
 ;guard expl
 score	dta 00,00,00,00	; ,00

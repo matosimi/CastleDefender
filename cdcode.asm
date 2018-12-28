@@ -394,7 +394,7 @@ coolloop
 	bmi finishloadsprites
 	jmp loadspriteloop
 	
-	;ATARI rest ignored (TEST)
+/* ATARI rest ignored (TEST)
 	lda #0
 	sta ($72),y      ; Clear destination
 colourcopyloop
@@ -443,6 +443,7 @@ nopixelmatch
 	dec $88
 	bmi finishloadsprites
 	jmp loadspriteloop
+*/
 finishloadsprites
 
 	;draw wave sprites
@@ -947,14 +948,22 @@ plotter
 	lda #$20
 	sta zspos+1 ; screen offset divided by 2
 	lda sx                ; find X coordinate
-	and #%11111100        ; Clear bottom bits
-	asl @                 ; Multiply by 2 -> 512 bytes/line
+;atari remove {
+;	and #%11111100        ; Clear bottom bits
+;	asl @                 ; Multiply by 2 -> 512 bytes/line
+; }
+;atari add:
+	and #%11111000
+	
 	sta zspos
   ;asl zspos               ; Multiply by 2 -> 512 bytes/line
 	rol zspos+1               ; Seems much simpler???
 	lda sy                ; Get y coordinate
 	and #%11111000        ; strip low bits
-	lsr @
+;atari replace {
+;	lsr @
+:2	lsr @
+; }
 	lsr @           ; divide by 4 to give line positions
 	adc zspos+1               ; Add to high byte
 	sta zspos+1
@@ -963,7 +972,10 @@ plotter
 	adc zspos             ; add row offset to low byte
 	sta zspos             ; and save
 	lda sx
-	and #%00000011        ; Get the offset
+;atari replace {
+;	and #%00000011        ; Get the offset
+	and #%00000111        ; Get the offset
+; }
 	sta zt                ; store for later
   
   ;LDA #etype MOD 256
@@ -982,9 +994,9 @@ plotter
 	and #64		;store a - and with 64
 	beq dohitsprite		; If and with 64=0 then we've got a "hit" condition and need to create a new spirte
 	pla
-	and #%111111
+	and #%00111111
 	sta etype,y	; Clear the 64 bit and store for next time
-	and #%11111
+	and #%00011111
 	jmp plotskipshift ; clear the 32 and 64 bits and go to the plot.
 dohitsprite
 	pla
@@ -1011,6 +1023,9 @@ plotskipshift
 	sEC                   
 	sBC #1                ; decrement by 1
 	asl @
+;atari add {
+	asl @ ;add another *2 for 8 shifts on atari
+; }
 	asl @           ; multiply by 4 (4 bytes accoss)
 	aDC zt                ; and add in the horizontal shift
 	tAX                   ; X contains sprite number * 4 + HORIZONTAL SHIFT
@@ -1025,6 +1040,8 @@ plotsprite
 ;  \ $78,$79 are sprite data pos
 	cLC
  ; FOR C,0,4,2           ; copy the start screen and aprite addresses to the following 3 addresses for
+
+/*atari remove
 .rept	3,#*2
 	lDA zspos+:1           ; each of the 4 sprite bytes accross
 	aDC #8
@@ -1039,6 +1056,31 @@ plotsprite
 	aDC #0
 	sTA zsoff+:1+3
 .endr
+*/
+
+;atari add {
+;zsoff - sprite source address (from table)
+;zspos - target draw word addresses (1 each column)
+;sprows - 14 - sprite vertical size
+
+;calculate rest of target/source addresses 
+.rept	1,#*2
+	lDA zspos+:1
+	aDC #8
+	sTA zspos+:1+2
+	lDA zspos+:1+1
+	aDC #0
+	sTA zspos+:1+3
+	
+	lDA zsoff+:1
+	aDC #sprows*2
+	sTA zsoff+:1+2
+	lDA zsoff+:1+1
+	aDC #0
+	sTA zsoff+:1+3
+.endr
+
+; }
 
 	lDY #0                ; Line counter
 	lDA zspos             ; get screen position
@@ -1053,10 +1095,12 @@ spriteloop1          ; plot loop for first block of 8
 	sTA(zspos),Y
 	lDA(zsoff+2),Y
 	sTA(zspos+2),Y
-	lDA(zsoff+4),Y
-	sTA(zspos+4),Y
-	lDA(zsoff+6),Y
-	sTA(zspos+6),Y        ; move sprite data
+; atari remove {
+;	lDA(zsoff+4),Y
+;	sTA(zspos+4),Y
+;	lDA(zsoff+6),Y
+;	sTA(zspos+6),Y        ; move sprite data
+; }
 	iNY
 	dEX                   
 	bNE spriteloop1       
@@ -1068,10 +1112,12 @@ spriteloop2          ; plot second (possibly last) row of sprite
 	sTA(zspos),Y
 	lDA(zsoff+2),Y
 	sTA(zspos+2),Y
-	lDA(zsoff+4),Y
-	sTA(zspos+4),Y
-	lDA(zsoff+6),Y
-	sTA(zspos+6),Y        ; move sprite data
+; atari remove {
+;	lDA(zsoff+4),Y
+;	sTA(zspos+4),Y
+;	lDA(zsoff+6),Y
+;	sTA(zspos+6),Y        ; move sprite data
+; }
 	iNY
 	cPY #sprows           ; check if we've finished
 	bEQ spritefinish      ; and skip of we have
@@ -1081,19 +1127,23 @@ spriteloop2          ; plot second (possibly last) row of sprite
   ;SEC
   ;SBC #8                ; Take the 8 bytes off of the offset that we've just plotted (since 
   ;STA zt               ; zt contains orignal value
+
 	jSR spmoverow         ; and subtract them from the start of the screen offset
 spriteloop3          ; Plot final sprite row
 	lDA(zsoff),Y          
 	sTA(zspos),Y
 	lDA(zsoff+2),Y
 	sTA(zspos+2),Y
-	lDA(zsoff+4),Y
-	sTA(zspos+4),Y
-	lDA(zsoff+6),Y
-	sTA(zspos+6),Y        ; plot the sprite
+; atari remove {
+;	lDA(zsoff+4),Y
+;	sTA(zspos+4),Y
+;	lDA(zsoff+6),Y
+;	sTA(zspos+6),Y        ; move sprite data
+; }
 	iNY
 	cPY #sprows           ;check if we've finished (can never be 8)
 	bNE spriteloop3       
+
 spritefinish
 	rTS
 
@@ -1104,11 +1154,15 @@ spmoverow             ; sprite row increment routine zt contains number of rows 
 	sBC zt                ; Subtract number of rows that we have already plotted
 	sTA zspos             ; save
 	lDA zspos+1           ; and move the carry
-	sBC #0                ; reduce high byte of required
+; atari replace {
+;	sBC #0                ; reduce high byte of required
+	clc
+; }
 	aDC #1                ; add row (512 bytes)
 	sTA zspos+1           ; save final value
 	cLC
 ;  FOR C,0,4,2           ; copy the start screen and aprite addresses to the following 3 addresses for
+/* atari remove
 .rept	3,#*2
 	lDA zspos+:1           ; each of the 4 sprite bytes accross
 	aDC #8
@@ -1117,6 +1171,18 @@ spmoverow             ; sprite row increment routine zt contains number of rows 
 	aDC #0
 	sTA zspos+:1+3
 .endr
+*/
+; atari add {
+.rept	1,#*2
+	lDA zspos+:1           ; each of the 4 sprite bytes accross
+	clc
+	aDC #8
+	sTA zspos+:1+2
+	lDA zspos+:1+1
+	aDC #0
+	sTA zspos+:1+3
+.endr
+; }
 	rTS
 
 checktowers
@@ -2671,6 +2737,7 @@ loadspritefile
 */
 	lda spritefilenumber
 	and #$0f
+	sub #1
 	asl @
 	tax
 	
@@ -2680,7 +2747,7 @@ loadspritefile
 	sta w1+1
 	mwa #(expl+(spritesize*3)) w2
 	
-	ldy #223
+	ldy #spritesize-1
 x1	mva (w1),y (w2),y
 	dey
 	bne x1	
@@ -3604,7 +3671,7 @@ spritelowtable
 ?x=#
 .rept 4
 ?y=#
-  dta [sprites+14*?y*4+?x*14*4*4] % 256
+  dta [sprites+14*?y*4+?x*spritesize] % 256
   ;next
   ;next
 .endr
@@ -3616,7 +3683,7 @@ spritelowtable
 ?x=#
 .rept 4
 ?y=#
-  dta [expl+14*?y*4+?x*14*4*4] % 256
+  dta [expl+14*?y*4+?x*spritesize] % 256
   ;next
   ;next
 .endr
@@ -3629,7 +3696,7 @@ spritehightable
 ?x=#
 .rept 4
 ?y=#
-  dta [sprites+14*?y*4+?x*14*4*4] / 256
+  dta [sprites+14*?y*4+?x*spritesize] / 256
   ;next
   ;next
 .endr
@@ -3641,7 +3708,7 @@ spritehightable
 ?x=#
 .rept 4
 ?y=#
-  dta [expl+14*?y*4+?x*14*4*4] / 256
+  dta [expl+14*?y*4+?x*spritesize] / 256
   ;next
   ;next
 .endr
