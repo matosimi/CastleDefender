@@ -1,7 +1,7 @@
 ; Set up some variables
 ;atari replace {
 ;spritesize = 4*14*4   ; Size of sprites in bytes
-spritesize = 2*14*4
+spritesize = 4*14*4
 ; }
 enemyno = 64          ; Number of enemies in a wave
 towrno = 16           ; Maximum number of towers
@@ -45,7 +45,8 @@ gamevram	equ $4000
 	ins 'srcdata\L.1',0,$4000-typos
 
 	org gamevram
-	ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
+:7600	dta 255 ;white background	
+	;ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
 
 	;org $9400 ;default font
 	;ins 'default.fnt'

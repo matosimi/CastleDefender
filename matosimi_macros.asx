@@ -1,5 +1,5 @@
 ; ********* MATOSIMI MACROS **********
-; 18.10.2018
+; 29.12.2018
 	 
 .macro	add16 ' '
 	lda :1
@@ -125,4 +125,9 @@ _______x1
 	cmp 20
 	bne *-2
 	eif
+.endm
+
+;guard if compiler reaches given address
+.macro guard
+	ert *>:1
 .endm

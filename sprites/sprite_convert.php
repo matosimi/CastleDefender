@@ -25,6 +25,45 @@ $name = getcwd() . "\\S" . $number . ".fnt";
 $fi=fopen($name,"wb");
 if (!$fi) { echo "Can't open file $name.\n"; exit(); }
 
+for ($j = 0; $j < 14; $j++)
+{	
+	$hi = ord($mode1[$j+13*14]) & bindec('11110000');
+	$lo = (ord($mode1[$j+14*14]) & bindec('11110000')) >> 4;
+	$origin1[$j] = $hi | $lo;
+	fwrite($fi, pack("C*",$origin1[$j]));
+}
+
+for ($j = 0; $j < 14; $j++)
+{	
+	$hi = ord($mode1[$j+15*14]) & bindec('11110000');
+	$lo = (ord($mode1[$j+16*14]) & bindec('11110000')) >> 4;
+	$origin2[$j] = $hi | $lo;
+	fwrite($fi, pack("C*",$origin2[$j]));
+	$remainder[$j] = $origin2[$j] << 1;
+}
+
+
+for ($i = 0; $i < 7; $i++)
+{
+	for ($j = 0; $j < 14; $j++)
+	{
+		$sh1[$j] = $origin1[$j] >> 1;
+		$sh2[$j] = $origin2[$j] >> 1 | $origin1[$j] << 7;
+	}
+	for ($j = 0; $j < 14; $j++)
+		fwrite($fi, pack("C*", $sh1[$j]));
+	for ($j = 0; $j < 14; $j++)
+		fwrite($fi, pack("C*", $sh2[$j]));
+	
+	$origin1 = $sh1;
+	$origin2 = $sh2;
+}
+
+for ($j = 0; $j < 14; $j++)
+	fwrite($fi, pack("C*", $remainder[$j]));
+
+
+/*
 for ($i = 0; $i < $gfxsize; $i+=14)
 {
 	for ($j = 0; $j < 14; $j++)
@@ -37,6 +76,7 @@ for ($i = 0; $i < $gfxsize; $i+=14)
 	fwrite($fi, pack("C*",$b00 | $b01 | $b10 | $b11));
 	}
 }
+*/
 
 fclose($fi);
 }

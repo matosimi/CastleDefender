@@ -241,7 +241,7 @@ drawblanktowersloop
 	jsr bongsound
 
 	lda #11
-	jsr delay
+;	jsr delay ;atari DEBUG OUT
 
 skipblanktowers
 	pla
@@ -445,6 +445,11 @@ nopixelmatch
 	jmp loadspriteloop
 */
 finishloadsprites
+
+;atari add {
+	sprite_test
+	jmp *
+;}
 
 	;draw wave sprites
 	lda #1
@@ -945,7 +950,10 @@ noplot
 
 plotter
 	; takes sx, sy and $8d as coordinates and enemy number
-	lda #$20
+; atari replace {
+;	lda #$20
+	lda #>(gamevram/2)
+; }	
 	sta zspos+1 ; screen offset divided by 2
 	lda sx                ; find X coordinate
 ;atari remove {
@@ -978,6 +986,9 @@ plotter
 ; }
 	sta zt                ; store for later
   
+  
+;atari note: zspos is calculated correctly
+
   ;LDA #etype MOD 256
   ;STA $88
   ;LDA #etype DIV 256
@@ -1073,7 +1084,7 @@ plotsprite
 	sTA zspos+:1+3
 	
 	lDA zsoff+:1
-	aDC #sprows*2
+	aDC #sprows
 	sTA zsoff+:1+2
 	lDA zsoff+:1+1
 	aDC #0
@@ -1105,6 +1116,7 @@ spriteloop1          ; plot loop for first block of 8
 	dEX                   
 	bNE spriteloop1       
 	sTY zt                ; y is not how many pixels we've plotted
+
 	jSR spmoverow         ; change offsets to line up location in sprite data with row data
 	lDX #8                ; assume we're plotting 8 rows
 spriteloop2          ; plot second (possibly last) row of sprite
@@ -1148,19 +1160,29 @@ spritefinish
 	rTS
 
 spmoverow             ; sprite row increment routine zt contains number of rows to subtract
+
+/* atari remove
 	lDA zspos             ; get screen low 
 	aND #$F8              ; clear bottom 8 bits to round to new segment (important for first row - not for second
 	sEC
 	sBC zt                ; Subtract number of rows that we have already plotted
 	sTA zspos             ; save
 	lDA zspos+1           ; and move the carry
-; atari replace {
-;	sBC #0                ; reduce high byte of required
 	clc
-; }
 	aDC #1                ; add row (512 bytes)
 	sTA zspos+1           ; save final value
 	cLC
+*/
+
+;atari add {
+	lda zspos
+	sub #8
+	sta zspos
+	bcc jumpover
+	inc zspos+1
+jumpover
+; }
+	
 ;  FOR C,0,4,2           ; copy the start screen and aprite addresses to the following 3 addresses for
 /* atari remove
 .rept	3,#*2
@@ -3664,64 +3686,6 @@ eventend
 	;.towerdistance
 	;  dta 100
 
-spritelowtable
-  ;for x,0,nosprites-1
-  ;for y,0,3
-.rept nosprites
-?x=#
-.rept 4
-?y=#
-  dta [sprites+14*?y*4+?x*spritesize] % 256
-  ;next
-  ;next
-.endr
-.endr
-  
-  ;for x,0,3
-  ;for y,0,3
-.rept 4
-?x=#
-.rept 4
-?y=#
-  dta [expl+14*?y*4+?x*spritesize] % 256
-  ;next
-  ;next
-.endr
-.endr
-
-spritehightable
-  ;for x,0,nosprites-1
-  ;for y,0,3
-.rept nosprites
-?x=#
-.rept 4
-?y=#
-  dta [sprites+14*?y*4+?x*spritesize] / 256
-  ;next
-  ;next
-.endr
-.endr
-  
-  ;for x,0,3
-  ;for y,0,3
-.rept 4
-?x=#
-.rept 4
-?y=#
-  dta [expl+14*?y*4+?x*spritesize] / 256
-  ;next
-  ;next
-.endr
-.endr
-
-squaretable
-  ;for s,0,15
-.rept 16
-?s=#
-  dta ?s*?s
-  ;next
-.endr
-
 
 spritefilename
 	dta "S."
@@ -3953,3 +3917,111 @@ towermask
 :16	dta $ff
 :8	dta $f0
 .endr
+temp	dta 0
+
+	org $b000
+	
+
+spritelowtable
+  ;for x,0,nosprites-1
+  ;for y,0,3
+.rept nosprites
+?x=#
+.rept 8 ;4
+?y=#
+  dta [sprites+14*?y*2+?x*spritesize] % 256
+  ;next
+  ;next
+.endr
+.endr
+  
+  ;for x,0,3
+  ;for y,0,3
+.rept 4
+?x=#
+.rept 4
+?y=#
+  dta [expl+14*?y*4+?x*spritesize] % 256
+  ;next
+  ;next
+.endr
+.endr
+
+spritehightable
+  ;for x,0,nosprites-1
+  ;for y,0,3
+.rept nosprites
+?x=#
+.rept 8 ;4
+?y=#
+  dta [sprites+14*?y*2+?x*spritesize] / 256
+  ;next
+  ;next
+.endr
+.endr
+  
+  ;for x,0,3
+  ;for y,0,3
+.rept 4
+?x=#
+.rept 4
+?y=#
+  dta [expl+14*?y*4+?x*spritesize] / 256
+  ;next
+  ;next
+.endr
+.endr
+
+squaretable
+  ;for s,0,15
+.rept 16
+?s=#
+  dta ?s*?s
+  ;next
+.endr
+	
+	
+.proc	sprite_test
+	
+	mva #20 temp
+xloop33	lda #1
+	ldy #enemyno-1
+	sta etype,Y
+	sty $8d
+	lda temp
+	sta sx
+	lda #20
+	sta sy
+	jsr plotter
+	pause 50
+	inc temp
+	lda temp
+	cmp #180
+	bne xloop33
+	
+/*
+	mva #2 temp
+loop_x	mva #30 sy
+	mva temp sx
+	jsr plotter
+	inc temp
+	pause 2
+	lda temp
+	cmp #180
+	bne loop_x
+
+.rept 10,#
+	lda #1
+	ldy #enemyno-1
+	sta etype,Y
+	sty $8d
+	lda #28+:1*20
+	sta sx
+	lda #8+:1*2
+	sta sy
+	jsr plotter
+	pause 50
+.endr
+*/
+	rts
+.endp
