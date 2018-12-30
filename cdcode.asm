@@ -3941,7 +3941,7 @@ spritelowtable
 ?x=#
 .rept 4
 ?y=#
-  dta [expl+14*?y*4+?x*spritesize] % 256
+  dta [expl+14*?y*2+?x*spritesize] % 256
   ;next
   ;next
 .endr
@@ -3966,7 +3966,7 @@ spritehightable
 ?x=#
 .rept 4
 ?y=#
-  dta [expl+14*?y*4+?x*spritesize] / 256
+  dta [expl+14*?y*2+?x*spritesize] / 256
   ;next
   ;next
 .endr

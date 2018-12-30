@@ -27,16 +27,16 @@ if (!$fi) { echo "Can't open file $name.\n"; exit(); }
 
 for ($j = 0; $j < 14; $j++)
 {	
-	$hi = ord($mode1[$j+13*14]) & bindec('11110000');
-	$lo = (ord($mode1[$j+14*14]) & bindec('11110000')) >> 4;
+	$hi = ord($mode1[$j+0*14]) & bindec('11110000');
+	$lo = (ord($mode1[$j+1*14]) & bindec('11110000')) >> 4;
 	$origin1[$j] = $hi | $lo;
 	fwrite($fi, pack("C*",$origin1[$j]));
 }
 
 for ($j = 0; $j < 14; $j++)
 {	
-	$hi = ord($mode1[$j+15*14]) & bindec('11110000');
-	$lo = (ord($mode1[$j+16*14]) & bindec('11110000')) >> 4;
+	$hi = ord($mode1[$j+2*14]) & bindec('11110000');
+	$lo = (ord($mode1[$j+3*14]) & bindec('11110000')) >> 4;
 	$origin2[$j] = $hi | $lo;
 	fwrite($fi, pack("C*",$origin2[$j]));
 	$remainder[$j] = $origin2[$j] << 1;
@@ -62,7 +62,11 @@ for ($i = 0; $i < 7; $i++)
 for ($j = 0; $j < 14; $j++)
 	fwrite($fi, pack("C*", $remainder[$j]));
 
-
+for ($j = 0; $j < 14; $j++)
+{
+	
+	fwrite($fi, pack("C*", $remainder[$j] << 1));
+}
 /*
 for ($i = 0; $i < $gfxsize; $i+=14)
 {
