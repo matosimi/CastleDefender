@@ -40,6 +40,7 @@ vbi_ptr	equ $b0 ;vbi vector
 dli_ptr	equ $b2 ;dli vector
 w1	equ $b4 
 w2	equ $b6
+xshift	equ $b8 ;contains horizontal sprite shift
 
 
 	icl "matosimi_macros.asx"
@@ -447,8 +448,8 @@ nopixelmatch
 finishloadsprites
 
 ;atari add {
-	sprite_test
-	jmp *
+	;sprite_test
+	;jmp *
 ;}
 
 	;draw wave sprites
@@ -985,7 +986,7 @@ plotter
 	and #%00000111        ; Get the offset
 ; }
 	sta zt                ; store for later
-  
+  	sta xshift
   
 ;atari note: zspos is calculated correctly
 
@@ -1075,7 +1076,8 @@ plotsprite
 ;sprows - 14 - sprite vertical size
 
 ;calculate rest of target/source addresses 
-.rept	1,#*2
+zirafa
+.rept	2,#*2
 	lDA zspos+:1
 	aDC #8
 	sTA zspos+:1+2
@@ -1091,6 +1093,18 @@ plotsprite
 	sTA zsoff+:1+3
 .endr
 
+	lda xshift ;compensation for 3rd drawn char in row
+	a_lt #6 notribit
+	
+	tax
+	lda zsoff+2
+	add tribitadd,x
+	sta zsoff+4
+
+	lda zsoff+3
+	adc #0
+	sta zsoff+5
+notribit
 ; }
 
 	lDY #0                ; Line counter
@@ -1101,11 +1115,18 @@ plotsprite
 	sEC
 	sBC zt
 	tAX                   ; use as loop counter
+; atari add {
+	lda xshift
+	a_lt #6 spriteloop1x
+; }
 spriteloop1          ; plot loop for first block of 8
 	lDA(zsoff),Y
 	sTA(zspos),Y
 	lDA(zsoff+2),Y
 	sTA(zspos+2),Y
+	lDA(zsoff+4),Y
+	sTA(zspos+4),Y
+	
 ; atari remove {
 ;	lDA(zsoff+4),Y
 ;	sTA(zspos+4),Y
@@ -1116,7 +1137,7 @@ spriteloop1          ; plot loop for first block of 8
 	dEX                   
 	bNE spriteloop1       
 	sTY zt                ; y is not how many pixels we've plotted
-
+		
 	jSR spmoverow         ; change offsets to line up location in sprite data with row data
 	lDX #8                ; assume we're plotting 8 rows
 spriteloop2          ; plot second (possibly last) row of sprite
@@ -1124,6 +1145,9 @@ spriteloop2          ; plot second (possibly last) row of sprite
 	sTA(zspos),Y
 	lDA(zsoff+2),Y
 	sTA(zspos+2),Y
+	lDA(zsoff+4),Y
+	sTA(zspos+4),Y
+;	
 ; atari remove {
 ;	lDA(zsoff+4),Y
 ;	sTA(zspos+4),Y
@@ -1146,6 +1170,8 @@ spriteloop3          ; Plot final sprite row
 	sTA(zspos),Y
 	lDA(zsoff+2),Y
 	sTA(zspos+2),Y
+	lDA(zsoff+4),Y
+	sTA(zspos+4),Y
 ; atari remove {
 ;	lDA(zsoff+4),Y
 ;	sTA(zspos+4),Y
@@ -1155,9 +1181,49 @@ spriteloop3          ; Plot final sprite row
 	iNY
 	cPY #sprows           ;check if we've finished (can never be 8)
 	bNE spriteloop3       
-
+*/
 spritefinish
 	rTS
+
+;atari add {	
+spriteloop1x
+	lDA(zsoff),Y
+	sTA(zspos),Y
+	lDA(zsoff+2),Y
+	sTA(zspos+2),Y
+	iNY
+	dEX                   
+	bNE spriteloop1x       
+	sTY zt                ; y is not how many pixels we've plotted
+	
+	jSR spmoverow         ; change offsets to line up location in sprite data with row data
+	lDX #8                ; assume we're plotting 8 rows
+spriteloop2x          ; plot second (possibly last) row of sprite
+	lDA(zsoff),Y
+	sTA(zspos),Y
+	lDA(zsoff+2),Y
+	sTA(zspos+2),Y
+	
+	iNY
+	cPY #sprows           ; check if we've finished
+	bEQ spritefinish      ; and skip of we have
+	dEX                   ; or if we've plotted 8 bytes
+	bNE spriteloop2x
+	
+	jSR spmoverow         ; and subtract them from the start of the screen offset
+spriteloop3x          ; Plot final sprite row
+	lDA(zsoff),Y          
+	sTA(zspos),Y
+	lDA(zsoff+2),Y
+	sTA(zspos+2),Y
+	
+	iNY
+	cPY #sprows           ;check if we've finished (can never be 8)
+	bNE spriteloop3x       
+	rts
+	
+tribitadd dta 0,0,0,0
+	dta 0,0,sprows*4,sprows
 
 spmoverow             ; sprite row increment routine zt contains number of rows to subtract
 
@@ -1195,7 +1261,7 @@ jumpover
 .endr
 */
 ; atari add {
-.rept	1,#*2
+.rept	2,#*2
 	lDA zspos+:1           ; each of the 4 sprite bytes accross
 	clc
 	aDC #8
@@ -3990,16 +4056,16 @@ xloop33	lda #1
 	sty $8d
 	lda temp
 	sta sx
-	lda #20
+	;lda #20
 	sta sy
 	jsr plotter
-	pause 50
+	pause 5
 	inc temp
 	lda temp
 	cmp #180
 	bne xloop33
 	
-/*
+
 	mva #2 temp
 loop_x	mva #30 sy
 	mva temp sx
@@ -4022,6 +4088,6 @@ loop_x	mva #30 sy
 	jsr plotter
 	pause 50
 .endr
-*/
+
 	rts
 .endp
