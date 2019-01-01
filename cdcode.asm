@@ -377,7 +377,7 @@ loadspriteloop
 	sta $71         ; Store where sprites are coped from
 
 	lda $88
-	asl @
+:2	asl @
 	asl @     ; Multiply location by 4 for table
 	tax             ; Move to X for offset.
 	lda spritelowtable,X
@@ -966,7 +966,10 @@ plotter
 	
 	sta zspos
   ;asl zspos               ; Multiply by 2 -> 512 bytes/line
-	rol zspos+1               ; Seems much simpler???
+;atari replace:
+;	rol zspos+1               ; Seems much simpler???
+	asl zspos+1
+	
 	lda sy                ; Get y coordinate
 	and #%11111000        ; strip low bits
 ;atari replace {
@@ -1181,7 +1184,7 @@ spriteloop3          ; Plot final sprite row
 	iNY
 	cPY #sprows           ;check if we've finished (can never be 8)
 	bNE spriteloop3       
-*/
+
 spritefinish
 	rTS
 
@@ -1224,6 +1227,7 @@ spriteloop3x          ; Plot final sprite row
 	
 tribitadd dta 0,0,0,0
 	dta 0,0,sprows*4,sprows
+; }
 
 spmoverow             ; sprite row increment routine zt contains number of rows to subtract
 
@@ -3991,6 +3995,7 @@ temp	dta 0
 spritelowtable
   ;for x,0,nosprites-1
   ;for y,0,3
+  
 .rept nosprites
 ?x=#
 .rept 8 ;4
@@ -4005,7 +4010,7 @@ spritelowtable
   ;for y,0,3
 .rept 4
 ?x=#
-.rept 4
+.rept 8 ;4
 ?y=#
   dta [expl+14*?y*2+?x*spritesize] % 256
   ;next
@@ -4030,7 +4035,7 @@ spritehightable
   ;for y,0,3
 .rept 4
 ?x=#
-.rept 4
+.rept 8 ;4
 ?y=#
   dta [expl+14*?y*2+?x*spritesize] / 256
   ;next
@@ -4049,22 +4054,23 @@ squaretable
 	
 .proc	sprite_test
 	
-	mva #20 temp
-xloop33	lda #1
-	ldy #enemyno-1
+	mva #0 temp
+xloop33	ldy #enemyno-1
+	lda temp
 	sta etype,Y
 	sty $8d
-	lda temp
+	
+	lda #20
 	sta sx
 	;lda #20
 	sta sy
 	jsr plotter
-	pause 5
+	pause 50
 	inc temp
 	lda temp
-	cmp #180
+	cmp #5
 	bne xloop33
-	
+	rts
 
 	mva #2 temp
 loop_x	mva #30 sy
