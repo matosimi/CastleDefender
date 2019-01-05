@@ -3611,7 +3611,7 @@ levelwinsounddurations
 wavetext	;2ce2
 .print "wavetext (supposed to be $2ce2): ",wavetext
 ;	incbin "/home/chris/bem/spriter/leveltext.bin"
-towers	equ wavetext+$2d72-$2ce2 ;2d72
+;towers	equ wavetext+$2d72-$2ce2 ;2d72
 ;	iNCBIN "/home/chris/bem/spriter/towers.bin"
 .print "Towers ",towers
 notower	equ wavetext+$2f22-$2ce2 ;2f22
@@ -3951,9 +3951,12 @@ towerfiredisplayspeed       ; Time between reciprocal
 
 towerlocations		; Locations of tower sprites
   .word notower           ; Padding ;2f22
+/*atari replace  
   .word towers ;2d72
   .word towers+24*6 ; 24x24/4 ppb
   .word towers+24*6*2 ; 24x24/4 ppb
+*/
+:3	.word towers+:1*12*8
 
 colourtable
 	dta %0001,%10000,%10001
@@ -4102,7 +4105,7 @@ towermask
 temp	dta 0
 
 	org $b000
-	
+towers	ins 'towers\towers_shifted.fnt'	
 
 spritelowtable
   ;for x,0,nosprites-1
