@@ -20,7 +20,7 @@ tftarget = tfcount-towrno     ; Location of tower fire target table
 tftargetx = tftarget-towrno   ; Location of tower fire target x position table
 tftargety = tftargetx-towrno  ; Location of tower fire target y position table
 sprites = tftargety-(nosprites*spritesize)     ; Location sprites will be loaded
-expl = sprites-(spritesize*4)     ; Location of second explosion 
+;expl = sprites-(spritesize*4)     ; Location of second explosion 
 tempsprite=$3000-40
 activetowers=$3ffe
 
@@ -35,11 +35,11 @@ lastplot=$83
 
 gamevram	equ $4000
 
-	org expl
-	ins 'srcdata\$.Explode'
-	
-	org expl+(spritesize*3)
-	ins 'srcdata\S.1' ;workaround
+	;org expl
+	;ins 'srcdata\$.Explode'
+		
+	;org expl+(spritesize*3)
+	;ins 'srcdata\S.1' ;workaround
 	
 	org typos ;level data+picture background
 	ins 'srcdata\L.1',0,$4000-typos
@@ -54,6 +54,10 @@ gamevram	equ $4000
 	org $a000 ;sprites
 .rept 8,#+1
 spr:1	ins 'sprites\S:1.fnt'
+.endr
+expl	
+.rept 4,#+1
+	ins 'sprites\E:1.fnt'
 .endr
 
 ; debug: only 1 sprite loaded, rest zeros

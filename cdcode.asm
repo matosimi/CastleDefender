@@ -1090,6 +1090,13 @@ spritehighbitsnotset
 	cmp #16+13             ; Check if we've reached the end of the explosion
 	bcc plotskipreset       ; skip less than
 	lda #0                  ; Reset to zero
+;atari add {
+	sta etype,y
+	pla ;just clean stack
+	lda zt
+	add #8 
+	jmp plotgettable
+;}
 plotskipreset
 	sta etype,y            ; set enemy type as explosion frame or none
 	pla
@@ -1107,6 +1114,9 @@ plotskipshift
 ; }
 	asl @           ; multiply by 4 (4 bytes accoss)
 	aDC zt                ; and add in the horizontal shift
+;atari add {
+plotgettable
+; }
 	tAX                   ; X contains sprite number * 4 + HORIZONTAL SHIFT
 	lDA spritelowtable,X
 	sTA zsoff
@@ -1143,7 +1153,7 @@ plotsprite
 ;sprows - 14 - sprite vertical size
 
 ;calculate rest of target/source addresses 
-zirafa
+
 .rept	2,#*2
 	lDA zspos+:1
 	aDC #8
