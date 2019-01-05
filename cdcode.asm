@@ -22,7 +22,9 @@ prior	equ $d01b
 vdelay	equ $d01c ;shift PM by 1 scanline, first missiles,then players(bits)
 gractl	equ $d01d ;BIT1-ACTIV.PMG
 consol	equ $d01f
+kbcode	equ $d209
 random	equ $d20a
+irqen	equ $d20e
 skctl	equ $d20f
 porta	equ $d300 ;stick 0,1
 portb	equ $d301
@@ -41,7 +43,10 @@ dli_ptr	equ $b2 ;dli vector
 w1	equ $b4 
 w2	equ $b6
 xshift	equ $b8 ;contains horizontal sprite shift
+keystat	equ $b9
+keypres	equ $ba
 
+keytable	equ $0500 ;table of keycodes
 
 	icl "matosimi_macros.asx"
 	icl "headercode.asm"
@@ -57,6 +62,16 @@ xshift	equ $b8 ;contains horizontal sprite shift
 	pause 1
 	sei
 	mva #$00 nmien
+	sta irqen 	;disable interupts (klavesy)
+	
+	;keyboard init
+	ldy #$7f
+copykeytab
+        	lda ($79),y ; pointer to keytable in osrom
+        	sta keytable,y
+        	dey
+        	bpl copykeytab
+
 	mwa #dl dlistl
 	mwa #gameDli.dli1 dli_ptr ;vdslst
 	mwa #gameVbi.vbi vbi_ptr
@@ -64,7 +79,56 @@ xshift	equ $b8 ;contains horizontal sprite shift
 	mva #$fe portb	;turn off osrom and basicrom	
 	mwa #NMI $fffa		
 	mva #$c0 nmien ;80 dli, 40 vbi
+	
 	rts
+;returns pressed key (code)
+.proc	getkeypressed
+		
+	lda skctl
+	and #4
+	bne keynotpressed
+keypressed
+	lda keystat
+	beq readkey
+	bne stillpressed
+	dta 2 ;code cannot get here
+	
+keynotpressed
+	mva #0 keystat
+	
+stillpressed
+	lda #255
+	rts
+	
+readkey	lda #1
+	sta keystat
+
+	ldx kbcode
+	lda keytable,x
+	
+	a_in #"P" #"Y" num09 ;handle numbers
+	sta keypres
+	rts
+	
+num09	sub #"P"
+	ora #$10
+	
+	sta keypres
+	rts
+.endp
+
+;returns #1 if space is pressed at the moment
+.proc	spacepressed 
+	lda keypres ;last key pressed
+	cmp #"@"
+	bne x0
+	lda keystat
+	beq x0
+	lda #1
+	rts
+x0	lda #0
+	rts
+.endp
 	
 .align $100
 dl	;dta $70
@@ -1989,46 +2053,91 @@ keyboard
 	; Keyboard input routine and tower plot/update
 	lda #2
 	sta gamespeed
-	lda $ec ;atari note: $EC is supposed to be code of key just pressed
-	cmp #98+128		; Is Space being pressed?
+;atari replace {
+;	lda $ec ;atari note: $EC is supposed to be code of key just pressed
+	spacepressed
+; }
+	cmp #1		; Is Space being pressed?
 	bne nospacepressed	
 	lda #0
 	sta gamespeed
 nospacepressed
-	lda lastkeypressed
+/* atari remove
+
+	lda keypres
 	beq nokeypressed        ; Check if there was a key pressed last time we were here.
-	cmp $ec
+;atari replace {
+;	cmp $ec
+	getkeypressed
+	cmp keypres
+; }
 	beq keystillpressed     
-	cmp $ed
-	beq keystillpressed
+;atari replace { 
+;	cmp $ed
+;	beq keystillpressed
+	lda skctl
+	cmp #255
+	bne keystillpressed
+; }
 nokeypressed
 	; We're only going to work with the last key pressed (ec)
-	lda $ec
-	cmp #48+128
-	beq press1            ; 1
-	cmp #49+128
-	beq press2            ; 2
-	cmp #17+128
-	beq press3            ; 3
+*/
 
-	cmp #53+128
-	beq upgradetower      ; U pressed - Upgrade
+;atari replace {
+;	lda $ec
+;	cmp #48+128
+;	beq press1            ; 1
+;	cmp #49+128
+;	beq press2            ; 2
+;	cmp #17+128
+;	beq press3            ; 3
 
-	cmp #112+128
-	beq escape		; Escape pressed
+;	cmp #53+128
+;	beq upgradetower      ; U pressed - Upgrade
 
-	cmp #25+128             ; Left Cursor
+;	cmp #112+128
+;	beq escape		; Escape pressed
+
+;	cmp #25+128             ; Left Cursor
+;	beq moveleft
+;	cmp #121+128            ; Right cursor
+;	beq moveright
+;	cmp #57+128
+;	beq moveup              ; Up cursor
+;	cmp #41+128
+;	beq movedown            ; Down cursor
+
+	getkeypressed
+	cmp #"1"
+	beq press1
+	cmp #"2"
+	beq press2
+	cmp #"3"
+	beq press3
+	
+	cmp #"u"
+	beq upgradetower
+	
+	cmp #";" ;ESC
+	beq escape
+
+	cmp #"w"
+	beq moveup
+	cmp #"a"
 	beq moveleft
-	cmp #121+128            ; Right cursor
+	cmp #"s"
+	beq movedown
+	cmp #"d"
 	beq moveright
-	cmp #57+128
-	beq moveup              ; Up cursor
-	cmp #41+128
-	beq movedown            ; Down cursor
+
+; }
 
 notescape
-	lda $ec
-	sta lastkeypressed
+;atari replace {
+;	lda $ec
+;	getkeypressed
+;	sta lastkeypressed
+; }
 	rts                   ; Exit to prevent update of tower information.
 
 moveleft
@@ -2107,7 +2216,10 @@ maketower
 	jsr plotbox             ; redraw box
 
 finishkeyboard
-	lda $ec
+;atari replace {
+;	lda $ec
+	getkeypressed
+; }
 	sta lastkeypressed
 	jsr printtowerinfo
 	rts
