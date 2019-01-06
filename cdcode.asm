@@ -46,6 +46,7 @@ xshift	equ $b8 ;contains horizontal sprite shift
 keystat	equ $b9
 keypres	equ $ba
 
+temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
 
 	icl "matosimi_macros.asx"
@@ -435,10 +436,11 @@ loadspriteloop
 	;jsr loadspritefile
 	choose_sprites
 
-	lda #<(expl+(spritesize*3))
-	sta $70
-	lda #>(expl+(spritesize*3))
-	sta $71         ; Store where sprites are coped from
+	mwa #temppage $70
+	;lda #<(expl+(spritesize*4))
+	;sta $70
+	;lda #>(expl+(spritesize*4))
+	;sta $71         ; Store where sprites are coped from
 
 	lda $88
 :2	asl @
@@ -1090,6 +1092,7 @@ spritehighbitsnotset
 	cmp #16+13             ; Check if we've reached the end of the explosion
 	bcc plotskipreset       ; skip less than
 	lda #0                  ; Reset to zero
+/*
 ;atari add {
 	sta etype,y
 	pla ;just clean stack
@@ -1097,6 +1100,7 @@ spritehighbitsnotset
 	add #8 
 	jmp plotgettable
 ;}
+*/
 plotskipreset
 	sta etype,y            ; set enemy type as explosion frame or none
 	pla
@@ -2959,7 +2963,7 @@ loadspritefile
 	sta w1
 	lda sprite_address_table+1,x
 	sta w1+1
-	mwa #(expl+(spritesize*3)) w2
+	mwa #temppage w2
 	
 	ldy #spritesize-1
 x1	mva (w1),y (w2),y
