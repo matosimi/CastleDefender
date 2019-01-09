@@ -81,6 +81,8 @@ copykeytab
 	mwa #NMI $fffa		
 	mva #$c0 nmien ;80 dli, 40 vbi
 	
+	preshift_explosion_sprites
+	
 	rts
 ;returns pressed key (code)
 .proc	getkeypressed
@@ -190,6 +192,7 @@ codeoffset=$0900
 
 start
 	jsr $8000 ;atari init stuff
+	
 	
 	;; Turn sound on/off for attract mode
 /* atari off
@@ -512,7 +515,7 @@ nopixelmatch
 	jmp loadspriteloop
 */
 finishloadsprites
-	sprite_preshift
+	;sprite_preshift
 ;atari add {
 	;sprite_test
 	;jmp *
@@ -2965,10 +2968,13 @@ loadspritefile
 	sta w1+1
 	mwa #temppage w2
 	
-	ldy #spritesize-1
+	ldy #sprows*2-1
 x1	mva (w1),y (w2),y
+	mva #0 sprite_shift.rem2,y
 	dey
-	bne x1	
+	bpl x1	
+	
+	sprite_preshift
 	
 	rts
 sprite_address_table
@@ -2977,6 +2983,7 @@ sprite_address_table
 .endr
 
 .endp
+/* atari off - loaded as data block
 
 	;Load a file - assumes load address and filename already provided
 loadfile
@@ -2991,14 +2998,13 @@ clearloadblock
 	ldx #<(loadfileblock)
 	ldy #>(loadfileblock)
 	lda #$ff
-/* atari off - loaded as data block
-   TODO: this is supposed to load several sprite types at the same location one after another
+;   TODO: this is supposed to load several sprite types at the same location one after another
          at this moment only sprite 1 is loaded, rest is not handled at all
 	jsr $ffdd
-*/
+
 	rts
 
-
+*/
 	; Colour definitions
 	green=%10000
 	red=%00001
@@ -4134,7 +4140,8 @@ spritelowtable
   ;next
 .endr
 .endr
-  
+
+expllowtable  
   ;for x,0,3
   ;for y,0,3
 .rept 4
@@ -4160,6 +4167,7 @@ spritehightable
 .endr
 .endr
   
+explhightable
   ;for x,0,3
   ;for y,0,3
 .rept 4
@@ -4213,12 +4221,52 @@ x1     	mva sprite_shift.rem2,x sprite_shift.rem1,x
 	rts
 .endp
 
+.proc	preshift_explosion_sprites
+	mva #3 tmp
+x3	ldx tmp
+	
+	lda expl_address_table,x
+	sta w1
+	lda expl_address_table+1,x
+	sta w1+1
+	mwa #temppage w2
+	
+	ldy #sprows*2-1
+x1	mva (w1),y (w2),y
+	mva #0 sprite_shift.rem2,y
+	dey
+	bpl x1	
+	
+	sprite_preshift
+	
+	ldx tmp
+	lda expllowtable,x
+	sta w1
+	lda explhightable+8,x
+	sta w1+1
+	
+	ldy #spritesize
+x2	mva temppage,y (w1),y
+	dey
+	bne x2
+	
+	dec tmp
+	bpl x3
+	
+	rts
+tmp	dta 0
+expl_address_table
+.rept 4,#+1
+	dta a(exp:1)
+.endr
+.endp
+
 ;main procedure which does all the preshifting of 1 sprite
 .proc     sprite_preshift
-	mwa #sprites w1	;target
+	mwa #[temppage+sprows*2] w1	;target
           
           ldx #sprows*2-1
-x1        lda sprites,x       ;source
+x1        lda temppage,x      ;source
 	;and #%10111010
 	;asl @
 	;ora sprites,x
@@ -4232,7 +4280,8 @@ ptr	equ *-1
 	dex
           bpl x1
 
-	ldx #6	;note that x-register is not used in sprite_storeshift nor sprite_shift 
+	sprite_shift
+	ldx #5	;note that x-register is not used in sprite_storeshift nor sprite_shift 
 x2	sprite_storeshift          
           sprite_shift
 	dex

@@ -54,11 +54,11 @@ gamevram	equ $4000
 	org $a000 ;sprites
 .rept 8,#+1
 spr:1	ins 'sprites\S:1.fnt'
-.endr
-expl	
+.endr	
 .rept 4,#+1
-	ins 'sprites\E:1.fnt'
+exp:1	ins 'sprites\E:1.fnt'
 .endr
+expl	;4*spritesize
 
 ; debug: only 1 sprite loaded, rest zeros
 /*

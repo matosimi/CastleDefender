@@ -60,49 +60,8 @@ for ($j = 0; $j < 14; $j++)
 	}
 	$origin2[$j] = $hi | $lo | $hi2 | $lo2;
 	fwrite($fi, pack("C*",$origin2[$j]));
-	$remainder[$j] = $origin2[$j] << 1;
 }
-
-
-for ($i = 0; $i < 7; $i++)
-{
-	for ($j = 0; $j < 14; $j++)
-	{
-		$sh1[$j] = $origin1[$j] >> 1;
-		$sh2[$j] = $origin2[$j] >> 1 | $origin1[$j] << 7;
-	}
-	for ($j = 0; $j < 14; $j++)
-		fwrite($fi, pack("C*", $sh1[$j]));
-	for ($j = 0; $j < 14; $j++)
-		fwrite($fi, pack("C*", $sh2[$j]));
 	
-	$origin1 = $sh1;
-	$origin2 = $sh2;
-}
-
-for ($j = 0; $j < 14; $j++)
-	fwrite($fi, pack("C*", $remainder[$j]));
-
-for ($j = 0; $j < 14; $j++)
-{
-	
-	fwrite($fi, pack("C*", $remainder[$j] << 1));
-}
-/*
-for ($i = 0; $i < $gfxsize; $i+=14)
-{
-	for ($j = 0; $j < 14; $j++)
-	{	
-	$b00 = ord($mode1[$i+$j]) & bindec('11110000');
-	//$b01 = (ord($mode1[$i]) & bindec('00001111')) << 4;
-	$b10 = (ord($mode1[$i+14+$j]) & bindec('11110000')) >> 4;
-	//$b11 = ord($mode1[$i+1]) & bindec('00001111');
-	
-	fwrite($fi, pack("C*",$b00 | $b01 | $b10 | $b11));
-	}
-}
-*/
-
 fclose($fi);
 }
 
