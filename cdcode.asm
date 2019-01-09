@@ -512,7 +512,7 @@ nopixelmatch
 	jmp loadspriteloop
 */
 finishloadsprites
-
+	sprite_preshift
 ;atari add {
 	;sprite_test
 	;jmp *
@@ -4179,7 +4179,93 @@ squaretable
   dta ?s*?s
   ;next
 .endr
-	
+
+;inplace sprite preshift	
+.proc     sprite_shift
+          ldy #sprows-1
+x1        lda data,y
+          lsr @
+          sta data,y
+          lda data+sprows,y
+          ror @
+          sta data+sprows,y
+          lda rem2,y
+          ror @
+          sta rem2,y
+          dey
+          bpl x1
+          rts
+
+data      
+:sprows*2 dta 0
+rem2
+:sprows	dta 0
+rem1
+:sprows	dta 0
+
+.endp
+
+.proc	sprite_rem21copy
+     	ldx #sprows-1
+x1     	mva sprite_shift.rem2,x sprite_shift.rem1,x
+     	dex
+     	bpl x1
+	rts
+.endp
+
+;main procedure which does all the preshifting of 1 sprite
+.proc     sprite_preshift
+	mwa #sprites w1	;target
+          
+          ldx #sprows*2-1
+x1        lda sprites,x       ;source
+	;and #%10111010
+	;asl @
+	;ora sprites,x
+ptr	equ *-1
+          sta sprite_shift.data,x
+          
+	;lda ptr
+          ;eor #$ff
+          ;sta ptr
+          
+	dex
+          bpl x1
+
+	ldx #6	;note that x-register is not used in sprite_storeshift nor sprite_shift 
+x2	sprite_storeshift          
+          sprite_shift
+	dex
+	bne x2
+
+          sprite_rem21copy
+          sprite_storeshift          
+          sprite_shift
+          sprite_storeshift          
+	sprite_storerem21
+          rts
+.endp
+
+.proc	sprite_storerem21
+     	ldy #sprows*2
+x1    	lda sprite_shift.rem2,y
+     	sta (w1),y
+     	dey
+     	bpl x1
+	rts
+.endp
+
+.proc	sprite_storeshift
+     	ldy #sprows*2-1
+x1     	lda sprite_shift.data,y
+     	sta (w1),y
+     	dey
+     	bpl x1
+     	
+     	add16 #sprows*2 w1
+	rts
+.endp
+
 	
 .proc	sprite_test
 	

@@ -144,16 +144,16 @@ startdelay	dta 0
 wavedata	; Wave data structure?
 ; Enemy Data
 goldvalues      ;Values of gold for each enemy (bcd)    
-	dta $03,$05,$07,$09
+	dta $00,$00,$00,$00
 enemystrengths		;BCD
-	dta $50,$40,$30,$20
+	dta $00,$00,$00,$00
 enemyshields		;BCD
-	dta $0,$3,$6,$11
+	dta $00,$00,$00,$00
 enemyspeed
-	dta 30			; distance between enemies in frames
+	dta 0		         ; distance between enemies in frames
 	dta 0
 spritenumbers  ; Types of enemy
-	dta "1122"
+	dta $00,$00,$00,$00          ;string with 4 numbers 
 spritecolours
 	dta 0,0,0
 	dta 0,0,0
@@ -167,5 +167,6 @@ wavedataend
 varend	
 
 	org wavedata ;wave file
-	ins 'srcdata\W.1',0,wavedataend-wavedata
+	;ins 'srcdata\W.1',0,wavedataend-wavedata
+          ins 'waves\L1W1.bin'
 	
