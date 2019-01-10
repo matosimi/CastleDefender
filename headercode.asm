@@ -35,21 +35,12 @@ lastplot=$83
 
 gamevram	equ $4000
 
-	;org expl
-	;ins 'srcdata\$.Explode'
-		
-	;org expl+(spritesize*3)
-	;ins 'srcdata\S.1' ;workaround
-	
-	org typos ;level data+picture background
-	ins 'srcdata\L.1',0,$4000-typos
+	org typos ;level data
+	ins 'levels\L1data.bin'
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	ins 'reverse engineered attempt\L1.fnt',($4000-typos)/2
-
-	;org $9400 ;default font
-	;ins 'default.fnt'
+	ins 'levels\L1.fnt'
 	
 	org $a000 ;sprites
 .rept 8,#+1
@@ -166,7 +157,6 @@ etype			; Enemy type list - reserve bytes
 wavedataend
 varend	
 
-	org wavedata ;wave file
-	;ins 'srcdata\W.1',0,wavedataend-wavedata
-          ins 'waves\L1W1.bin'
+	org wavedata ;wave file   - TODO: this will eventually be inflated 
+	ins 'waves\L1W1.bin'
 	
