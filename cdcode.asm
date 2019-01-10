@@ -4141,7 +4141,6 @@ spritelowtable
 .endr
 .endr
 
-expllowtable  
   ;for x,0,3
   ;for y,0,3
 .rept 4
@@ -4167,7 +4166,6 @@ spritehightable
 .endr
 .endr
   
-explhightable
   ;for x,0,3
   ;for y,0,3
 .rept 4
@@ -4223,7 +4221,9 @@ x1     	mva sprite_shift.rem2,x sprite_shift.rem1,x
 
 .proc	preshift_explosion_sprites
 	mva #3 tmp
-x3	ldx tmp
+x3	lda tmp
+	asl @
+	tax
 	
 	lda expl_address_table,x
 	sta w1
@@ -4239,10 +4239,13 @@ x1	mva (w1),y (w2),y
 	
 	sprite_preshift
 	
-	ldx tmp
-	lda expllowtable,x
+	lda tmp
+	add #4	; skip loaded enemy sprites
+:3	asl @     ; Multiply location by 8 for table
+	tax 
+	lda spritelowtable,x ;incorrect
 	sta w1
-	lda explhightable+8,x
+	lda spritehightable,x
 	sta w1+1
 	
 	ldy #spritesize

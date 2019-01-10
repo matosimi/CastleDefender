@@ -1,11 +1,13 @@
 <?php
 //castle defender sprite converter
 //converts bbc micro videodata mode 1 to mode 4 same as atari mode $0f (gr.8)
+//it just converts 1st sprite position from original sprite file and saves it to new file
+//sprite pre-shifting has been moved to 6502 code
 
 convert("1");
 convert("2");
 convert("3");
-convert("4");
+convert("4",0,null,true);
 convert("5");
 convert("6");
 convert("7");
@@ -61,7 +63,7 @@ for ($j = 0; $j < 14; $j++)
 	$origin2[$j] = $hi | $lo | $hi2 | $lo2;
 	fwrite($fi, pack("C*",$origin2[$j]));
 }
-	
+echo $name,"\n";	
 fclose($fi);
 }
 
