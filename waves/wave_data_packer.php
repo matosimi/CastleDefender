@@ -9,7 +9,7 @@ for ($i = 0; $i < $levels; $i++)
     for ($j = 0; $j < $waves; $j++)
     {
         $name = getcwd() . "\\L" . ($i+1) . "W" . ($j+1) . ".bin";
-        exec(getcwd() . "\\zopfli --deflate --i150 $name");
+        exec(getcwd() . "\\..\\tools\\zopfli --deflate --i150 $name");
         echo $name, ".deflate - ",filesize($name), " => ",filesize($name . ".deflate"), "\n";
     }
 
