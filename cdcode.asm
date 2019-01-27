@@ -134,7 +134,7 @@ x0	lda #0
 .endp
 	
 .align $100
-dl	;dta $70
+dl	dta $30
 	dta $42,a(vram),2,2,$82
 :6	dta $42,a(vram),2,2,$82
 	dta $42,a(vram)
@@ -1022,9 +1022,9 @@ plotter
 	; takes sx, sy and $8d as coordinates and enemy number
 ; atari replace {
 ;	lda #$20
-	lda #>(gamevram/2)
+	lda #>gamevram
 ; }	
-	sta zspos+1 ; screen offset divided by 2
+	sta zspos+1 ; screen offset /*divided by 2*/
 	lda sx                ; find X coordinate
 ;atari remove {
 ;	and #%11111100        ; Clear bottom bits
@@ -1035,9 +1035,8 @@ plotter
 	
 	sta zspos
   ;asl zspos               ; Multiply by 2 -> 512 bytes/line
-;atari replace:
+;atari remove:
 ;	rol zspos+1               ; Seems much simpler???
-	asl zspos+1
 	
 	lda sy                ; Get y coordinate
 	and #%11111000        ; strip low bits
@@ -1374,6 +1373,9 @@ towerloop
 	cLC
 	aDC #6                ; add 6 to pu into cetre of enemy
 	lsr @
+;atari add: {
+;	lsr @
+; }
 	lsr @           ; Divide by 4 - Range is now 0-64
 	sta $71               ; Save for later
 	lda txpos,Y           ; Get tower x position
@@ -1394,6 +1396,9 @@ skipxswap
 	;clc
 	adc #7                ; Again middle of enemy assume 
 	lsr @
+; atari add {
+;	lsr @
+; }
 	lsr @           ; Divide by 4
 	sta $70               ; Store in 70 for later
 	lda typos,Y           ; Get ower y position
@@ -1423,8 +1428,14 @@ skipyswap
 	lda $8d               ; We have fire candidate so write to fire table.  First get index to write
 	sta tftarget,y
 	lda sx
+;atari add {
+;	lsr @
+; }
 	sta tftargetx,y
 	lda sy
+;atari add {
+;	lsr @
+; }
 	sta tftargety,y       ; Write fire targets and locations
 skiptower
 	dEY
@@ -1664,24 +1675,35 @@ towerfireloop
   ; load location of screen position to $70,71
 	lda #0
 	sta $71
+	
+;atari info: tftargetx,y contains absolute position in pixels 256*256 range (top left corner of enemy)
 	lda tftargetx,X        ; move x coordinate to A
 	clc
 	adc #7            ; Get middle of target
-	and #%11111100        ; Clear bottom bits
+; atari replace {
+;	and #%11111100        ; Clear bottom bits
+	and #%11111000
+; }
 	sta $70
-	asl $70               ; Multiply by 2 -> 512 bytes/line
-	rol $71               ; Seems much simpler???
-
+; atari remove {	
+;	asl $70               ; Multiply by 2 -> 512 bytes/line
+;	rol $71               ; Seems much simpler???
+; }
+/* ;atari remove - idk what it does
 	lda tftargety,X
 	and #%10		; Take component of y and add it to the target offset (0 or 2 - avoids very top and bottom)
 	adc $70
 	sta $70
+*/
 	;lda #0:adc $70:sta $70
 	;inc $70:inc $70:inc $70
 	lda tftargety,X       ; Get y coordinate
 	;clc:adc #4            ; Find the middle
 	and #%11111000        ; strip low bits
 	lsr @
+;atari add {
+	lsr @ ;by 8
+; }
 	lsr @           ; divide by 4 to give line positions
 	adc $71               ; Add to high byte
 	sta $71
@@ -1689,7 +1711,10 @@ towerfireloop
   ;adc #7                ; middle
   ;and #%00000100        ; fudge middle approximation
   ;adc $70:sta $70
-	lda #$42               ; Add screen offset + 2 to move one pixel down
+; atari replace {  
+;	lda #$42              ; Add screen offset + 2 to move one pixel down
+	lda #>gamevram
+; }
 	adc $71
 	sta $71       
   ; Draw "hit"
@@ -1723,8 +1748,12 @@ finishfireplot
 	iny
 	lda firetypes-1,X
 	sta ($70),Y
-
-
+	
+/*loop
+	eor #255
+	sta ($70),Y
+	jmp loop
+*/
 
 
 	jsr reduceenemystats
@@ -1810,19 +1839,29 @@ midynoswap             ; a is now greater than $79
 	sta $71
 	lda $78               ; move x (0-63) coordinate to A
 	asl @
+/* atari remove
 	asl @
+*/
 	asl @   ; A = 0 to 511 + carry
 	sta $70
+/* atari remove
 	rol $71               ; Seems much simpler???
+*/
 	inc $70
 	inc $70
 	inc $70
 	lda $79              ; Get y coordinate (0-63)
-	and #%00111110        ; strip low bits
+; atari replace {
+;	and #%00111110        ; strip low bits
+	lsr @
+; }
 	clc
 	adc $71          ; Add to high byte
 	sta $71
-	lda #$40               ; Add screen offset
+; atari replace {
+;	lda #$40               ; Add screen offset
+	lda #>gamevram
+; }
 	adc $71
 	sta $71       
 
@@ -1853,7 +1892,7 @@ midynoswap             ; a is now greater than $79
 	ldx $74
 	jmp finishfireplot
 
-
+/* atari remove temporary */
 drawbullets
 	;Routine to draw inflight bullets
 	ldx #7
@@ -4049,6 +4088,7 @@ levcolourmap
 	dta %00001111
 
 firetypes
+/*atari remove
 	dta %00000000
 	dta %00000110
 	dta %00000110
@@ -4063,8 +4103,19 @@ firetypes
 	dta %00000110
 	dta %00000110
 	dta %10011001
-
-
+*/
+;atari add:
+	dta %00000000
+:2	dta %00011000
+	dta %00000000
+	
+	dta %00100100
+:2	dta %00011000
+	dta %00100100
+	
+	dta %00111100
+:2	dta %00100100
+	dta %00111100
 
 lowcodeend
 
