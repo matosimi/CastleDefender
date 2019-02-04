@@ -1669,10 +1669,10 @@ towerfire
 	ldx activetowers ;start at the end and work backwards
 towerfireloop
 	lda ttype,X   ; Check if tower defined
-	beq skiptowerfire     ; skip if not
+	jeq skiptowerfire     ; skip if not
   ; Don't need to check fire count if we have a target
 	ldy tftarget,X ;Do we have a target?
-	beq skiptowerfire     ; skip if not
+	jeq skiptowerfire     ; skip if not
   ; We now have an active tower with a target that's ready to fire - Y is target
 
   ; load location of screen position to $70,71
@@ -1743,7 +1743,34 @@ finishfireplot
 	tax
 
 	; Plot "Middle" bullet position.
-/* atari remove - temporarily
+; atari add {
+	lda bulright
+	beq midbulletleft
+
+.local midbulletright
+
+	lda firetypes_right-4,X
+	ldy #0
+	sta ($70),Y
+	iny
+	lda firetypes_right-3,X
+	sta ($70),Y
+	iny
+	lda firetypes_right-2,X
+	sta ($70),Y
+	iny
+	lda firetypes_right-1,X
+	sta ($70),Y
+
+	waittostart
+
+	jsr reduceenemystats
+	jmp skiptowerfire
+.endl
+
+midbulletleft
+; }
+
 	lda firetypes-4,X
 	ldy #0
 	sta ($70),Y
@@ -1756,18 +1783,15 @@ finishfireplot
 	iny
 	lda firetypes-1,X
 	sta ($70),Y
-*/
-	
-/*loop
-	eor #255
-	sta ($70),Y
-	jmp loop
-*/
 
+;atari add {
+	waittostart
+; }
 
 	jsr reduceenemystats
 
 skiptowerfire
+
 	lda #0
 	sta tftarget,X        ; Reset the fire target
 
@@ -1780,7 +1804,10 @@ skiptowerfire
 	cld
 skiptowerdecrement
 	dex
-	bpl towerfireloop
+;atari replace {
+;	bpl towerfireloop
+	jpl towerfireloop
+; }
 	; Play a sound of a firing tower
 	jmp firesound
 
@@ -1850,6 +1877,11 @@ midynoswap             ; a is now greater than $79
 	lda #0
 	sta $71
 	lda $78               ; move x (0-63) coordinate to A
+;atari add {
+	and #$01
+	sta bulright	;decide if bullet is on right side of char
+	lda $78
+; }
 	asl @
 /* atari remove
 	asl @
@@ -1858,10 +1890,11 @@ midynoswap             ; a is now greater than $79
 	sta $70
 /* atari remove
 	rol $71               ; Seems much simpler???
+
+	inc $70
+	inc $70
+	inc $70
 */
-	inc $70
-	inc $70
-	inc $70
 	lda $79              ; Get y coordinate (0-63)
 ; atari replace {
 ;	and #%00111110        ; strip low bits
@@ -1900,7 +1933,10 @@ midynoswap             ; a is now greater than $79
 	sta fcoldl,Y            ; Store old location
 	lda $71
 	sta fcoldh,Y            ; Store old location
-
+; atari add {
+	mva bulright fcoldright,y	;save right MID info
+	;probably not even needed to store fcoldright,y
+; }
 	ldx $74
 	jmp finishfireplot
 
