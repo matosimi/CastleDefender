@@ -40,7 +40,7 @@ gamevram	equ $4000
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	ins 'levels\L1.fnt'
+	;ins 'levels\L1.fnt'
 	
 	org $a000 ;sprites
 .rept 8,#+1
@@ -102,6 +102,10 @@ fcnewh	dta 0,0,0,0,0,0,0,0
 fctype	dta 0,0,0,0,0,0,0,0
 fcstore	.word 0,0,0,0,0,0,0,0
 	.word 0,0,0,0,0,0,0,0
+fcnewright
+:8	dta 0
+fcoldright
+:8	dta 0
 
 textcolour	dta $ff
 

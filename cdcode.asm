@@ -45,6 +45,9 @@ w2	equ $b6
 xshift	equ $b8 ;contains horizontal sprite shift
 keystat	equ $b9
 keypres	equ $ba
+b1	equ $bc
+bulright	equ $bd ;bullet on right part of char
+;bulright2	equ $be
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -1682,6 +1685,10 @@ towerfireloop
 	adc #7            ; Get middle of target
 ; atari replace {
 ;	and #%11111100        ; Clear bottom bits
+	sta b1
+	and #%00000100
+	sta bulright	;bullet on right part of char
+	lda b1
 	and #%11111000
 ; }
 	sta $70
@@ -1713,7 +1720,7 @@ towerfireloop
   ;adc $70:sta $70
 ; atari replace {  
 ;	lda #$42              ; Add screen offset + 2 to move one pixel down
-	lda #>gamevram
+	lda #>gamevram+$01	;add screen offset + 1 to move one char down
 ; }
 	adc $71
 	sta $71       
@@ -1736,6 +1743,7 @@ finishfireplot
 	tax
 
 	; Plot "Middle" bullet position.
+/* atari remove - temporarily
 	lda firetypes-4,X
 	ldy #0
 	sta ($70),Y
@@ -1748,6 +1756,7 @@ finishfireplot
 	iny
 	lda firetypes-1,X
 	sta ($70),Y
+*/
 	
 /*loop
 	eor #255
@@ -1778,9 +1787,12 @@ skiptowerdecrement
 
 storehit
 	lda $70
-	sta fcnewl,Y            ; Store location of new plot
+	sta fcnewl,Y            ; Store location of new plot (HIT)
 	lda $71
 	sta fcnewh,Y            ; Store high location of new plot
+;atari add {
+  	mva bulright fcnewright,y ;save info that bullet is right
+; }
 	lda ttype,X             ; Vary "Hit" based on tower type
 	and #%11111100            ; strip the "level" bits
 	sta fctype,Y            ; Store tower type for fire list
@@ -1899,16 +1911,21 @@ drawbullets
 
 bulletloop
 	lda fctype,X   ; Check if location is zero
-	beq skipbullet  ; skip whole process if it is.
-	lda fcoldl,X
+;atari replace {
+;	beq skipbullet  ; skip whole process if it is.
+	jeq skipbullet  ; skip whole process if it is.
+; }
+	lda fcoldl,X   ;(MID)
 	sta $70
 	lda fcoldh,X
 	sta $71
-	lda fcnewl,X
+	lda fcnewl,X   ; (HIT)
 	sta $72
 	lda fcnewh,X
 	sta $73         ; old and new screen addresses copied.
-
+;atari add {
+	mva fcnewright,x bulright ;HIT right         
+; }
 	stx $74         ; Save x for later
 	txa
 	asl @
@@ -1921,10 +1938,54 @@ bulletloop
 	stx $76             ; Store type offset for later
 
 	ldy #0
+	
+; atari add {
+	lda bulright
+	beq bls0	;bullet on left side of char
+	
+.local	bullet_on_right
+	lda firetypes_right-4,X
+	sta ($72),Y
+	ldx $75
+	lda fcstore,X
+	sta ($70),Y
+	ldx $76
+
+	ldy #1
+	lda firetypes_right-3,X
+	sta ($72),Y
+	ldx $75
+	lda fcstore+1,X
+	sta ($70),Y
+	ldx $76
+
+	ldy #2
+	lda firetypes_right-2,X
+	sta ($72),Y
+	ldx $75
+	lda fcstore+2,X
+	sta ($70),Y
+	ldx $76
+
+	ldy #3
+	lda firetypes_right-1,X
+	sta ($72),Y
+	ldx $75
+	lda fcstore+3,X
+	ldx $76
+	sta ($70),Y
+	jmp bls4	;continue
+.endl
+
+bls0
+; }	
+	
 	lda firetypes-4,X
 	sta ($72),Y
+/* atari remove
 	cmp ($70),Y
 	bne bls1
+*/
 	ldx $75
 	lda fcstore,X
 	sta ($70),Y
@@ -1933,8 +1994,10 @@ bls1
 	ldy #1
 	lda firetypes-3,X
 	sta ($72),Y
+/* atari remove
 	cmp ($70),Y
 	bne bls2
+*/
 	ldx $75
 	lda fcstore+1,X
 	sta ($70),Y
@@ -1943,8 +2006,10 @@ bls2
 	ldy #2
 	lda firetypes-2,X
 	sta ($72),Y
+/* atari remove
 	cmp ($70),Y
 	bne bls3
+*/
 	ldx $75
 	lda fcstore+2,X
 	sta ($70),Y
@@ -1953,8 +2018,10 @@ bls3
 	ldy #3
 	lda firetypes-1,X
 	sta ($72),Y
+/* atari remove
 	cmp ($70),Y
 	bne bls4
+*/
 	ldx $75
 	lda fcstore+3,X
 	ldx $76
@@ -1964,6 +2031,10 @@ bls4
 	ldx $74
 	lda #0
 	sta fctype,X
+
+; atari add {
+	waittostart ;debug
+; }
 
 skipbullet
 	dex
@@ -4105,17 +4176,33 @@ firetypes
 	dta %10011001
 */
 ;atari add:
-	dta %00000000
-:2	dta %00011000
-	dta %00000000
+	dta %00000100
+	dta %01100100
+	dta %01100100
+	dta %00000111
 	
-	dta %00100100
-:2	dta %00011000
-	dta %00100100
+	dta %10010000
+:2	dta %01100000
+	dta %10010000
 	
-	dta %00111100
-:2	dta %00100100
-	dta %00111100
+	dta %11110000
+:2	dta %10010000
+	dta %11110000
+
+firetypes_right
+	dta %11000000
+	dta %10100110
+	dta %11000110
+	dta %10100000
+	
+	dta %00001001
+:2	dta %00000110
+	dta %00001001
+	
+	dta %00001111
+:2	dta %00001001
+	dta %00001111
+
 
 lowcodeend
 
@@ -4413,5 +4500,16 @@ loop_x	mva #30 sy
 	pause 50
 .endr
 
+	rts
+.endp
+
+;wait until start button is pressed and released
+.proc	waittostart
+x1     	lda consol
+     	cmp #6
+     	bne x1
+x2     	lda consol
+     	cmp #6
+     	beq x2
 	rts
 .endp
