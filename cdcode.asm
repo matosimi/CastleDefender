@@ -1730,7 +1730,7 @@ towerfireloop
 	ldy #0
 findhitspace
 	lda fctype,Y
-	beq storehit
+	jeq storehit
 	iny
 	cpy #8		; 8 fire locations
 	bne findhitspace
@@ -1752,7 +1752,12 @@ finishfireplot
 	ldy #0
 
 .rept 4,#-4
-     	lda firetypes_right+:1,X
+     	;lda firetypes_right+:1,X
+	;sta ($70),Y
+	;iny
+	lda ($70),Y
+	and #$f0
+	ora firetypes_right+:1,X
 	sta ($70),Y
 	iny
 .endr
@@ -1770,7 +1775,7 @@ finishfireplot
 	lda firetypes_right-1,X
 	sta ($70),Y
 	*/
-	waittostart
+;	waittostart
 
 	jsr reduceenemystats
 	jmp skiptowerfire
@@ -1799,12 +1804,19 @@ midbulletleft
 	ldy #0
 	
 .rept 4,#-4
-     	lda firetypes+:1,X
+     	;lda firetypes+:1,X
+	;sta ($70),Y
+	;iny
+	
+	lda ($70),y
+	and #$0f
+	ora firetypes+:1,X
 	sta ($70),Y
 	iny
+
 .endr
 
-	waittostart
+;	waittostart
 ; }
 
 	jsr reduceenemystats
@@ -2000,11 +2012,16 @@ bulletloop
 	
 .local	bullet_on_right
 
-.rept 4,#-4,#+1
-	lda firetypes_right+:1,X
-	sta ($72),Y
+.rept 4,#-4,#+1,#
+	;lda firetypes_right+:1,X
+	;sta ($72),Y
+	lda ($72),y
+	and #$f0
+	ora firetypes_right+:1,x
+	sta ($72),y
+	
 	ldx $75
-	lda fcstore,X
+	lda fcstore+:3,X
 	sta ($70),Y
 	ldx $76
 
@@ -2050,11 +2067,16 @@ bls0
 ; }	
 	
 ;atari add {
-.rept 4,#-4,#+1
-	lda firetypes+:1,X
-	sta ($72),Y
+.rept 4,#-4,#+1,#
+	;lda firetypes+:1,X
+	;sta ($72),Y
+	lda ($72),y
+	and #$0f
+	ora firetypes+:1,X
+	sta ($72),y
+	
 	ldx $75
-	lda fcstore,X
+	lda fcstore+:3,X
 	sta ($70),Y
 	ldx $76
 	ldy #:2
@@ -2108,7 +2130,7 @@ bls4
 	sta fctype,X
 
 ; atari add {
-	waittostart ;debug
+;	waittostart ;debug
 ; }
 
 skipbullet
@@ -4251,10 +4273,10 @@ firetypes
 	dta %10011001
 */
 ;atari add:
-	dta %00000100
-	dta %01100100
-	dta %01100100
-	dta %00000111
+	dta %00000000
+	dta %01100000
+	dta %01100000
+	dta %00000000
 	
 	dta %10010000
 :2	dta %01100000
@@ -4265,10 +4287,10 @@ firetypes
 	dta %11110000
 
 firetypes_right
-	dta %11000000
-	dta %10100110
-	dta %11000110
-	dta %10100000
+	dta %00000000
+	dta %00000110
+	dta %00000110
+	dta %00000000
 	
 	dta %00001001
 :2	dta %00000110
