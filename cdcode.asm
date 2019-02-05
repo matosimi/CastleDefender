@@ -1749,7 +1749,15 @@ finishfireplot
 
 .local midbulletright
 
-	lda firetypes_right-4,X
+	ldy #0
+
+.rept 4,#-4
+     	lda firetypes_right+:1,X
+	sta ($70),Y
+	iny
+.endr
+
+/*	lda firetypes_right-4,X
 	ldy #0
 	sta ($70),Y
 	iny
@@ -1761,7 +1769,7 @@ finishfireplot
 	iny
 	lda firetypes_right-1,X
 	sta ($70),Y
-
+	*/
 	waittostart
 
 	jsr reduceenemystats
@@ -1771,6 +1779,7 @@ finishfireplot
 midbulletleft
 ; }
 
+/*atari remove
 	lda firetypes-4,X
 	ldy #0
 	sta ($70),Y
@@ -1783,8 +1792,18 @@ midbulletleft
 	iny
 	lda firetypes-1,X
 	sta ($70),Y
+*/
 
 ;atari add {
+
+	ldy #0
+	
+.rept 4,#-4
+     	lda firetypes+:1,X
+	sta ($70),Y
+	iny
+.endr
+
 	waittostart
 ; }
 
@@ -1980,6 +1999,19 @@ bulletloop
 	beq bls0	;bullet on left side of char
 	
 .local	bullet_on_right
+
+.rept 4,#-4,#+1
+	lda firetypes_right+:1,X
+	sta ($72),Y
+	ldx $75
+	lda fcstore,X
+	sta ($70),Y
+	ldx $76
+
+	ldy #:2
+.endr
+
+/*
 	lda firetypes_right-4,X
 	sta ($72),Y
 	ldx $75
@@ -2010,18 +2042,30 @@ bulletloop
 	lda fcstore+3,X
 	ldx $76
 	sta ($70),Y
+*/
 	jmp bls4	;continue
 .endl
 
 bls0
 ; }	
 	
+;atari add {
+.rept 4,#-4,#+1
+	lda firetypes+:1,X
+	sta ($72),Y
+	ldx $75
+	lda fcstore,X
+	sta ($70),Y
+	ldx $76
+	ldy #:2
+.endr
+;}
+	
+/* atari remove	
 	lda firetypes-4,X
 	sta ($72),Y
-/* atari remove
 	cmp ($70),Y
 	bne bls1
-*/
 	ldx $75
 	lda fcstore,X
 	sta ($70),Y
@@ -2030,10 +2074,8 @@ bls1
 	ldy #1
 	lda firetypes-3,X
 	sta ($72),Y
-/* atari remove
 	cmp ($70),Y
 	bne bls2
-*/
 	ldx $75
 	lda fcstore+1,X
 	sta ($70),Y
@@ -2042,10 +2084,8 @@ bls2
 	ldy #2
 	lda firetypes-2,X
 	sta ($72),Y
-/* atari remove
 	cmp ($70),Y
 	bne bls3
-*/
 	ldx $75
 	lda fcstore+2,X
 	sta ($70),Y
@@ -2054,14 +2094,13 @@ bls3
 	ldy #3
 	lda firetypes-1,X
 	sta ($72),Y
-/* atari remove
 	cmp ($70),Y
 	bne bls4
-*/
 	ldx $75
 	lda fcstore+3,X
 	ldx $76
 	sta ($70),Y
+*/
 bls4
 
 	ldx $74
