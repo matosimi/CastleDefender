@@ -40,7 +40,7 @@ gamevram	equ $4000
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	;ins 'levels\L1.fnt'
+	ins 'levels\L1.fnt'
 	
 	org $a000 ;sprites
 .rept 8,#+1

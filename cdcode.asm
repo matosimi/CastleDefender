@@ -1552,11 +1552,11 @@ towerrowloop
 	mwa #towermask w1
 ; }
 towerdrawloop
-	lda ($72),Y
+	lda ($70),Y
 	;eor #$ff ;debug
 ;atari add {
-	eor (w1),y     ;towermasking
-	eor ($70),y	
+	and (w1),y     ;towermasking
+	ora ($72),y	
 ; }	
 	sta ($70),Y    ; draw sprite
 	dey
@@ -1639,7 +1639,9 @@ towerdrawloop
 	asl @
 	asl @
 	asl @
+/*atari remove
 	asl @	; Multiply by 16 to give byte offset (each column)
+*/
 	tay			; Store in index.
 
 	; draw dot. (c3, 3c)
@@ -4353,9 +4355,9 @@ lowcodeend
 	;ins 'towers\towers_shifted.fnt'
 towermask	
 .rept 3
-:8	dta $0f
-:16	dta $ff
 :8	dta $f0
+:16	dta $00
+:8	dta $0f
 .endr
 temp	dta 0
 
