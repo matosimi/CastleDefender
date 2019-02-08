@@ -3863,10 +3863,10 @@ wavetext	;2ce2
 ;towers	equ wavetext+$2d72-$2ce2 ;2d72
 ;	iNCBIN "/home/chris/bem/spriter/towers.bin"
 .print "Towers ",towers
-notower	equ wavetext+$2f22-$2ce2 ;2f22
+;notower	equ wavetext+$2f22-$2ce2 ;2f22
 ;	iNCBIN "/home/chris/bem/spriter/notower.bin"
 .print "notower ",notower
-
+/* atari remove
 	dta $07,$02,$02,$02,$02,$02,$07,$00,$00,$00,$00
 	dta $00,$00,$02,$0E,$00,$00,$00,$06,$09,$0F,$08,$07,$00,$00,$00,$05
 	dta $05,$05,$05,$02,$00,$00,$00,$03,$04,$07,$04,$03,$00,$06,$02,$02
@@ -3913,7 +3913,7 @@ notower	equ wavetext+$2f22-$2ce2 ;2f22
 	dta $F0,$F0,$F0,$F0,$F0,$70,$A0,$D0,$F0,$F0,$F0,$F0,$F0,$F0,$A0,$50
 	dta $F0,$F0,$F0,$F0,$F0,$50,$B0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0,$F0
 	dta $F0,$F0,$F0,$F0,$F0
-
+*/
 
 endage
 
@@ -4370,19 +4370,20 @@ lowcodeend
 	clear start,end
 */
 
-	org notower
-	ins 'towers\notower_shifted.fnt'
+;	org notower
+;	ins 'towers\notower_shifted.fnt'
 	;ins 'towers\towers_shifted.fnt'
+temp	dta 0
+
+	org $b000
+towers	ins 'towers\towers_shifted.fnt'	
+notower	ins 'towers\notower_shifted.fnt'
 towermask	
 .rept 3
 :8	dta $f0
 :16	dta $00
 :8	dta $0f
 .endr
-temp	dta 0
-
-	org $b000
-towers	ins 'towers\towers_shifted.fnt'	
 
 spritelowtable
   ;for x,0,nosprites-1
