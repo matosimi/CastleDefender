@@ -253,7 +253,6 @@ setup
 	sta level	; Level set by basic (not anymore)
 	;TODO:check the level stuff from acorn basic
 	
-	
 	; Once per "Screen" setups
 
 newlevel
@@ -288,6 +287,9 @@ ttypeclear
 	lda #$20
 	sta lives
 
+;atari add {
+	mva #$99 gold+1 ;debug - lot of gold
+;}
 
 
 	; Draw blank towers
@@ -1645,6 +1647,7 @@ towerdrawloop
 	tay			; Store in index.
 
 	; draw dot. (c3, 3c)
+/*atari remove
 	lda #$83
 	sta ($70),Y
 	iny
@@ -1657,6 +1660,23 @@ towerdrawloop
 	sta ($70),Y
 	iny
 	sta ($70),y
+*/
+;atari add {
+	lda #%11111100
+	and ($70),y
+	sta ($70),y
+	iny
+	sta ($70),y
+	tya
+	add #7
+	tay
+	lda #%00011111
+	and ($70),y
+	sta ($70),y
+	iny
+	sta ($70),y
+
+; }
 
 nodotstodraw
 
