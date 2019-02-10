@@ -50,6 +50,7 @@ for ($j = 0; $j < 14; $j++)
 	$origin1[$j] = $hi | $lo | $hi2 | $lo2;
 	fwrite($fi, pack("C*",$origin1[$j]));
 }
+fwrite($fi, pack("C*",0,0));
 
 for ($j = 0; $j < 14; $j++)
 {	
@@ -63,6 +64,7 @@ for ($j = 0; $j < 14; $j++)
 	$origin2[$j] = $hi | $lo | $hi2 | $lo2;
 	fwrite($fi, pack("C*",$origin2[$j]));
 }
+fwrite($fi, pack("C*",0,0));
 echo $name,"\n";	
 fclose($fi);
 }
