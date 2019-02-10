@@ -1281,7 +1281,7 @@ spriteloop1x
 	sTA(zspos+2),Y
 	iNY
 	dEX                   
-	bNE spriteloop1x       
+	bne spriteloop1x       
 	sTY zt                ; y is not how many pixels we've plotted
 	
 	jSR spmoverow         ; change offsets to line up location in sprite data with row data
@@ -3684,7 +3684,11 @@ createhitsprite
 	lDA spritehightable,X
 	sTA zsoff+1           ; Store offsets to sprite
 	; We can now copy this sprite to the temporary sprite table
-	ldy #14*4-1
+;atari replace {
+;	ldy #14*4-1
+	ldy #sprows*3-1
+; }
+/* atari remove
 hitspriteloop
 	ldx #4
 	lda #%10001
@@ -3708,6 +3712,21 @@ hitspritebitszero
 	sta tempsprite,y	; Store in new sprite
 	dey
 	bpl hitspriteloop	; Loop through the pixels
+*/
+;atari add {
+hitspriteloop
+	lda (zsoff),y
+	and #%01010101 
+	sta tempsprite,y
+	dey
+	bmi alreadydonehit
+	
+	lda (zsoff),y
+	and #%10101010	;alter the mask to get "checkerboard"
+	sta tempsprite,y
+	dey
+	bpl hitspriteloop
+;}
 
 alreadydonehit
 	lda #>(tempsprite)
@@ -4510,7 +4529,6 @@ x1	mva (w1),y (w2),y
 x2	mva temppage,y (w1),y
 	dey
 	bne x2
-	
 	dec tmp
 	bpl x3
 	
@@ -4557,7 +4575,7 @@ x2	sprite_storeshift
 .endp
 
 .proc	sprite_storerem21
-     	ldy #sprows*2
+     	ldy #sprows*2-1
 x1    	lda sprite_shift.rem2,y
      	sta (w1),y
      	dey
@@ -4579,7 +4597,7 @@ x1     	lda sprite_shift.data,y
 	
 .proc	sprite_test
 	
-	mva #0 temp
+/*	mva #0 temp
 xloop33	ldy #enemyno-1
 	lda temp
 	sta etype,Y
@@ -4590,19 +4608,26 @@ xloop33	ldy #enemyno-1
 	;lda #20
 	sta sy
 	jsr plotter
-	pause 50
+	;pause 50
 	inc temp
 	lda temp
 	cmp #5
 	bne xloop33
-	rts
-
-	mva #2 temp
-loop_x	mva #30 sy
+	
+*/	
+	mva #8 temp
+loop_x	mva #10 sy
 	mva temp sx
+
+	ldy #enemyno-1
+	lda #20
+	sta etype,y
+	sty $8d
+
 	jsr plotter
 	inc temp
 	pause 2
+;	waittostart
 	lda temp
 	cmp #180
 	bne loop_x
@@ -4619,7 +4644,7 @@ loop_x	mva #30 sy
 	jsr plotter
 	pause 50
 .endr
-
+	jmp *
 	rts
 .endp
 

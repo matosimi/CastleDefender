@@ -21,7 +21,10 @@ tftargetx = tftarget-towrno   ; Location of tower fire target x position table
 tftargety = tftargetx-towrno  ; Location of tower fire target y position table
 sprites = tftargety-(nosprites*spritesize)     ; Location sprites will be loaded
 ;expl = sprites-(spritesize*4)     ; Location of second explosion 
-tempsprite=$3000-40
+;atari replace {
+;tempsprite=$3000-40
+tempsprite	equ $1000
+; }
 activetowers=$3ffe
 
 zspos=$70
@@ -40,7 +43,7 @@ gamevram	equ $4000
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	ins 'levels\L1.fnt'
+	;ins 'levels\L1.fnt'
 	
 	org $a000 ;sprites
 .rept 8,#+1
