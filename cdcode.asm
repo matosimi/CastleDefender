@@ -3674,6 +3674,9 @@ createhitsprite
 	sBC #1                ; decrement by 1
 	asl @
 	asl @           ; multiply by 4 (4 bytes accoss)
+;atari add {	
+	asl @
+; }
 	aDC zt                ; and add in the horizontal shift
 	cmp lasthitsprite
 	beq alreadydonehit	; We've done this work before - let's not repeat the effort. 
