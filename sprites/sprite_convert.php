@@ -2,6 +2,7 @@
 //castle defender sprite converter
 //converts bbc micro videodata mode 1 to mode 4 same as atari mode $0f (gr.8)
 //it just converts 1st sprite position from original sprite file and saves it to new file
+//suitable for atarifontmaker editing
 //sprite pre-shifting has been moved to 6502 code
 
 convert("1");
