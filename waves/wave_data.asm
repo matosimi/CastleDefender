@@ -1,9 +1,5 @@
 ; wavedata generator
-          
-          green=%10000
-	red=%00001
-	cyan=%10001
-          
+                    
           org $1000  
 ; ****** LEVEL 1 ********
 
@@ -20,12 +16,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 50,100			; distance between enemies in frames (zero needed)
 spritenumbers  ; Types of enemy
-	dta "1122"
-spritecolours
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,green,cyan
-	dta green,red,cyan
+	dta "acde"
 enemynumber
 	dta $34
 ; Enemy type list? - reserve ebytes?
@@ -46,12 +37,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 44,88			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "1122"
-spritecolours
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,green,cyan
-	dta green,red,cyan
+	dta "acde"
 enemynumber
 	dta $45
 ; Enemy type list? - reserve ebytes?
@@ -70,12 +56,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 30,60			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "5512"
-spritecolours
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "mnad"
 enemynumber
 	dta $51
 ; Enemy type list? - reserve ebytes?
@@ -94,12 +75,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 39,78			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "5123"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta green,red,cyan
-	dta red,green,cyan
+	dta "maeg"
 enemynumber
 	dta $49
 ; Enemy type list? - reserve ebytes?
@@ -118,12 +94,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 33,66			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "1233"
-spritecolours
-	dta red,green,cyan
-	dta green,red,cyan
-	dta red,green,cyan
-	dta red,cyan,green
+	dta "aegh"
 enemynumber
 	dta $55
 ; Enemy type list? - reserve ebytes?
@@ -150,12 +121,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 60,120		; distance between enemies in frames (zero needed)
 spritenumbers  ; Types of enemy
-	dta "5236"
-spritecolours
-	dta red,cyan,green
-	dta red,cyan,green
-	dta red,cyan,green
-	dta red,green,cyan
+	dta "nfho"
 enemynumber
 	dta $36
 ; level data - paths
@@ -174,12 +140,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 42,84			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "1366"
-spritecolours
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,cyan,green
+	dta "ahop"
 enemynumber
 	dta $41
 ; level data - paths
@@ -198,12 +159,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 38,74			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "1536"
-spritecolours
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,cyan,green
+	dta "cmhp"
 enemynumber
 	dta $47
 ; level data - paths
@@ -222,12 +178,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 36,72			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "5512"
-spritecolours
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "nmad"
 enemynumber
 	dta $56
 ; Enemy type list? - reserve ebytes?
@@ -247,12 +198,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 30,60			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "2364"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "dgoi"
 enemynumber
 	dta $54
 ; Enemy type list? - reserve ebytes?
@@ -276,12 +222,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 52,104			; distance between enemies in frames (zero needed)
 spritenumbers  ; Types of enemy
-	dta "1537"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "amgq"
 enemynumber
 	dta $43
 ; level data - paths
@@ -301,12 +242,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 41,82			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "2367"
-spritecolours
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,cyan,green
+	dta "dhor"
 enemynumber
 	dta $45
 ; Enemy type list? - reserve ebytes?
@@ -326,12 +262,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 36,72			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "1574"
-spritecolours
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "cmqi"
 enemynumber
 	dta $43
 ; level data - paths
@@ -350,12 +281,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 33,66			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "5368"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "mgos"
 enemynumber
 	dta $49
 ; level data - paths
@@ -374,12 +300,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 28,56			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "5784"
-spritecolours
-	dta red,cyan,green
-	dta red,cyan,green
-	dta red,green,cyan
-	dta red,cyan,green
+	dta "nrsj"
 enemynumber
 	dta $48
 ; level data - paths
@@ -403,12 +324,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 50,100		; distance between enemies in frames (zero needed)
 spritenumbers  ; Types of enemy
-	dta "1578"
-spritecolours
-	dta green,red,cyan
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "bmqs"
 enemynumber
 	dta $46
 ; level data - paths
@@ -427,12 +343,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 37,74			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "2684"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
-	dta green,red,red
+	dta "dosk"
 enemynumber
 	dta $48
 ; level data - paths
@@ -451,12 +362,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 30,60			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "5784"
-spritecolours
-	dta red,green,cyan
-	dta red,cyan,green
-	dta red,green,cyan
-	dta cyan,red,red
+	dta "mrsl"
 enemynumber
 	dta $50
 ; Enemy type list? - reserve ebytes?
@@ -476,12 +382,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 40,80			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "3678"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
-	dta red,green,cyan
+	dta "goqs"
 enemynumber
 	dta $62
 ; Enemy type list? - reserve ebytes?
@@ -501,12 +402,7 @@ enemyshields		;BCD
 enemyspeed
 	dta 24,48			; distance between enemies in frames
 spritenumbers  ; Types of enemy
-	dta "1444"
-spritecolours
-	dta red,green,cyan
-	dta red,green,cyan
-	dta green,red,red
-	dta cyan,red,red
+	dta "aikl"
 enemynumber
 	dta $39
 ; Enemy type list? - reserve ebytes?
