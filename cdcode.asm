@@ -3186,8 +3186,10 @@ loadspritefile
 	; NO JMP BECAUSE NEXT TO LOAD FILE CODE
 */
 	lda spritefilenumber
-	and #$0f
-	sub #1
+;atari replace {
+;	and #$0f
+;	sub #1
+	sub #'a'
 	asl @
 	tax
 	
@@ -3207,8 +3209,8 @@ x1	mva (w1),y (w2),y
 	
 	rts
 sprite_address_table
-.rept 8,#+1
-	dta a(spr:1)
+.rept 19,#
+	dta a(allsprites+(2*sprows)*(4+:1))
 .endr
 
 .endp
@@ -4356,8 +4358,8 @@ lowcodeend
 .pRINT "Tower type ",ttype
 .pRINT "Tower fire count ",tfcount
 .pRINT "Tower fire target ",tftarget
-.pRINT "Sprites ",sprites
-.pRINT "Explosions ",expl
+;.pRINT "Sprites ",sprites
+;.pRINT "Explosions ",expl
 .print "Lives ",lives
 .print "Score ",score
 .print "Wave ",wave
@@ -4371,7 +4373,7 @@ lowcodeend
   ;print ".drawbox",boxjump
 .print "Main Code ",start," - ",endage," (",endage-start,")"
 .print "Low code ",codeoffset," - ",lowcodeend," (",lowcodeend-codeoffset,")"
-.print "Free space: Main = ",$3000-32-endage," Variables = ",expl-varend," etype location = ",etype,"-",varend
+;.print "Free space: Main = ",$3000-32-endage," Variables = ",expl-varend," etype location = ",etype,"-",varend
 .print "interrupts $ Numbers = ",codeoffset+$ff-numberend," ",numberend 
 .print "table data ",codeoffset+$3ff-lowcodeend
 .print "level data size = ",varend-wavedata
@@ -4538,8 +4540,8 @@ x2	mva temppage,y (w1),y
 	rts
 tmp	dta 0
 expl_address_table
-.rept 4,#+1
-	dta a(exp:1)
+.rept 4,#
+	dta a(allsprites+sprows*2*:1)
 .endr
 .endp
 

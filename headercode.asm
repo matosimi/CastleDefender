@@ -46,13 +46,19 @@ gamevram	equ $4000
 	ins 'levels\L1.fnt'
 	
 	org $a000 ;sprites
+allsprites	;4*explosions, 19*enemies
+	ins 'sprites\allsprites.fnt'
+
+/*
 .rept 8,#+1
 spr:1	ins 'sprites\S:1.fnt'
 .endr	
 .rept 4,#+1
 exp:1	ins 'sprites\E:1.fnt'
 .endr
+*/
 expl	;4*spritesize
+
 
 ; debug: only 1 sprite loaded, rest zeros
 /*
