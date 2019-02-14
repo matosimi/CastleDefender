@@ -158,11 +158,13 @@ enemyspeed
 	dta 0
 spritenumbers  ; Types of enemy
 	dta $00,$00,$00,$00          ;string with 4 numbers 
+/*atari remove
 spritecolours
 	dta 0,0,0
 	dta 0,0,0
 	dta 0,0,0
 	dta 0,0,0
+*/
 numberofenemies
 	dta 0
 etype			; Enemy type list - reserve bytes
