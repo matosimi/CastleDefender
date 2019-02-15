@@ -3326,7 +3326,9 @@ numberplot
 	txa
 	asl @
 	adc $70          ;Add the length * 2 to the x coordinate
+/*atari remove
 	asl @
+*/
 	asl @     ; Multiply by 4 (%00111111 to %11111100)
 	sta $72         ; Store in screen location
 	lda #$20        ; screen start / 2
@@ -3335,7 +3337,9 @@ numberplot
 	rol @   ; Multiply by 2 (total 8)
 	sta $73
 	lda $77
+/*atari remove
 	asl @           ; Multiply by 2 to make 512
+*/
 	adc $73
 	sta $73 ; Add to screen address and save
 ;.if codeoffset=$900
