@@ -177,7 +177,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$0000] chbase
+	mva #>[gamevram+($400*:3)+$0400] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -288,7 +288,7 @@ ttypeclear
 	sta lives
 
 ;atari add {
-	mva #$99 gold+1 ;debug - lot of gold
+	;mva #$99 gold+1 ;debug - lot of gold
 ;}
 
 
@@ -3091,11 +3091,15 @@ showwave ;$28f5
 	sta $70
 	lda #>(wavetext)
 	sta $71			; Origin text
-	lda #<($8000-256-48-512)
-	sta $72
-	lda #>($8000-256-48-512)
-	sta $73
-	ldy #144
+;atari replace {
+;	lda #<($8000-256-48-512)
+;	sta $72
+;	lda #>($8000-256-48-512)
+;	sta $73
+;	ldy #144
+	mwa #gamevram+$1e60 $72	;position of text on screen
+	ldy #72
+
 showwaveloop
 	dey
 	lda ($70),y
@@ -3125,6 +3129,10 @@ showwaveloop
 	lda #wave / 256
 	sta $75
 	ldx #0
+;atari add {
+	jsr numberplot
+	jmp * ;temp debug
+;}
 	jmp numberplot   
 	;rts
 
@@ -3244,8 +3252,10 @@ clearloadblock
 printscore
 	; Routine to print score to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
-	lda #%00001111
-	sta textcolour 
+;atari remove {
+;	lda #%00001111
+;	sta textcolour 
+; }
 	lda #8
 	sta $70
 	lda #31
@@ -3261,8 +3271,10 @@ printscore
 printgold
 	; Routine to print gold value to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
+/*atari remove
 	lda #%11111111
 	sta textcolour 
+*/
 	lda #8
 	sta $70
 	lda #30
@@ -3276,8 +3288,10 @@ printgold
 	;rts
 
 showstatus
+/* atari remove
 	lda #%11110000
 	sta textcolour
+*/
 	lda #61
 	sta $70
 	lda #29
@@ -3292,8 +3306,10 @@ showstatus
 	ldx #0
 	jsr numberplot          ;last enemy health
 
+/* atari remove
 	lda #%00001111
 	sta textcolour
+*/
 	lda #61
 	sta $70
 	lda #30
@@ -3320,15 +3336,16 @@ showstatus
 numberplot
 	tya
 	pha
+/*atari remove
 	lda textcolour
 	sta $76
-
+*/
 	txa
 	asl @
 	adc $70          ;Add the length * 2 to the x coordinate
 /*atari remove
 	asl @
-*/
+*/	
 	asl @     ; Multiply by 4 (%00111111 to %11111100)
 	sta $72         ; Store in screen location
 	lda #$20        ; screen start / 2
@@ -3359,10 +3376,17 @@ numberloop
 	ldy #7          ; Set plot loop
 digit1loop
 	lda ($70),Y     ; Get byte
-	and $76         ; Change colour
+;atari replace {
+;	and $76         ; Change colour
+	and #$f0
+; }
 	sta ($72),Y     ; Store in screen
 	dey
 	bpl digit1loop  ; And loop
+;atari add {	
+	dex
+	bmi numberplotted
+; }
 	txa
 	tay         ; X to y
 	lda ($74),Y     ; Load number byte
@@ -3371,17 +3395,24 @@ digit1loop
 	asl @ ; shift into location
 	and #%01111000 ; mask out unused high bits
 	sta $70         ; Store loop byte location
+/* atari remove
 	lda $72
 	clc
 	adc #8      ; Update screen location
 	sta $72
 	lda $73
 	adc #0  ; screen high
-	sta $73         
+	sta $73
+*/         
 	ldy #7
 digit2loop
 	lda ($70),Y     ; Get byte
-	and $76         ; Change colour
+;atari replace {
+;	and $76         ; Change colour
+	and #$0f
+	;eor #$ff
+	ora ($72),y
+; }
 	sta ($72),Y     ; Store in screen
 	dey
 	bpl digit2loop  ; And loop
@@ -3395,6 +3426,9 @@ digit2loop
 	sta $73
 	dex
 	bpl numberloop
+;atari add {
+numberplotted
+; }
 	pla
 	tay
 	rts
@@ -3886,6 +3920,7 @@ levelwinsounddurations
 
 
 wavetext	;2ce2
+	ins "leveltext\leveltext.fnt"
 .print "wavetext (supposed to be $2ce2): ",wavetext
 ;	incbin "/home/chris/bem/spriter/leveltext.bin"
 ;towers	equ wavetext+$2d72-$2ce2 ;2d72
