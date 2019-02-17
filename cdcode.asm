@@ -177,7 +177,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$0400] chbase
+	mva #>[gamevram+($400*:3)+$0800] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -3097,7 +3097,7 @@ showwave ;$28f5
 ;	lda #>($8000-256-48-512)
 ;	sta $73
 ;	ldy #144
-	mwa #gamevram+$1e60 $72	;position of text on screen
+	mwa #gamevram+$1e68 $72	;position of text on screen
 	ldy #72
 
 showwaveloop
@@ -3107,8 +3107,10 @@ showwaveloop
 	cpy #0
 	bne showwaveloop
 
+/*atari remove
 	lda #%00001111
 	sta textcolour 
+*/
 	lda #32
 	sta $70
 	lda #30
@@ -3384,8 +3386,8 @@ digit1loop
 	dey
 	bpl digit1loop  ; And loop
 ;atari add {	
-	dex
-	bmi numberplotted
+	;dex
+	;bmi numberplotted
 ; }
 	txa
 	tay         ; X to y
@@ -3410,7 +3412,6 @@ digit2loop
 ;atari replace {
 ;	and $76         ; Change colour
 	and #$0f
-	;eor #$ff
 	ora ($72),y
 ; }
 	sta ($72),Y     ; Store in screen
@@ -4164,8 +4165,9 @@ eventend
 
 	org codeoffset+$100
 ;	guard codeoffset+$1ff
-	
+	ins "srcdata/numbers.bin" ;bin.fnt (for debug)
 	;INCBIN "/home/chris/bem/spriter/numbers.bin"
+/* atari remove
 	dta     $44,$AA,$AA,$AA,$AA,$AA,$44,$00,$44,$CC,$44,$44,$44,$44,$EE
 	dta $00,$44,$AA,$22,$44,$88,$88,$EE,$00,$CC,$22,$22,$CC,$22,$22,$CC
 	dta $00,$88,$88,$88,$88,$AA,$EE,$22,$00,$EE,$88,$88,$CC,$22,$AA,$44
@@ -4174,7 +4176,7 @@ eventend
 	dta $00,$00,$00,$00,$00,$00,$00,$00,$00,$99,$99,$99,$99,$99,$99,$77
 	dta $00,$66,$44,$00,$00,$00,$44,$66,$00,$33,$11,$00,$00,$00,$11,$33
 	dta $00			;0A6F 00
-
+*/
 	;.savedtowerdist
 	;  dta 100
 	;.towerdistance
