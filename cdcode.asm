@@ -47,7 +47,7 @@ keystat	equ $b9
 keypres	equ $ba
 b1	equ $bc
 bulright	equ $bd ;bullet on right part of char
-;bulright2	equ $be
+
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -614,7 +614,7 @@ finishloadsprites
 	sta $75
 	ldx #0
 	jsr numberplot          
-
+		
 	lda #27
 	sta $70
 	;lda #27:sta $77
@@ -3132,8 +3132,8 @@ showwaveloop
 	sta $75
 	ldx #0
 ;atari add {
-	jsr numberplot
-	jmp * ;temp debug
+	;jsr numberplot
+	;jmp * ;temp debug
 ;}
 	jmp numberplot   
 	;rts
@@ -3149,10 +3149,17 @@ clearstatusbox
 	txa
 clearstatusboxloop
 	dex
-	sta $4000+512*29+19*8,x
-	sta $4000+512*30+19*8,x
-	sta $4000+512*31+19*8,x
+; atari replace {
+	;sta $4000+512*29+19*8,x
+	;sta $4000+512*30+19*8,x
+	;sta $4000+512*31+19*8,x
+	sta gamevram+256*29,x
+	sta gamevram+256*30,x
+	sta gamevram+256*31,x
+	;possible that only part of line needs to be deleted
+; }
 	bne clearstatusboxloop
+
 
 	;write the "decenders"
 	; $7af0=192 $7b40=192
@@ -3342,6 +3349,11 @@ numberplot
 	lda textcolour
 	sta $76
 */
+;atari add {
+	lda $70
+	and #$01
+	bne numberplot2 ;different routine for midchar numbers
+; }
 	txa
 	asl @
 	adc $70          ;Add the length * 2 to the x coordinate
@@ -3433,6 +3445,87 @@ numberplotted
 	pla
 	tay
 	rts
+
+numberplot2
+
+.local	numberplot_2
+	txa
+	asl @
+	adc $70          ;Add the length * 2 to the x coordinate
+	asl @     ; Multiply by 4 (%00111111 to %11111100)
+	sub #2
+	sta $72         ; Store in screen location
+	lda #$20        ; screen start / 2
+	;sta $73         ; Save in high byte
+	asl $72
+	rol @   ; Multiply by 2 (total 8)
+	sta $73
+	lda $77
+	adc $73
+	sta $73 ; Add to screen address and save
+	lda #$a
+	sta $71 ; Number high byte
+numberloop
+	txa
+	tay         ; Transfer x to y
+	lda ($74),Y     ; Load number byte
+	lsr @           ; divide by 2
+	and #%01111000 ; mask out low bits
+	sta $70         ; Store low byte location
+	ldy #7          ; Set plot loop
+digit1loop
+	lda ($70),Y     ; Get byte
+	and #$0f
+	sta b1
+	lda ($72),y ;half char masking
+	and #$f0
+	ora b1
+	
+	sta ($72),Y     ; Store in screen
+	dey
+	bpl digit1loop  ; And loop
+	txa
+	tay         ; X to y
+	lda ($74),Y     ; Load number byte
+	asl @
+	asl @
+	asl @ ; shift into location
+	and #%01111000 ; mask out unused high bits
+	sta $70         ; Store loop byte location
+	ldy #7
+
+	lda $72
+	add #8
+	sta $72
+	lda $73
+	adc #0
+	sta $73
+
+digit2loop
+	lda ($70),Y     ; Get byte
+	and #$f0
+	sta b1
+	lda ($72),y ;2nd half char masking
+	and #$0f
+	ora b1
+	sta ($72),Y     ; Store in screen
+	dey
+	bpl digit2loop  ; And loop
+	; Now update screen location to point to old number
+	sec
+	lda $72
+	sbc #24 ;Subtract 2 characters
+	sta $72
+	lda $73
+	sbc #0  ; High byte
+	sta $73
+	dex
+	bpl numberloop
+	pla
+	tay
+	rts
+
+.endl
 
 	;Game over prety picture
 
