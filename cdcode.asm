@@ -3433,7 +3433,10 @@ digit2loop
 	; Now update screen location to point to old number
 	sec
 	lda $72
-	sbc #24 ;Subtract 2 characters
+;atari replace {
+;	sbc #24 ;Subtract 2 characters
+	sbc #8
+; }
 	sta $72
 	lda $73
 	sbc #0  ; High byte
