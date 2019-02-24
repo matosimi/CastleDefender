@@ -3153,10 +3153,11 @@ clearstatusboxloop
 	;sta $4000+512*29+19*8,x
 	;sta $4000+512*30+19*8,x
 	;sta $4000+512*31+19*8,x
-	sta gamevram+256*29,x
-	sta gamevram+256*30,x
-	sta gamevram+256*31,x
+	sta gamevram+256*29-6*8,x
+	sta gamevram+256*30-6*8,x
+	sta gamevram+256*31-6*8,x
 	;possible that only part of line needs to be deleted
+	cpx #120
 ; }
 	bne clearstatusboxloop
 
