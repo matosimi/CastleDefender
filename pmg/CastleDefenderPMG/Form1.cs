@@ -98,19 +98,24 @@ namespace CastleDefenderPMG
             int my = MyFloor(py / ykernsize);
 
             if (mx < 0 || my < 0 || mx > 31 || my > 256)
-                return;            
+                return;
 
-            Color myColor = myPen ? Color.FromArgb(128, Color.Red) : Color.FromArgb(0, Color.White);
-
-            for (int i = 0; i < xkernsize; i++)
-                for (int j = 0; j < ykernsize; j++)
-                {
-                    pmgmap.SetPixel(px + i, py + j, myColor);
-                }
+            SetPixel(px, py);
             pictureBox2.Image = pmgmap;
             lastX = px;
             lastY = py;
             SetPMG(mx, my);
+        }
+
+
+        private void SetPixel(int x, int y)
+        {
+            Color myColor = myPen ? Color.FromArgb(128, Color.Red) : Color.FromArgb(0, Color.White);
+            for (int i = 0; i < xkernsize; i++)
+                for (int j = 0; j < ykernsize; j++)
+                {
+                    pmgmap.SetPixel(x + i, y + j, myColor);
+                }
         }
 
         private void UnsetPoint(int px, int py)
@@ -121,24 +126,26 @@ namespace CastleDefenderPMG
     
         private void SetPMG(int mx, int my)
         {
+            //Console.WriteLine("mx,my: " + mx.ToString() + "," + my.ToString());
+
             int x = mx;
             int y = my;
-            int bitIndex = x % 8;
+            int bitIndex = 7 - (x % 8);
             uint bitValue = (uint)1 << bitIndex;
             int pmgno = MyFloor(x / 8);
 
             if (myPen)
             {
-                for (int i = 0; i < ykernsize; i++)
+                for (int i = 0; i < ykernsize / 2; i++)
                 {
-                    pmgdata[pmgno * 256 + y + i] |= (byte)bitValue;
+                    pmgdata[pmgno * 256 + y*ykernsize/2 + i] |= (byte)bitValue;
                 }
             }
             else
             {
-                for (int i = 0; i < ykernsize; i++)
+                for (int i = 0; i < ykernsize / 2; i++)
                 {
-                    pmgdata[pmgno * 256 + y + i] &= (byte)bitValue;
+                    pmgdata[pmgno * 256 + y*ykernsize/2 + i] &= (byte)(255 - bitValue);
                 }
             }
         }
@@ -189,8 +196,8 @@ namespace CastleDefenderPMG
 
         private void RedrawPMG()
         {
-            int oldidx = comboBox1.SelectedIndex;
-            comboBox1.SelectedItem = comboBox1.Items.IndexOf("1");
+            int oldyks = ykernsize;
+            ykernsize = 2; //size of 1 pixel drawn vertically
             myPen = true;
             
             for (int i = 0; i < 4; i++)
@@ -199,7 +206,7 @@ namespace CastleDefenderPMG
                     byte myByte = pmgdata[i * 256 + j];
                     for (int k = 7; k > -1; k--)
                     {
-                        if (myByte > 128)
+                        if (myByte >= 128)
                         {
                             SetPoint((7 + i * 8 + 7 - k) * xkernsize, j * ykernsize);
                             //pictureBox2.Refresh();
@@ -209,7 +216,8 @@ namespace CastleDefenderPMG
                         myByte <<= 1; //shift value left
                     }
                 }
-            comboBox1.SelectedIndex = oldidx;
+
+            ykernsize = oldyks;
             myPen = false;
         }
 
