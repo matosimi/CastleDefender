@@ -37,8 +37,12 @@
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.buttonClearPMG = new System.Windows.Forms.Button();
+            this.buttonFrame = new System.Windows.Forms.Button();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.buttonInverse = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -121,11 +125,57 @@
             this.buttonClearPMG.UseVisualStyleBackColor = true;
             this.buttonClearPMG.Click += new System.EventHandler(this.buttonClearPMG_Click);
             // 
+            // buttonFrame
+            // 
+            this.buttonFrame.Location = new System.Drawing.Point(558, 9);
+            this.buttonFrame.Name = "buttonFrame";
+            this.buttonFrame.Size = new System.Drawing.Size(75, 23);
+            this.buttonFrame.TabIndex = 7;
+            this.buttonFrame.Text = "Frame";
+            this.buttonFrame.UseVisualStyleBackColor = true;
+            this.buttonFrame.Click += new System.EventHandler(this.buttonFrame_Click);
+            // 
+            // numericUpDown1
+            // 
+            this.numericUpDown1.Increment = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Location = new System.Drawing.Point(639, 9);
+            this.numericUpDown1.Maximum = new decimal(new int[] {
+            80,
+            0,
+            0,
+            0});
+            this.numericUpDown1.Minimum = new decimal(new int[] {
+            80,
+            0,
+            0,
+            -2147483648});
+            this.numericUpDown1.Name = "numericUpDown1";
+            this.numericUpDown1.Size = new System.Drawing.Size(53, 20);
+            this.numericUpDown1.TabIndex = 8;
+            this.numericUpDown1.ValueChanged += new System.EventHandler(this.numericUpDown1_ValueChanged);
+            // 
+            // buttonInverse
+            // 
+            this.buttonInverse.Location = new System.Drawing.Point(713, 6);
+            this.buttonInverse.Name = "buttonInverse";
+            this.buttonInverse.Size = new System.Drawing.Size(75, 23);
+            this.buttonInverse.TabIndex = 9;
+            this.buttonInverse.Text = "Inverse";
+            this.buttonInverse.UseVisualStyleBackColor = true;
+            this.buttonInverse.Click += new System.EventHandler(this.buttonInverse_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.buttonInverse);
+            this.Controls.Add(this.numericUpDown1);
+            this.Controls.Add(this.buttonFrame);
             this.Controls.Add(this.buttonClearPMG);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.buttonSavePMG);
@@ -138,6 +188,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -153,6 +204,9 @@
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.ComboBox comboBox1;
         private System.Windows.Forms.Button buttonClearPMG;
+        private System.Windows.Forms.Button buttonFrame;
+        private System.Windows.Forms.NumericUpDown numericUpDown1;
+        private System.Windows.Forms.Button buttonInverse;
     }
 }
 

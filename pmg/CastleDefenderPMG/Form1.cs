@@ -51,7 +51,7 @@ namespace CastleDefenderPMG
         {
             pictureBox1.Size = new Size(pictureBox1.Image.Width * 2, pictureBox1.Image.Height * 2);
             pictureBox2.Left = 8; // pictureBox1.Left;
-            pictureBox2.Top = 8; // pictureBox1.Top;
+            pictureBox2.Top = 0; // pictureBox1.Top;
             pictureBox2.Size = pictureBox1.Size;
             pmgmap = new Bitmap(pictureBox1.Width, pictureBox1.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             pictureBox2.BackColor = Color.Transparent; //Color.Green;
@@ -224,6 +224,25 @@ namespace CastleDefenderPMG
         private void buttonClearPMG_Click(object sender, EventArgs e)
         {
             InitPMG();
+            RedrawPMG();
+        }
+
+        private void buttonFrame_Click(object sender, EventArgs e)
+        {
+            Graphics gr = pictureBox2.CreateGraphics();
+            gr.DrawRectangle(new Pen(Color.White), 0, 0, pictureBox2.Width - 1, pictureBox2.Height - 1);
+            
+        }
+
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+            pictureBox2.Left = (int)numericUpDown1.Value;
+        }
+
+        private void buttonInverse_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < pmgdata.Length; i++)
+                pmgdata[i] = (byte)(255 - pmgdata[i]);
             RedrawPMG();
         }
 

@@ -51,6 +51,7 @@ bulright	equ $bd ;bullet on right part of char
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
+mypmbase	equ $6c00
 
 	icl "matosimi_macros.asx"
 	icl "headercode.asm"
@@ -177,7 +178,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$0800] chbase
+	mva #>[gamevram+($400*:3)+$0000] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -260,7 +261,7 @@ newlevel
 	jsr showwave 	;Level 1 Wave 1 (in the box)
 	;load screen (should include screen $ Path $ tower positions)
 	jsr loadscreen
-	
+	level_pmg
 	; Clear tower types structures
 	ldx #towrno-1
 	lda #0
@@ -4801,3 +4802,20 @@ x2     	lda consol
      	beq x2
 	rts
 .endp
+
+.proc	level_pmg
+	mva #1 prior
+	lda #3
+:4	sta sizep0+:1
+:4	mva #64+:1*32 hposp0+:1
+	mva #32+1+12+16 dmactl
+	mva #$03 gractl
+	mva >mypmbase pmbase
+	lda #$90
+:4	sta colpm0+:1
+	rts
+.endp
+
+	org mypmbase
+:8	dta 0
+	ins 'pmg\lvl1.pmg'
