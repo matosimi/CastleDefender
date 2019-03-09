@@ -6,7 +6,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CastleDefenderPMG
@@ -241,6 +240,9 @@ namespace CastleDefenderPMG
 
         private void buttonInverse_Click(object sender, EventArgs e)
         {
+            pmgmap = new Bitmap(pictureBox1.Width, pictureBox1.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            pictureBox2.Image = pmgmap;
+
             for (int i = 0; i < pmgdata.Length; i++)
                 pmgdata[i] = (byte)(255 - pmgdata[i]);
             RedrawPMG();

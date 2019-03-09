@@ -160,7 +160,7 @@
             // 
             // buttonInverse
             // 
-            this.buttonInverse.Location = new System.Drawing.Point(713, 6);
+            this.buttonInverse.Location = new System.Drawing.Point(713, 9);
             this.buttonInverse.Name = "buttonInverse";
             this.buttonInverse.Size = new System.Drawing.Size(75, 23);
             this.buttonInverse.TabIndex = 9;
