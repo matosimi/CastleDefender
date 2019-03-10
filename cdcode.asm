@@ -178,7 +178,7 @@ dli6
 .rept 6,#,#+1,#+2
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$0000] chbase
+	mva #>[gamevram+($400*:3)+$0800] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
@@ -4804,7 +4804,7 @@ x2     	lda consol
 .endp
 
 .proc	level_pmg
-	mva #1 prior
+	mva #1+16 prior
 	lda #3
 :4	sta sizep0+:1
 :4	mva #64+:1*32 hposp0+:1
@@ -4813,8 +4813,16 @@ x2     	lda consol
 	mva >mypmbase pmbase
 	lda #$90
 :4	sta colpm0+:1
+	
+:4	mva #195+:1*2 hposm0+:1
+	
+	mva #$2c colpf0+3
+	
 	rts
 .endp
+
+	org mypmbase-$100
+:255	dta 255
 
 	org mypmbase
 :8	dta 0
