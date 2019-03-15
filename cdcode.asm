@@ -47,7 +47,7 @@ keystat	equ $b9
 keypres	equ $ba
 b1	equ $bc
 bulright	equ $bd ;bullet on right part of char
-
+b2	equ $be
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -3261,6 +3261,29 @@ clearloadblock
 	cyan=%10001
 
 printscore
+
+; atari add {
+
+	mva #$f0 missile_drawchar.mask
+	mva #$0f missile_drawchar.mask2
+	
+	mvx #0 b2
+	ldy #56+(6+6+3)*8
+pmscoreloop
+	lda score,x
+:4	lsr @
+	missile_drawchar
+	ldx b2
+	
+	lda score,x
+	and #$0f
+	missile_drawchar
+	inc b2
+	ldx b2
+	cpx #4
+	bne pmscoreloop
+; }
+
 	; Routine to print score to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
 ;atari remove {
@@ -3280,6 +3303,29 @@ printscore
 	;rts
 
 printgold
+
+; atari add {
+
+	mva #$f0 missile_drawchar.mask
+	mva #$0f missile_drawchar.mask2
+	
+	mvx #0 b2
+	ldy #56+6*8
+pmgoldloop
+	lda gold,x
+:4	lsr @
+	missile_drawchar
+	ldx b2
+	
+	lda gold,x
+	and #$0f
+	missile_drawchar
+	inc b2
+	ldx b2
+	cpx #3
+	bne pmgoldloop
+; }
+
 	; Routine to print gold value to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
 /*atari remove
@@ -3299,6 +3345,25 @@ printgold
 	;rts
 
 showstatus
+; atari add {
+
+	mva #$f0 missile_drawchar.mask2
+	mva #$0f missile_drawchar.mask
+
+	ldy #32+7*8
+	ldx lastplotidx
+	lda ehealth,x
+	sta b2
+:4	lsr @
+	missile_drawchar
+	
+	lda b2
+	and #$0f
+	missile_drawchar
+	
+; }
+
+
 /* atari remove
 	lda #%11110000
 	sta textcolour
@@ -3316,6 +3381,21 @@ showstatus
 	sta $75
 	ldx #0
 	jsr numberplot          ;last enemy health
+
+; atari add {
+
+	ldy #32+12*8
+	ldx lastplotidx
+	lda eshield,x
+	sta b2
+:4	lsr @
+	missile_drawchar
+	
+	lda b2
+	and #$0f
+	missile_drawchar
+	
+; }
 
 /* atari remove
 	lda #%00001111
@@ -4294,6 +4374,24 @@ screenfilenumber
 	dta $0d
 
 printleft
+
+; atari add {
+
+	mva #$f0 missile_drawchar.mask2
+	mva #$0f missile_drawchar.mask
+	
+	ldy #32+17*8
+	lda numberofenemies
+:4	lsr @
+	missile_drawchar
+
+	lda numberofenemies
+	and #$0f
+	missile_drawchar
+	
+; }
+
+	
 	; Routine to print number of enemies left to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
 	lda #%11111111
@@ -4312,6 +4410,23 @@ printleft
 printlives
 	; Routine to print lives to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
+	
+; atari add {
+
+	mva #$f0 missile_drawchar.mask
+	mva #$0f missile_drawchar.mask2
+
+	ldy #56+1*8
+	lda lives
+:4	lsr @
+	missile_drawchar
+	
+	lda lives
+	and #$0f
+	missile_drawchar
+	
+; }
+	
 	lda #%11110000
 	sta textcolour 
 	lda #8
@@ -4814,15 +4929,142 @@ x2     	lda consol
 	lda #$90
 :4	sta colpm0+:1
 	
-:4	mva #195+:1*2 hposm0+:1
+:2	mva #196-:1*2 hposm0+:1	;missile positions
+:2	mva #60-:1*2 hposm0+2+:1
 	
-	mva #$2c colpf0+3
-	
+	mva #$2c colpf0+3	;missile color
+	pmg_status
 	rts
 .endp
 
-	org mypmbase-$100
-:255	dta 255
+;redraw pmg status
+.proc	pmg_status
+shift	equ 0
+	
+	;left column
+	mva #$f0 missile_drawchar.mask
+	mva #$0f missile_drawchar.mask2
+
+	;stats
+	mva #18 tmp
+	ldy #16+shift
+x5	missile_drawchar
+	inc tmp
+	lda tmp
+	cmp #22
+	bne x5
+	
+	lda #10 ;L
+	ldy #56+shift
+	missile_drawchar
+	
+	ldy #56+1*8+shift
+	lda #0
+	missile_drawchar
+	lda #0
+	missile_drawchar
+	
+	lda #11 ;G
+	ldy #56+5*8+shift
+	missile_drawchar
+	
+	mva #6 tmp
+	ldy #56+(6)*8+shift
+x2	lda #0
+	missile_drawchar
+	dec tmp
+	bne x2
+
+	lda #12 ;S
+	ldy #56+(6+6+2)*8+shift
+	missile_drawchar
+
+	mva #8 tmp
+	ldy #56+(6+6+3)*8+shift
+x3	lda #0
+	missile_drawchar
+	dec tmp
+	bne x3
+
+	;right column
+	mva #$f0 missile_drawchar.mask2
+	mva #$0f missile_drawchar.mask
+
+	;enemy
+	mva #14 tmp
+	ldy #16+shift
+x4	missile_drawchar
+	inc tmp
+	lda tmp
+	cmp #18
+	bne x4
+
+	lda #13 ;H
+	ldy #32+6*8
+	missile_drawchar
+	
+	lda #0
+	missile_drawchar
+	lda #0
+	missile_drawchar
+	
+	lda #12 ;S
+	ldy #32+11*8
+	missile_drawchar
+	
+	lda #0
+	missile_drawchar
+	lda #0
+	missile_drawchar
+	
+	lda #10 ;L
+	ldy #32+16*8
+	
+	missile_drawchar
+	
+	lda #0
+	missile_drawchar
+	lda #0
+	missile_drawchar
+	rts
+
+init	dta 0
+tmp	dta 0
+.endp
+
+msldata	ins 'status_missiles.fnt',0,23*8
+
+
+;a = index of char
+;y = position
+;mask = #$f0 or #$0f (left, right)
+;mask2 = inverse to mask1
+.proc	missile_drawchar
+	asl @
+	asl @
+	asl @
+	tax
+	mva #8 count
+x1	lda msldata,x
+	and #$f0
+mask	equ *-1
+	sta b1
+	lda mypmbase-$100,y
+	and #$0f
+mask2	equ *-1
+	ora b1
+	sta mypmbase-$100,y
+	inx
+	iny
+	dec count
+	bne x1
+	
+	rts
+count	dta 0
+.endp
+
+
+	;org mypmbase-$100
 
 	org mypmbase
 :8	dta 0
