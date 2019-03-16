@@ -153,6 +153,34 @@ NMI	bit nmist
 	jmp (dli_ptr)	;dli
 nmi_vbi	jmp (vbi_ptr)
 
+;set no status bar
+.proc	set_status0
+	lda >gameDli.dlix
+	sta gameVbi.ptr1h
+	lda <gameDli.dlix
+	sta gameVbi.ptr1l
+	rts
+.endp
+
+;set status bar top
+.proc	set_status1
+	lda >gameDli.dlix3
+	sta gameVbi.ptr1h
+	lda <gameDli.dlix3
+	sta gameVbi.ptr1l
+	rts
+.endp
+
+;set status bar bottom
+.proc	set_status2
+	lda >gameDli.dli4x
+	sta gameDli.ptr3h
+	lda <gameDli.dli4x
+	sta gameDli.ptr3l
+	rts
+.endp
+
+
 .local	gameVbi
 vbi	phr
 	inc 20
@@ -162,19 +190,56 @@ vbi	phr
 	inc vsynccount
 	
 	mva #>gamevram chbase
-	mwa #gameDli.dlix dli_ptr
+	
+	lda >gameDli.dlix
+ptr1h	equ *-1
+	sta dli_ptr+1
+	lda <gameDli.dlix
+ptr1l	equ *-1
+	sta dli_ptr
+	
+	;mwa #gameDli.dlix dli_ptr
 	
 	mva #$94 colpf0+2
 	mva #$0c colpf0+1 ;white lum
 	lda #$90
 :4	sta colpm0+:1
 	mva #$a6 colpf0+3	;missile color
-	
+	mva #$11 prior
 	plr
 	rti
 .endl
 
 .local	gameDli
+dlix3	pha
+	sta wsync
+	mva #$14 prior
+	mva #$06 colpf0+2
+	mva #$06 colpf0+1
+	sta wsync
+	mva #$04 colpf0+2
+	mva #$0c colpf0+1
+	mva #>[gamevram+$1c00] chbase
+	mwa #dlix2 dli_ptr
+	sta wsync
+	sta wsync
+	sta wsync
+	mva #$2c colpf0+3	;missile
+	pla
+	rti
+	
+dlix2	pha
+	sta wsync
+	mva #$94 colpf0+2
+	mva #>[gamevram+($400*2)] chbase
+	mva #$11 prior
+	mva #$0c colpf0+1
+	mwa #dli1 dli_ptr
+	pla
+	rti
+	
+
+
 dlix	pha
 	sta wsync
 	mva #>[gamevram+$400] chbase
@@ -184,21 +249,61 @@ dlix	pha
 	pla
 	rti
 
+
+
 dli0	pha
 	sta wsync
 	mva #>[gamevram+($400*2)] chbase
+	mva #$94 colpf0+2
 	mwa #dli1 dli_ptr
 	pla
 	rti
+
 
 .rept 4,#+1,#+2,#+3
 dli:1	pha
 	sta wsync
 	mva #>[gamevram+($400*:3)+$0000] chbase
-	mwa #dli:2 dli_ptr
+	
+	;mwa #dli:2 dli_ptr
+	lda #>dli:2
+ptr:2h	equ *-1
+	sta dli_ptr+1
+	lda #<dli:2
+ptr:2l	equ *-1
+	sta dli_ptr
 	pla
 	rti
 .endr
+
+;bottom statusbar
+dli4x	pha
+	sta wsync
+	mva #$14 prior
+	mva #$06 colpf0+2
+	mva #$06 colpf0+1
+	sta wsync
+	mva #$04 colpf0+2
+	mva #$0c colpf0+1
+	mva #>[gamevram+$1c00] chbase
+	mwa #dli5x dli_ptr
+	sta wsync
+	sta wsync
+	sta wsync
+	mva #$2c colpf0+3	;missile
+	pla
+	rti
+	
+dli5x	pha
+	sta wsync
+	mva #$94 colpf0+2
+	mva #>[gamevram+($1800)] chbase
+	mva #$11 prior
+	mva #$0c colpf0+1
+	mwa #dli1 dli_ptr
+	pla
+	rti
+	
 
 dli5	pha
 	sta wsync
@@ -4944,7 +5049,7 @@ x2     	lda consol
 .endp
 
 .proc	level_pmg
-	mva #1+16 prior
+	;mva #1+16 prior
 	lda #3
 :4	sta sizep0+:1
 :4	mva #64+:1*32 hposp0+:1
@@ -4956,6 +5061,9 @@ x2     	lda consol
 :2	mva #60-:1*2 hposm0+2+:1
 	
 	pmg_status
+	;set_status1
+	;set_status0
+	set_status2
 	rts
 .endp
 
