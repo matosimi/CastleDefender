@@ -159,6 +159,9 @@ nmi_vbi	jmp (vbi_ptr)
 	sta gameVbi.ptr1h
 	lda <gameDli.dlix
 	sta gameVbi.ptr1l
+	
+	mva >gameDli.dli3 gameDli.ptr3h
+	mva <gameDli.dli3 gameDli.ptr3l
 	rts
 .endp
 
@@ -168,6 +171,10 @@ nmi_vbi	jmp (vbi_ptr)
 	sta gameVbi.ptr1h
 	lda <gameDli.dlix3
 	sta gameVbi.ptr1l
+
+	mva >gameDli.dli3 gameDli.ptr3h
+	mva <gameDli.dli3 gameDli.ptr3l
+	
 	rts
 .endp
 
@@ -280,12 +287,15 @@ ptr:2l	equ *-1
 dli4x	pha
 	sta wsync
 	mva #$14 prior
-	mva #$06 colpf0+2
-	mva #$06 colpf0+1
-	sta wsync
-	mva #$04 colpf0+2
-	mva #$0c colpf0+1
 	mva #>[gamevram+$1c00] chbase
+	mva #$08 colpf0+2
+	mva #$08 colpf0+1
+	sta wsync
+	mva #$06 colpf0+2
+	mva #$0c colpf0+1
+:6	sta wsync
+	mva #$04 colpf0+2
+	
 	mwa #dli5x dli_ptr
 	sta wsync
 	sta wsync
@@ -300,7 +310,7 @@ dli5x	pha
 	mva #>[gamevram+($1800)] chbase
 	mva #$11 prior
 	mva #$0c colpf0+1
-	mwa #dli1 dli_ptr
+	mwa #dli5 dli_ptr
 	pla
 	rti
 	
@@ -5061,8 +5071,6 @@ x2     	lda consol
 :2	mva #60-:1*2 hposm0+2+:1
 	
 	pmg_status
-	;set_status1
-	;set_status0
 	set_status2
 	rts
 .endp
