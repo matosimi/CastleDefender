@@ -138,7 +138,7 @@ x0	lda #0
 .endp
 	
 .align $100
-dl	dta $30
+dl	dta $50
 	dta $42,a(vram),2,2,$82
 :6	dta $42,a(vram),2,2,$82
 	dta $42,a(vram)
@@ -163,6 +163,13 @@ vbi	phr
 	
 	mva #>gamevram chbase
 	mwa #gameDli.dlix dli_ptr
+	
+	mva #$94 colpf0+2
+	mva #$0c colpf0+1 ;white lum
+	lda #$90
+:4	sta colpm0+:1
+	mva #$a6 colpf0+3	;missile color
+	
 	plr
 	rti
 .endl
@@ -172,17 +179,35 @@ dlix	pha
 	sta wsync
 	mva #>[gamevram+$400] chbase
 	mwa #dli0 dli_ptr
+:3	sta wsync
+	mva #$2c colpf0+3	;missile
 	pla
 	rti
-dli6
-.rept 6,#,#+1,#+2
+
+dli0	pha
+	sta wsync
+	mva #>[gamevram+($400*2)] chbase
+	mwa #dli1 dli_ptr
+	pla
+	rti
+
+.rept 4,#+1,#+2,#+3
 dli:1	pha
 	sta wsync
-	mva #>[gamevram+($400*:3)+$0800] chbase
+	mva #>[gamevram+($400*:3)+$0000] chbase
 	mwa #dli:2 dli_ptr
 	pla
 	rti
 .endr
+
+dli5	pha
+	sta wsync
+	mva #>[gamevram+($400*7)] chbase
+:2	sta wsync
+	mva #0 colpf0+2
+	sta colpf0+1
+	pla
+	rti
 .endl	
 	
 	run $1b00
@@ -4926,13 +4951,10 @@ x2     	lda consol
 	mva #32+1+12+16 dmactl
 	mva #$03 gractl
 	mva >mypmbase pmbase
-	lda #$90
-:4	sta colpm0+:1
 	
 :2	mva #196-:1*2 hposm0+:1	;missile positions
 :2	mva #60-:1*2 hposm0+2+:1
 	
-	mva #$2c colpf0+3	;missile color
 	pmg_status
 	rts
 .endp
@@ -5067,5 +5089,5 @@ count	dta 0
 	;org mypmbase-$100
 
 	org mypmbase
-:8	dta 0
+:10	dta 0
 	ins 'pmg\lvl1.pmg'
