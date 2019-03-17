@@ -155,10 +155,8 @@ nmi_vbi	jmp (vbi_ptr)
 
 ;set no status bar
 .proc	set_status0
-	lda >gameDli.dlix
-	sta gameVbi.ptr1h
-	lda <gameDli.dlix
-	sta gameVbi.ptr1l
+	mva >gameDli.dlix gameVbi.ptr1h
+	mva <gameDli.dlix gameVbi.ptr1l
 	
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
@@ -167,10 +165,8 @@ nmi_vbi	jmp (vbi_ptr)
 
 ;set status bar top
 .proc	set_status1
-	lda >gameDli.dlix3
-	sta gameVbi.ptr1h
-	lda <gameDli.dlix3
-	sta gameVbi.ptr1l
+	mva >gameDli.dlix3 gameVbi.ptr1h
+	mva <gameDli.dlix3 gameVbi.ptr1l
 
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
@@ -180,10 +176,11 @@ nmi_vbi	jmp (vbi_ptr)
 
 ;set status bar bottom
 .proc	set_status2
-	lda >gameDli.dli4x
-	sta gameDli.ptr3h
-	lda <gameDli.dli4x
-	sta gameDli.ptr3l
+	mva >gameDli.dli4x gameDli.ptr3h
+	mva <gameDli.dli4x gameDli.ptr3l
+	
+	mva >gameDli.dlix gameVbi.ptr1h
+	mva <gameDli.dlix gameVbi.ptr1l
 	rts
 .endp
 
@@ -221,16 +218,16 @@ ptr1l	equ *-1
 dlix3	pha
 	sta wsync
 	mva #$14 prior
-	mva #$06 colpf0+2
-	mva #$06 colpf0+1
-	sta wsync
-	mva #$04 colpf0+2
-	mva #$0c colpf0+1
 	mva #>[gamevram+$1c00] chbase
+	mva #$08 colpf0+2
+	mva #$08 colpf0+1
+	sta wsync
+	mva #$06 colpf0+2
+	mva #$0c colpf0+1
+:6	sta wsync
+	mva #$04 colpf0+2
+	
 	mwa #dlix2 dli_ptr
-	sta wsync
-	sta wsync
-	sta wsync
 	mva #$2c colpf0+3	;missile
 	pla
 	rti
@@ -297,9 +294,6 @@ dli4x	pha
 	mva #$04 colpf0+2
 	
 	mwa #dli5x dli_ptr
-	sta wsync
-	sta wsync
-	sta wsync
 	mva #$2c colpf0+3	;missile
 	pla
 	rti
@@ -5071,7 +5065,9 @@ x2     	lda consol
 :2	mva #60-:1*2 hposm0+2+:1
 	
 	pmg_status
-	set_status2
+	set_status1
+	
+	
 	rts
 .endp
 
