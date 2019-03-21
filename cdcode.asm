@@ -48,6 +48,7 @@ keypres	equ $ba
 b1	equ $bc
 bulright	equ $bd ;bullet on right part of char
 b2	equ $be
+sbarvisib	equ $bf ;status bar visible = 0
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -92,6 +93,9 @@ copykeytab
 .proc	getkeypressed
 		
 	lda skctl
+	and #8
+	beq shiftpressed
+	lda skctl
 	and #4
 	bne keynotpressed
 keypressed
@@ -100,6 +104,13 @@ keypressed
 	bne stillpressed
 	dta 2 ;code cannot get here
 	
+shiftpressed
+	;shift
+	lda #1
+	sta keystat
+	sta keypres
+	rts
+
 keynotpressed
 	mva #0 keystat
 	
@@ -160,6 +171,7 @@ nmi_vbi	jmp (vbi_ptr)
 	
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
+	mva #1 sbarvisib
 	rts
 .endp
 
@@ -170,7 +182,7 @@ nmi_vbi	jmp (vbi_ptr)
 
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
-	
+	mva #0 sbarvisib
 	rts
 .endp
 
@@ -181,6 +193,7 @@ nmi_vbi	jmp (vbi_ptr)
 	
 	mva >gameDli.dlix gameVbi.ptr1h
 	mva <gameDli.dlix gameVbi.ptr1l
+	mva #0 sbarvisib
 	rts
 .endp
 
@@ -2398,7 +2411,7 @@ press3
 	jmp maketower
 
 escape			;Escape has been pressed.
-
+;TODO: fix this (crash)
 	jsr readshift
 	bvc notescape ; Escape pressed - but not shift.
 	pla
@@ -2510,6 +2523,9 @@ nokeypressed
 	beq movedown
 	cmp #"d"
 	beq moveright
+	
+	cmp #1 ;shift
+	jeq shiftpressed
 
 ; }
 
@@ -2604,6 +2620,21 @@ finishkeyboard
 	sta lastkeypressed
 	jsr printtowerinfo
 	rts
+
+;atari add {
+shiftpressed
+	lda sbarvisib
+	bne sps1
+	set_status0
+	rts	
+sps1	ldx currentlocation
+	lda typos,x
+	a_ge #32 sps2
+	set_status2
+	rts
+sps2	set_status1
+	rts
+;}
 
 toweralreadyhere
 	jsr errorsound
@@ -5065,7 +5096,7 @@ x2     	lda consol
 :2	mva #60-:1*2 hposm0+2+:1
 	
 	pmg_status
-	set_status1
+	set_status0
 	
 	
 	rts
