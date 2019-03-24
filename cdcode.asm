@@ -48,7 +48,8 @@ keypres	equ $ba
 b1	equ $bc
 bulright	equ $bd ;bullet on right part of char
 b2	equ $be
-sbarvisib	equ $bf ;status bar visible = 0
+sbarvisib	equ $bf ;status bar visible = 1(top),2(bottom),0(none)
+sbarselec	equ $c0 ;status bar selection = 0(none selected)
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -93,9 +94,6 @@ copykeytab
 .proc	getkeypressed
 		
 	lda skctl
-	and #8
-	beq shiftpressed
-	lda skctl
 	and #4
 	bne keynotpressed
 keypressed
@@ -104,13 +102,6 @@ keypressed
 	bne stillpressed
 	dta 2 ;code cannot get here
 	
-shiftpressed
-	;shift
-	lda #1
-	sta keystat
-	sta keypres
-	rts
-
 keynotpressed
 	mva #0 keystat
 	
@@ -171,7 +162,11 @@ nmi_vbi	jmp (vbi_ptr)
 	
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
-	mva #1 sbarvisib
+	;todo: clear sbar selectio0n
+	
+	revert_pmg
+	mva #0 sbarvisib
+		
 	rts
 .endp
 
@@ -182,7 +177,10 @@ nmi_vbi	jmp (vbi_ptr)
 
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
-	mva #0 sbarvisib
+	mva #1 sbarvisib
+	mva #0 sbarselec
+	
+	store_pmg
 	rts
 .endp
 
@@ -193,7 +191,10 @@ nmi_vbi	jmp (vbi_ptr)
 	
 	mva >gameDli.dlix gameVbi.ptr1h
 	mva <gameDli.dlix gameVbi.ptr1l
-	mva #0 sbarvisib
+	mva #2 sbarvisib
+	mva #0 sbarselec
+	
+	store_pmg
 	rts
 .endp
 
@@ -230,7 +231,7 @@ ptr1l	equ *-1
 .local	gameDli
 dlix3	pha
 	sta wsync
-	mva #$14 prior
+	mva #$11 prior ;14
 	mva #>[gamevram+$1c00] chbase
 	mva #$08 colpf0+2
 	mva #$08 colpf0+1
@@ -296,7 +297,7 @@ ptr:2l	equ *-1
 ;bottom statusbar
 dli4x	pha
 	sta wsync
-	mva #$14 prior
+	mva #$11 prior ;14
 	mva #>[gamevram+$1c00] chbase
 	mva #$08 colpf0+2
 	mva #$08 colpf0+1
@@ -2515,6 +2516,9 @@ nokeypressed
 	cmp #";" ;ESC
 	beq escape
 
+	ldx sbarvisib
+	jne sbarcontrols	;if status bar is visible handle controls differently
+
 	cmp #"w"
 	beq moveup
 	cmp #"a"
@@ -2523,9 +2527,8 @@ nokeypressed
 	beq movedown
 	cmp #"d"
 	beq moveright
-	
-	cmp #1 ;shift
-	jeq shiftpressed
+	cmp #";"* ;return
+	jeq returnpressed
 
 ; }
 
@@ -2622,9 +2625,9 @@ finishkeyboard
 	rts
 
 ;atari add {
-shiftpressed
+returnpressed
 	lda sbarvisib
-	bne sps1
+	beq sps1
 	set_status0
 	rts	
 sps1	ldx currentlocation
@@ -2634,11 +2637,81 @@ sps1	ldx currentlocation
 	rts
 sps2	set_status1
 	rts
-;}
 
 toweralreadyhere
 	jsr errorsound
 	jmp finishkeyboard
+
+sbarcontrols
+.local	sbarcontrols_local
+         	cmp #"w"
+	beq moveup
+	;cmp #"a"
+	;beq moveleft
+	cmp #"s"
+	beq movedown
+	;cmp #"d"
+	;beq moveright
+	cmp #";"* ;return
+	jeq returnpressed
+	rts
+	
+moveup	lda sbarselec
+	a_lt #0 x0
+	dec sbarselec
+	clear_sbarselec
+	draw_sbarselec 
+	rts
+
+
+movedown	lda sbarselec
+	a_ge #3 x0
+	inc sbarselec
+	clear_sbarselec
+	draw_sbarselec 
+x0	rts
+
+.proc	draw_sbarselec
+     	ldx sbarvisib
+	dex
+	ldy sbarselec
+	lda store_pmg.bars,x
+	add lmvidx,y
+	tax
+	ldy #8
+x1	
+.rept 4,#
+	lda #255
+	sta mypmbase+:1*$100,x
+.endr	
+	dex
+	dey
+	bne x1
+	rts
+lmvidx	dta 8,16,24	;line move index (lines inside statusbar)
+.endp
+
+;clear statusbar selection (pmg)
+.proc	clear_sbarselec
+          ldx sbarvisib
+	dex
+	lda store_pmg.bars,x
+	add #32
+	tax
+	ldy #32
+x1
+.rept 4,#
+	lda #0
+	sta mypmbase+:1*$100,x
+.endr		
+	dex
+	dey
+	bne x1
+     	rts
+.endp
+.endl
+;}
+
 
 addgold
 	; Add A to gold value then update printout
@@ -5096,7 +5169,7 @@ x2     	lda consol
 :2	mva #60-:1*2 hposm0+2+:1
 	
 	pmg_status
-	set_status0
+	;set_status0
 	
 	
 	rts
@@ -5226,6 +5299,49 @@ mask2	equ *-1
 	
 	rts
 count	dta 0
+.endp
+
+;store pm data under statusbars and fill the statusbar data
+.proc	store_pmg
+	ldx sbarvisib
+	dex
+	lda bars,x
+	add #32
+	tax
+	ldy #32
+x1	
+.rept 4,#
+	lda mypmbase+:1*$100,x
+	sta temppage+:1*32,y
+	lda #0
+	sta mypmbase+:1*$100,x
+.endr	
+	dex
+	dey
+	bne x1
+	rts
+	
+bars	dta 45,173 ;pmg positions of top&bottom statusbar
+	
+.endp
+
+;revert statusbar data
+.proc	revert_pmg
+          ldx sbarvisib
+	dex
+	lda store_pmg.bars,x
+	add #32
+	tax
+	ldy #32
+x1	
+.rept 4,#
+	lda temppage+:1*32,y
+	sta mypmbase+:1*$100,x
+.endr	
+	dex
+	dey
+	bne x1
+     	rts
 .endp
 
 
