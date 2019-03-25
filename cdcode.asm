@@ -303,20 +303,26 @@ dli4x	pha
 	mva #$08 colpf0+1
 	sta wsync
 	mva #$06 colpf0+2
+	lda #$24 
+:4	sta colpm0+:1
+	
+	sta wsync
+;	mva #$06 colpf0+2
 	mva #$0c colpf0+1
 :6	sta wsync
 	mva #$04 colpf0+2
-	
 	mwa #dli5x dli_ptr
-	mva #$2c colpf0+3	;missile
 	pla
 	rti
 	
 dli5x	pha
-	sta wsync
-	mva #$94 colpf0+2
-	mva #>[gamevram+($1800)] chbase
 	mva #$11 prior
+	lda #$90
+:4	sta colpm0+:1	
+	
+	sta wsync
+	mva #>[gamevram+($1800)] chbase
+	mva #$94 colpf0+2
 	mva #$0c colpf0+1
 	mwa #dli5 dli_ptr
 	pla
@@ -2657,22 +2663,23 @@ sbarcontrols
 	rts
 	
 moveup	lda sbarselec
-	a_lt #0 x0
+	beq x1
 	dec sbarselec
 	clear_sbarselec
-	draw_sbarselec 
+x1	draw_sbarselec 
 	rts
 
 
 movedown	lda sbarselec
-	a_ge #3 x0
+	a_ge #2 x1
 	inc sbarselec
 	clear_sbarselec
 	draw_sbarselec 
 x0	rts
 
 .proc	draw_sbarselec
-     	ldx sbarvisib
+     	ldx sbarvisib 
+     	beq x0	;do not draw if visible=0
 	dex
 	ldy sbarselec
 	lda store_pmg.bars,x
@@ -2687,8 +2694,8 @@ x1
 	dex
 	dey
 	bne x1
-	rts
-lmvidx	dta 8,16,24	;line move index (lines inside statusbar)
+x0	rts
+lmvidx	dta 16,24,32	;line move index (lines inside statusbar)
 .endp
 
 ;clear statusbar selection (pmg)
