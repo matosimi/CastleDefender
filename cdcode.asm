@@ -50,6 +50,8 @@ bulright	equ $bd ;bullet on right part of char
 b2	equ $be
 sbarvisib	equ $bf ;status bar visible = 1(top),2(bottom),0(none)
 sbarselec	equ $c0 ;status bar selection = 0(none selected)
+sbarmax	equ $c1 ;status bar - max line index to select
+sbarmin	equ $c2 ;status bar - min line index to select
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -166,7 +168,7 @@ nmi_vbi	jmp (vbi_ptr)
 	
 	revert_pmg
 	mva #0 sbarvisib
-		
+	mva sbarmin sbarselec	
 	rts
 .endp
 
@@ -178,9 +180,9 @@ nmi_vbi	jmp (vbi_ptr)
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
 	mva #1 sbarvisib
-	mva #0 sbarselec
-	
+	mva sbarmin sbarselec	
 	store_pmg
+	sbarcontrols_local.draw_sbarselec
 	rts
 .endp
 
@@ -192,9 +194,9 @@ nmi_vbi	jmp (vbi_ptr)
 	mva >gameDli.dlix gameVbi.ptr1h
 	mva <gameDli.dlix gameVbi.ptr1l
 	mva #2 sbarvisib
-	mva #0 sbarselec
-	
+	mva sbarmin sbarselec	
 	store_pmg
+	sbarcontrols_local.draw_sbarselec
 	rts
 .endp
 
@@ -443,7 +445,7 @@ ttypeclear
 	sta lives
 
 ;atari add {
-	;mva #$99 gold+1 ;debug - lot of gold
+	mva #$99 gold+1 ;debug - lot of gold
 ;}
 
 
@@ -2663,15 +2665,20 @@ sbarcontrols
 	rts
 	
 moveup	lda sbarselec
+	beq x2
+	cmp sbarmin
 	beq x1
 	dec sbarselec
-	clear_sbarselec
-x1	draw_sbarselec 
+x1	clear_sbarselec
+	draw_sbarselec 
+	rts
+x2	clear_sbarselec
 	rts
 
 
 movedown	lda sbarselec
-	a_ge #2 x1
+	cmp sbarmax	;do not go over max line
+	beq x1
 	inc sbarselec
 	clear_sbarselec
 	draw_sbarselec 
@@ -2682,6 +2689,7 @@ x0	rts
      	beq x0	;do not draw if visible=0
 	dex
 	ldy sbarselec
+	beq x0	;do not draw if selected=0
 	lda store_pmg.bars,x
 	add lmvidx,y
 	tax
@@ -2695,7 +2703,7 @@ x1
 	dey
 	bne x1
 x0	rts
-lmvidx	dta 16,24,32	;line move index (lines inside statusbar)
+lmvidx	dta 0,16,24,32	;line move index (lines inside statusbar)
 .endp
 
 ;clear statusbar selection (pmg)
@@ -3007,6 +3015,14 @@ updatetowerinfo
 	sta previoustower       ; Store the last plot info
 	cmp #0                  ; Compare if there is no tower at the location                
 	beq printtowerbasicstats          ; only print base info
+;atari add {
+	pha
+	lda #1
+	sta sbarselec
+	sta sbarmin
+	mva #2 sbarmax
+	pla
+; }
 
 	dey
 	tay
@@ -3045,10 +3061,19 @@ updatetowerinfo
 	sta $70
 	ldx #00
 	jsr numberplot          ; keyboard         
-
+;atari add {		
+	sbarcontrols_local.clear_sbarselec
+	sbarcontrols_local.draw_sbarselec
+	rts
+; }
 	;jmp delrow3
 
 delrow2
+;atari add {
+	dec sbarmax
+	sbarcontrols_local.clear_sbarselec
+	sbarcontrols_local.draw_sbarselec
+; }
 	;lda #%00000000:sta textcolour 
 	;lda #19:sta $70
 	;lda #30:sta $77
@@ -3067,9 +3092,13 @@ printtowerbasicstats           ; Print the base tower infor for no tower present
 	ldy #%100
 	lda #29
 	sta $77
+;atari add {
+	mva #3 sbarmax
+	mva #0 sbarmin
+	sta sbarselec
+;}
 
 printtowerbasicsloop
-
 	lda #$a0
 	sta towertempnum
 	jsr printtoweractive            ; print one row of information
