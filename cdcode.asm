@@ -280,12 +280,12 @@ dli0	pha
 	rti
 
 
-.rept 4,#+1,#+2,#+3
+.rept 3,#+1,#+2,#+3
 dli:1	pha
 	sta wsync
 	mva #>[gamevram+($400*:3)+$0000] chbase
 	
-	;mwa #dli:2 dli_ptr
+	;mwa #:2*2+$10 colpf0+4
 	lda #>dli:2
 ptr:2h	equ *-1
 	sta dli_ptr+1
@@ -295,6 +295,27 @@ ptr:2l	equ *-1
 	pla
 	rti
 .endr
+
+.rept 1,#+1+3,#+2+3,#+3+3
+dli:1	pha
+	sta wsync
+	mva #>[gamevram+($400*:3)+$0000] chbase
+	
+	lda #>dli:2
+ptr:2h	equ *-1
+	sta dli_ptr+1
+	lda #<dli:2
+ptr:2l	equ *-1
+	sta dli_ptr
+
+:20	sta wsync
+	mva #$02 colpf0+2
+	mva #$0f colpf0+1 ;white lum
+	mva #4+16 prior
+	pla
+	rti
+.endr
+
 
 ;bottom statusbar
 dli4x	pha
@@ -688,37 +709,38 @@ finishloadsprites
 	ldy #enemyno-1
 	sta etype,Y
 	sty $8d
-	lda #16
+	lda #3 ;#16
 	sta sx
 	lda #212
 	sta sy
 	jsr plotter
 
 	inc etype+enemyno-1
-	lda #16+64
+	lda #3+64 ;16+64
 	sta sx
 	lda #212
 	sta sy
 	jsr plotter
 
 	inc etype+enemyno-1
-	lda #16+64+64
+	lda #3+64+64 ;16+64+64
 	sta sx
 	lda #212
 	sta sy
 	jsr plotter
 
 	inc etype+enemyno-1
-	lda #16+64+64+64
+	lda #3+64+64+64 ;16+64+64+64
 	sta sx
 	lda #212
 	sta sy
 	jsr plotter
 
 	;Print enemy health values
+	
 	lda #%00001111
 	sta textcolour 
-	lda #8
+	lda #4 ;8
 	sta $70
 	lda #27
 	sta $77
@@ -727,9 +749,12 @@ finishloadsprites
 	lda #(enemystrengths) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+; }
 
-	lda #24
+	lda #4+16 ;24
 	sta $70
 	;lda #27:sta $77
 	lda #(enemystrengths+1) % 256
@@ -737,9 +762,12 @@ finishloadsprites
 	lda #(enemystrengths+1) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+; }         
 
-	lda #40
+	lda #4+32 ;40
 	sta $70
 	;lda #27:sta $77
 	lda #(enemystrengths+2) % 256
@@ -747,9 +775,12 @@ finishloadsprites
 	lda #(enemystrengths+2) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+; }          
 
-	lda #56
+	lda #4+16+32 ;56
 	sta $70
 	;lda #27:sta $77
 	lda #(enemystrengths+3) % 256
@@ -757,12 +788,15 @@ finishloadsprites
 	lda #(enemystrengths+3) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+; }         
 
 	; Print enemy shield values
 	lda #%11111111
 	sta textcolour 
-	lda #11
+	lda #10 ;#11
 	sta $70
 	;lda #27:sta $77
 	lda #(enemyshields) % 256
@@ -770,9 +804,15 @@ finishloadsprites
 	lda #(enemyshields) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+	mva #10-2 $70
+	ldx #13*8+7
+	charplot_atari
+; }     
 		
-	lda #27
+	lda #10+16 ;27
 	sta $70
 	;lda #27:sta $77
 	lda #(enemyshields+1) % 256
@@ -780,9 +820,15 @@ finishloadsprites
 	lda #(enemyshields+1) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+	mva #10+16-2 $70
+	ldx #13*8+7
+	charplot_atari
+; }          
 
-	lda #43
+	lda #10+32 ;43
 	sta $70
 	;lda #27:sta $77
 	lda #(enemyshields+2) % 256
@@ -790,9 +836,15 @@ finishloadsprites
 	lda #(enemyshields+2) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+	mva #10+32-2 $70
+	ldx #13*8+7
+	charplot_atari
+; }          
 
-	lda #59
+	lda #10+16+32 ;59
 	sta $70
 	;lda #27:sta $77
 	lda #(enemyshields+3) % 256
@@ -800,7 +852,13 @@ finishloadsprites
 	lda #(enemyshields+3) / 256
 	sta $75
 	ldx #0
-	jsr numberplot          
+;atari replace {
+;	jsr numberplot          
+	numberplot_atari
+	mva #10+16+32-2 $70
+	ldx #13*8+7
+	charplot_atari
+; }         
 
 	lda #0
 	ldy #enemyno-1
@@ -2709,6 +2767,7 @@ lmvidx	dta 0,16,24,32	;line move index (lines inside statusbar)
 ;clear statusbar selection (pmg)
 .proc	clear_sbarselec
           ldx sbarvisib
+          beq x0	;do not Clear if not drawn
 	dex
 	lda store_pmg.bars,x
 	add #32
@@ -2722,7 +2781,7 @@ x1
 	dex
 	dey
 	bne x1
-     	rts
+x0     	rts
 .endp
 .endl
 ;}
@@ -4618,6 +4677,7 @@ eventend
 	org codeoffset+$100
 ;	guard codeoffset+$1ff
 	ins "srcdata/numbers.bin" ;bin.fnt (for debug)
+
 	;INCBIN "/home/chris/bem/spriter/numbers.bin"
 /* atari remove
 	dta     $44,$AA,$AA,$AA,$AA,$AA,$44,$00,$44,$CC,$44,$44,$44,$44,$EE
@@ -5380,7 +5440,73 @@ x1
      	rts
 .endp
 
+;draw number with atari font
+.proc	numberplot_atari
 
+	;calculate target
+	lda >gamevram
+	add $77 ;y
+	sta w1+1
+	lda $70 ;x*2
+:2	asl @
+	sta w1
+	
+	;print high digit
+	ldy #0
+	lda ($74),y
+;:4	lsr @ ;remove low digit
+;:3	asl @ ;*8
+	sta b1
+	and #$f0
+	lsr @
+	add #7
+	tax
+	
+	ldy #7
+x1	lda atrnfont,x
+	sta (w1),y
+	dex
+	dey
+	bpl x1
+	
+	lda b1
+	and #$0f
+:3	asl @	;get low digit
+	add #7
+	tax
+	
+	add16 #8 w1
+	
+	ldy #7
+x2	lda atrnfont,x
+	sta (w1),y
+	dex
+	dey
+	bpl x2
+	rts
+.endp
+
+;prot 1 character 
+;x = contains char*8 from numbers_atari
+.proc	charplot_atari
+	;calculate target
+	lda >gamevram
+	add $77 ;y
+	sta w1+1
+	lda $70 ;x*2
+:2	asl @
+	sta w1
+	
+	ldy #7
+x1	lda atrnfont,x
+	sta (w1),y
+	dex
+	dey
+	bpl x1
+	rts
+.endp
+
+atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;org mypmbase-$100
 
 	org mypmbase
