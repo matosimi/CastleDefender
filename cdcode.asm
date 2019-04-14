@@ -239,6 +239,11 @@ dlix3	pha
 	mva #$08 colpf0+1
 	sta wsync
 	mva #$06 colpf0+2
+	
+	lda #$24 
+:4	sta colpm0+:1
+	sta wsync	
+	
 	mva #$0c colpf0+1
 :6	sta wsync
 	mva #$04 colpf0+2
@@ -249,6 +254,10 @@ dlix3	pha
 	rti
 	
 dlix2	pha
+	mva #$11 prior
+	lda #$90
+:4	sta colpm0+:1
+
 	sta wsync
 	mva #$94 colpf0+2
 	mva #>[gamevram+($400*2)] chbase
@@ -309,7 +318,7 @@ ptr:2l	equ *-1
 	sta dli_ptr
 
 :20	sta wsync
-	mva #$02 colpf0+2
+	mva #$32 colpf0+2 ;enemybar color
 	mva #$0f colpf0+1 ;white lum
 	mva #4+16 prior
 	pla
@@ -337,29 +346,34 @@ dli4x	pha
 	mwa #dli5x dli_ptr
 	pla
 	rti
-	
+		
 dli5x	pha
 	mva #$11 prior
 	lda #$90
 :4	sta colpm0+:1	
 	
+	;enemybar
 	sta wsync
 	mva #>[gamevram+($1800)] chbase
 	mva #$94 colpf0+2
 	mva #$0c colpf0+1
 	mwa #dli5 dli_ptr
+
+:20	sta wsync	
+	mva #$32 colpf0+2 ;enemybar color
+	mva #$0f colpf0+1 ;white lum
+	mva #4+16 prior
 	pla
 	rti
 	
-
 dli5	pha
 	sta wsync
 	mva #>[gamevram+($400*7)] chbase
 :2	sta wsync
-	mva #0 colpf0+2
+	mva #0 colpf0+2 ;hide part right under enemybar
 	sta colpf0+1
 	pla
-	rti
+	rti 
 .endl	
 	
 	run $1b00
