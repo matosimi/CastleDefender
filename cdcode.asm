@@ -3092,12 +3092,14 @@ updatetowerinfo
 	sta $77
 	jsr printtoweractive            ; print one row of information
 
-	lda #$CD
-	sta towertempnum
-	lda #19
+	;lda #$CD
+	;sta towertempnum
+	lda #6 ;19
 	sta $70
-	ldx #00
-	jsr numberplot          ; keyboard         
+	;ldx #00
+	;jsr numberplot          ; keyboard         
+	ldx #13*8-1
+	charplot_atari
 
 	tya                             ; Get back the tower offset
 	and #%11
@@ -3114,12 +3116,14 @@ updatetowerinfo
 	lda #30
 	sta $77
 	jsr printtoweractive            ; print one row of information
-	lda #$ab
-	sta towertempnum
-	lda #19
+	;lda #$ab
+	;sta towertempnum
+	lda #6 ;19
 	sta $70
-	ldx #00
-	jsr numberplot          ; keyboard         
+	;ldx #00
+	ldx #12*8-1
+	;jsr numberplot          ; keyboard
+	charplot_atari         
 ;atari add {		
 	sbarcontrols_local.clear_sbarselec
 	sbarcontrols_local.draw_sbarselec
@@ -3167,11 +3171,13 @@ printtowerbasicsloop
 	lsr @
 	ora #$a0
 	sta towertempnum
-	lda #19
+	lda #4 ; 19
 	sta $70
 	ldx #00
-	jsr numberplot          ; keyboard         
-
+;atari replace {\
+;	jsr numberplot          ; keyboard         
+	numberplot_atari
+; }
 	inc $77
 	tya
 	clc
@@ -3183,57 +3189,70 @@ printtowerbasicsloop
 	rts
 
 printtoweractive               ; display one row of active tower info - removed from main loop.
-	lda #%00001111
-	sta textcolour   ;draw in green
-	lda #23
+	;lda #%00001111
+	;sta textcolour   ;draw in green
+	lda #10 ;23
 	sta $70
 	lda #towertempnum % 256
 	sta $74
 	lda #towertempnum / 256
 	sta $75
 	ldx #00
-	jsr numberplot          ; plot tower level         
+;	jsr numberplot          ; plot tower level         
+	numberplot_atari
+
+	;lda #%11110000
+	;sta textcolour   ; Draw in green
+	lda towerphysical-4,y
+	sta towertempnum
+	lda #18 ;28
+	sta $70
+	ldx #00
+	;jsr numberplot          ; plot tower physical damage         
+	numberplot_atari
 
 	lda towershield-4,y
 	sta towertempnum
-	lda #33
+	lda #26 ;33
 	sta $70
 	ldx #00
-	jsr numberplot          ; plot tower shield damage
-
+	;jsr numberplot          ; plot tower shield damage
+	numberplot_atari
+	
+	lda towerranges-4,y
+	sta towertempnum
+	lda #34 ;38
+	sta $70
+	ldx #00
+	;jmp numberplot          ; plot tower range	rts implied
+	;rts/
+	numberplot_atari
+	
 	lda towerfiredisplayspeed-4,y
 	sta towertempnum
-	lda #43
+	lda #42 ;43
 	sta $70
 	ldx #00
-	jsr numberplot          ; plot tower rate
+	;jsr numberplot          ; plot tower rate
+	numberplot_atari
 
 	lda #%11111111
 	sta textcolour   ;draw in yellow
 	lda towercosts,y
 	sta towertempnum
-	lda #48
+	lda #50 ;48
 	sta $70
 	ldx #01
-	jsr numberplot          ; plot tower cost
+;	jsr numberplot          ; plot tower cost
+	numberplot_atari
+	
+	;3rd figure of Cost
+	mva #54 $70
+	ldx #7
+	charplot_atari
+	
 
-	lda #%11110000
-	sta textcolour   ; Draw in green
-	lda towerphysical-4,y
-	sta towertempnum
-	lda #28
-	sta $70
-	ldx #00
-	jsr numberplot          ; plot tower physical damage         
-
-	lda towerranges-4,y
-	sta towertempnum
-	lda #38
-	sta $70
-	ldx #00
-	jmp numberplot          ; plot tower range	rts implied
-	;rts/
-
+	rts
 
 erasebox
 	lda cursordisplayed
@@ -3487,11 +3506,11 @@ clearstatusboxloop
 	;sta $4000+512*29+19*8,x
 	;sta $4000+512*30+19*8,x
 	;sta $4000+512*31+19*8,x
-	sta gamevram+256*29-6*8,x
-	sta gamevram+256*30-6*8,x
-	sta gamevram+256*31-6*8,x
+	sta gamevram+256*29,x
+	sta gamevram+256*30,x
+	sta gamevram+256*31,x
 	;possible that only part of line needs to be deleted
-	cpx #120
+	;cpx #120
 ; }
 	bne clearstatusboxloop
 
@@ -3615,6 +3634,7 @@ pmscoreloop
 	ldx b2
 	cpx #4
 	bne pmscoreloop
+	rts
 ; }
 
 	; Routine to print score to screen.
@@ -3623,6 +3643,7 @@ pmscoreloop
 ;	lda #%00001111
 ;	sta textcolour 
 ; }
+/*
 	lda #8
 	sta $70
 	lda #31
@@ -3634,6 +3655,7 @@ pmscoreloop
 	ldx #3
 	jmp numberplot          ;
 	;rts
+*/
 
 printgold
 
@@ -3657,6 +3679,7 @@ pmgoldloop
 	ldx b2
 	cpx #3
 	bne pmgoldloop
+	rts
 ; }
 
 	; Routine to print gold value to screen.
@@ -3664,7 +3687,7 @@ pmgoldloop
 /*atari remove
 	lda #%11111111
 	sta textcolour 
-*/
+
 	lda #8
 	sta $70
 	lda #30
@@ -3676,7 +3699,7 @@ pmgoldloop
 	ldx #2
 	jmp numberplot          ;last plotted index
 	;rts
-
+*/
 showstatus
 ; atari add {
 
@@ -3700,7 +3723,7 @@ showstatus
 /* atari remove
 	lda #%11110000
 	sta textcolour
-*/
+
 	lda #61
 	sta $70
 	lda #29
@@ -3714,7 +3737,7 @@ showstatus
 	sta $75
 	ldx #0
 	jsr numberplot          ;last enemy health
-
+*/
 ; atari add {
 
 	ldy #32+12*8
@@ -3727,13 +3750,13 @@ showstatus
 	lda b2
 	and #$0f
 	missile_drawchar
-	
+	rts
 ; }
 
 /* atari remove
 	lda #%00001111
 	sta textcolour
-*/
+
 	lda #61
 	sta $70
 	lda #30
@@ -3748,7 +3771,7 @@ showstatus
 	ldx #0
 	jmp numberplot          ;last enemy shield
 	;rts
-
+*/
 
 	; Number plot routine.
 	; Expects length of number string in X (in bytes) - zero relative
@@ -4725,7 +4748,7 @@ printleft
 	
 ; }
 
-	
+/*atari remove	
 	; Routine to print number of enemies left to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
 	lda #%11111111
@@ -4740,7 +4763,7 @@ printleft
 	sta $75
 	ldx #0
 	jmp numberplot
-
+*/
 printlives
 	; Routine to print lives to screen.
 	; Uses number print - so $70-$75 - does not preserve registers
@@ -4758,9 +4781,9 @@ printlives
 	lda lives
 	and #$0f
 	missile_drawchar
-	
+	rts
 ; }
-	
+/* atari remove	
 	lda #%11110000
 	sta textcolour 
 	lda #8
@@ -4774,6 +4797,7 @@ printlives
 	ldx #0
 	jmp numberplot          
 	;rts
+*/
 apage
 
 	org codeoffset+$200
@@ -5443,6 +5467,8 @@ x1
 ;draw number with atari font
 .proc	numberplot_atari
 
+	tya	;store Y - to be compatible with orig.numberplot
+	pha
 	;calculate target
 	lda >gamevram
 	add $77 ;y
@@ -5483,12 +5509,18 @@ x2	lda atrnfont,x
 	dex
 	dey
 	bpl x2
+	
+	pla	;restore Y from the beginning
+	tay
 	rts
 .endp
 
 ;prot 1 character 
 ;x = contains char*8 from numbers_atari
 .proc	charplot_atari
+
+	tya
+	pha
 	;calculate target
 	lda >gamevram
 	add $77 ;y
@@ -5503,6 +5535,9 @@ x1	lda atrnfont,x
 	dex
 	dey
 	bpl x1
+	
+	pla
+	tay
 	rts
 .endp
 
