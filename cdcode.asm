@@ -52,6 +52,9 @@ sbarvisib	equ $bf ;status bar visible = 1(top),2(bottom),0(none)
 sbarselec	equ $c0 ;status bar selection = 0(none selected)
 sbarmax	equ $c1 ;status bar - max line index to select
 sbarmin	equ $c2 ;status bar - min line index to select
+stick	equ $c3 ;stick status (no repeat)
+trig	equ $c4 ;trig status (no repeat)
+
 
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
@@ -2494,7 +2497,7 @@ press3
 escape			;Escape has been pressed.
 ;TODO: fix this (crash)
 	jsr readshift
-	bvc notescape ; Escape pressed - but not shift.
+	jvc notescape ; Escape pressed - but not shift.
 	pla
 	pla			; Pull return address off stack
 	jmp gameover
@@ -2582,7 +2585,10 @@ nokeypressed
 ;	cmp #41+128
 ;	beq movedown            ; Down cursor
 
+	handle_joystick
 	getkeypressed
+
+keyswitch
 	cmp #"1"
 	beq press1
 	cmp #"2"
@@ -2604,12 +2610,27 @@ nokeypressed
 	cmp #"a"
 	beq moveleft
 	cmp #"s"
-	beq movedown
+	jeq movedown
 	cmp #"d"
 	beq moveright
 	cmp #";"* ;return
 	jeq returnpressed
 
+;joystick controls
+	lda #$01
+	bit stick
+	beq moveup
+	asl @
+	bit stick
+	beq movedown
+	asl @
+	bit stick
+	beq moveleft
+	asl @
+	bit stick
+	beq moveright
+	lda trig
+	jeq returnpressed
 ; }
 
 notescape
@@ -2700,15 +2721,39 @@ finishkeyboard
 ;	lda $ec
 	getkeypressed
 ; }
-	sta lastkeypressed
+	;sta lastkeypressed
 	jsr printtowerinfo
 	rts
 
+toweralreadyhere
+	jsr errorsound
+	jmp finishkeyboard
+	
 ;atari add {
 returnpressed
+.local	sbarcontrols_local
 	lda sbarvisib
 	beq sps1
-	set_status0
+	;status bar is already shown
+	
+	lda sbarselec
+	cmp sbarmin
+	beq sps3 ;hide bar
+	
+	lda sbarmax
+	cmp #3 ;tower select
+	bne sps4
+	lda #"0"
+	add sbarselec
+	jmp keyswitch	;press number
+	
+sps4	cmp #2 ;upgrade possible
+	bne sps5
+	lda #"u"
+	jmp keyswitch
+sps5	dta 2 ;error
+	
+sps3	set_status0
 	rts	
 sps1	ldx currentlocation
 	lda typos,x
@@ -2717,10 +2762,7 @@ sps1	ldx currentlocation
 	rts
 sps2	set_status1
 	rts
-
-toweralreadyhere
-	jsr errorsound
-	jmp finishkeyboard
+.endl
 
 sbarcontrols
 .local	sbarcontrols_local
@@ -2734,6 +2776,17 @@ sbarcontrols
 	;beq moveright
 	cmp #";"* ;return
 	jeq returnpressed
+	
+;joystick controls
+	lda #$01
+	bit stick
+	beq moveup
+	asl @
+	bit stick
+	beq movedown
+	lda trig
+	jeq returnpressed	
+	
 	rts
 	
 moveup	lda sbarselec
@@ -5553,6 +5606,30 @@ x1	lda atrnfont,x
 	pla
 	tay
 	rts
+.endp
+
+;apply toggle modifier
+.proc	handle_joystick
+	lda porta
+	cmp old
+	bne x1
+	mva #$0f stick ;simulate no direction
+
+x2	lda trig0
+	cmp old+1
+	bne x3
+	mva #$01 trig ;simulate no fire
+	rts
+	
+x1	sta old	;set direction
+	sta stick
+	jmp x2
+	
+x3	sta old+1 ;fire pressed/released
+	sta trig
+	
+	rts
+old	dta 0,0
 .endp
 
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
