@@ -1,14 +1,8 @@
-	; Move code out of $900
-	; Create a screen clear at $900
-	; Create a clear of the enemy sprites for a level load
-	; use vairables for the pallette and timer offsets
-	; Create routine to enable/disable blanking of screen (possible include sprite clear...) 
-	; clear and then track number of enemies killed
-	;Updated wave/level box display time
-	;Correct level 3 first tower location
-	; changed colour of upgrade dits
-	; Reload instead of rate
-	; Gold score bug (/10)
+;TODO:
+;fix full speed glitch when lower statusbar is shown
+;fix timing - level,phase to be shown on normal level screen
+;fix PMG overlay for level1
+;fix status window at the beginning (currently empty)
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -55,7 +49,7 @@ sbarmin	equ $c2 ;status bar - min line index to select
 stick	equ $c3 ;stick status (no repeat)
 trig	equ $c4 ;trig status (no repeat)
 
-
+lephtmp	equ $0200 ;temp space for level,phase text
 temppage	equ $0400 ;temporary page (loading)
 keytable	equ $0500 ;table of keycodes
 mypmbase	equ $6c00
@@ -146,7 +140,7 @@ x0	lda #0
 	
 .align $100
 dl	dta $50
-	dta $42,a(vram),2,2,$82
+	dta $c2,a(vram),2,2,$82
 :6	dta $42,a(vram),2,2,$82
 	dta $42,a(vram)
 	dta $41,a(dl)
@@ -162,8 +156,8 @@ nmi_vbi	jmp (vbi_ptr)
 
 ;set no status bar
 .proc	set_status0
-	mva >gameDli.dlix gameVbi.ptr1h
-	mva <gameDli.dlix gameVbi.ptr1l
+	mva >gameDli.dlix gameDli.ptr1h
+	mva <gameDli.dlix gameDli.ptr1l
 	
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
@@ -177,8 +171,8 @@ nmi_vbi	jmp (vbi_ptr)
 
 ;set status bar top
 .proc	set_status1
-	mva >gameDli.dlix3 gameVbi.ptr1h
-	mva <gameDli.dlix3 gameVbi.ptr1l
+	mva >gameDli.dlix3 gameDli.ptr1h
+	mva <gameDli.dlix3 gameDli.ptr1l
 
 	mva >gameDli.dli3 gameDli.ptr3h
 	mva <gameDli.dli3 gameDli.ptr3l
@@ -194,8 +188,8 @@ nmi_vbi	jmp (vbi_ptr)
 	mva >gameDli.dli4x gameDli.ptr3h
 	mva <gameDli.dli4x gameDli.ptr3l
 	
-	mva >gameDli.dlix gameVbi.ptr1h
-	mva <gameDli.dlix gameVbi.ptr1l
+	mva >gameDli.dlix gameDli.ptr1h
+	mva <gameDli.dlix gameDli.ptr1l
 	mva #2 sbarvisib
 	mva sbarmin sbarselec	
 	store_pmg
@@ -214,16 +208,27 @@ vbi	phr
 	
 	mva #>gamevram chbase
 	
-	lda >gameDli.dlix
-ptr1h	equ *-1
+	lda >gameDli.dliy
+ptryh	equ *-1
 	sta dli_ptr+1
-	lda <gameDli.dlix
-ptr1l	equ *-1
+	lda <gameDli.dliy
+ptryl	equ *-1
 	sta dli_ptr
 	
-	;mwa #gameDli.dlix dli_ptr
+	lda startdelay
+	beq x1 ;if game started hide level,phase text
 	
-	mva #$94 colpf0+2
+	mva #$14 colpf0+2
+	mva #$0c colpf0+1 ;white lum
+	lda #$90
+:4	sta colpm0+:1
+	mva #$a6 colpf0+3	;missile color
+	mva #$14 prior
+	plr
+	rti
+
+; no top textline
+x1	mva #$94 colpf0+2
 	mva #$0c colpf0+1 ;white lum
 	lda #$90
 :4	sta colpm0+:1
@@ -231,9 +236,23 @@ ptr1l	equ *-1
 	mva #$11 prior
 	plr
 	rti
+	
 .endl
 
 .local	gameDli
+dliy	pha
+	sta wsync
+	mva #$11 prior
+	mva #$94 colpf0+2
+	lda >gameDli.dlix
+ptr1h	equ *-1
+	sta dli_ptr+1
+	lda <gameDli.dlix
+ptr1l	equ *-1
+	sta dli_ptr
+	pla
+	rti
+
 dlix3	pha
 	sta wsync
 	mva #$11 prior ;14
@@ -452,7 +471,7 @@ setup
 
 newlevel
 	jsr clearstatusbox  ;3 lines at the bottom
-	jsr showwave 	;Level 1 Wave 1 (in the box)
+	showwave 	;Level 1 Wave 1 (in the box)
 	;load screen (should include screen $ Path $ tower positions)
 	jsr loadscreen
 	level_pmg
@@ -550,7 +569,7 @@ newwave
 	lda #$ff
 	sta previoustower
 	jsr clearstatusbox
-	jsr showwave
+	showwave
 
 	; Clear Sprite storage area
 	ldx #0
@@ -937,7 +956,7 @@ mainloop             ;Main processing loop
 	ldx #0
 	stx startdelay			; and set delay to zero
 notinstartdelay
-
+	jsr showwave.restore
 	jSR plotlots          ; Plot all the visible sprites
 	jsr drawbullets       ; Plot the "in flight" bullets
 	jSR towerfire         ; Calculate and plot the firing
@@ -3504,22 +3523,28 @@ boxtopright
 	rts
 
 	;Routine to print the levels and waves
-showwave ;$28f5
-.print "showwave 28f5: ",showwave
+.proc showwave 
+
+	lda shown
+	cmp #1
+	beq x0 ;do not show if already shown
+	
+	;move data under text to temp space
+	ldy #0
+x1	lda gamevram,y
+	sta lephtmp,y
+	mva #0 gamevram,y
+	dey
+	bne x1
+	
 	;Set up for the copy
 	lda #<(wavetext) ;$2ce2
 	sta $70
 	lda #>(wavetext)
 	sta $71			; Origin text
-;atari replace {
-;	lda #<($8000-256-48-512)
-;	sta $72
-;	lda #>($8000-256-48-512)
-;	sta $73
-;	ldy #144
-	mwa #gamevram+$1e68 $72	;position of text on screen
-	ldy #72
-
+	mwa #gamevram+8*9 $72	;position of text on screen
+	ldy #8*12
+	
 showwaveloop
 	dey
 	lda ($70),y
@@ -3531,20 +3556,21 @@ showwaveloop
 	lda #%00001111
 	sta textcolour 
 */
-	lda #32
+	lda #26 ;32
 	sta $70
-	lda #30
+	lda #0 ;30
 	sta $77
 	lda #level % 256
 	sta $74
 	lda #level / 256
 	sta $75
 	ldx #0
-	jsr numberplot   
-
-	lda #42
+;	jsr numberplot   
+	numberplot_atari
+	
+	lda #42 ;42
 	sta $70
-	lda #30
+	lda #0 ;30
 	sta $77
 	lda #wave % 256
 	sta $74
@@ -3555,8 +3581,26 @@ showwaveloop
 	;jsr numberplot
 	;jmp * ;temp debug
 ;}
-	jmp numberplot   
-	;rts
+;	jmp numberplot   
+	numberplot_atari
+	mva #1 shown
+x0	rts
+	
+restore
+	lda shown
+	cmp #1
+	bne x0
+	;move data from temp space back
+	ldy #0
+x2	lda lephtmp,y
+	sta gamevram,y
+	dey
+	bne x2
+	mva #0 shown
+	rts	
+	
+shown	dta 0
+.endp
 
 clearstatusbox
 	; Clear the status box
@@ -4522,7 +4566,7 @@ levelwinsounddurations
 
 
 wavetext	;2ce2
-	ins "leveltext\leveltext.fnt"
+	ins "leveltext\leveltext.fnt",0,12*8
 .print "wavetext (supposed to be $2ce2): ",wavetext
 ;	incbin "/home/chris/bem/spriter/leveltext.bin"
 ;towers	equ wavetext+$2d72-$2ce2 ;2d72
