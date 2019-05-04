@@ -2,7 +2,7 @@
 //castle defender wavetext converter
 //converts bbc micro videodata mode 1 to mode 4 same as atari mode $0f (gr.8)
 
-convert("leveltext.bin",0,"leveltext",true);
+//convert("leveltext.bin",0,"leveltext",true); //original data not used anymore
 
 function convert($number, $seek = 0, $targetfile = null, $usecolor = false)
 {

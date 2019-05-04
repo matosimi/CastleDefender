@@ -1,6 +1,5 @@
 ;TODO:
 ;fix full speed glitch when lower statusbar is shown
-;fix timing - level,phase to be shown on normal level screen
 ;fix PMG overlay for level1
 ;fix status window at the beginning (currently empty)
 
@@ -215,7 +214,7 @@ ptryh	equ *-1
 ptryl	equ *-1
 	sta dli_ptr
 	
-	lda startdelay
+	lda showwave.shown
 	beq x1 ;if game started hide level,phase text
 	
 	mva #$14 colpf0+2
@@ -470,8 +469,8 @@ setup
 	; Once per "Screen" setups
 
 newlevel
-	jsr clearstatusbox  ;3 lines at the bottom
-	showwave 	;Level 1 Wave 1 (in the box)
+	;jsr clearstatusbox  ;3 lines at the bottom
+	;showwave 	;Level 1 Wave 1 (in the box)
 	;load screen (should include screen $ Path $ tower positions)
 	jsr loadscreen
 	level_pmg
@@ -3529,6 +3528,8 @@ boxtopright
 	cmp #1
 	beq x0 ;do not show if already shown
 	
+	mva #1 shown
+	pause 1
 	;move data under text to temp space
 	ldy #0
 x1	lda gamevram,y
@@ -3583,7 +3584,6 @@ showwaveloop
 ;}
 ;	jmp numberplot   
 	numberplot_atari
-	mva #1 shown
 x0	rts
 	
 restore
