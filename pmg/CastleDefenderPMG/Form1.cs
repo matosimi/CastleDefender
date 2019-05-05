@@ -48,7 +48,7 @@ namespace CastleDefenderPMG
 
         private void pictureBox1_LoadCompleted(object sender, AsyncCompletedEventArgs e)
         {
-            pictureBox1.Size = new Size(pictureBox1.Image.Width * 2, pictureBox1.Image.Height * 2);
+            pictureBox1.Size = new Size(pictureBox1.Image.Width, pictureBox1.Image.Height);
             pictureBox2.Left = 8; // pictureBox1.Left;
             pictureBox2.Top = 0; // pictureBox1.Top;
             pictureBox2.Size = pictureBox1.Size;
