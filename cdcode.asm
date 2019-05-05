@@ -1,7 +1,6 @@
 ;TODO:
 ;fix full speed glitch when lower statusbar is shown
 ;fix PMG overlay for level1
-;fix status window at the beginning (currently empty)
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -930,7 +929,9 @@ skippopulatehs
 	;jsr levelstartsound
 	lda #175
 	sta startdelay 
-
+;atari add {
+	jsr forceprinttowerinfo ;render 1st tower control bar
+; }
 	;jmp gameover       ; this will be removed in normal operation
 
 mainloop             ;Main processing loop
@@ -948,7 +949,9 @@ mainloop             ;Main processing loop
 	cpx #25
 	bne instartdelay
 	jsr levelstartsound	; Make start sound	Slightly before start to sync enemies appearing
+/*atari remove {
 	jsr forceprinttowerinfo
+*/
 	jmp instartdelay
 	cpx #1		; Are we on the last frame?
 	bne instartdelay
