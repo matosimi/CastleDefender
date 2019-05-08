@@ -1,6 +1,5 @@
 ;TODO:
 ;fix full speed glitch when lower statusbar is shown
-;fix PMG overlay for level1
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -5683,5 +5682,5 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;org mypmbase-$100
 
 	org mypmbase
-:8	dta 0
+;:8	dta 0
 	ins 'pmg\lvl1.pmg'

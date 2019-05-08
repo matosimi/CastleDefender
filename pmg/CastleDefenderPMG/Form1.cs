@@ -175,12 +175,24 @@ namespace CastleDefenderPMG
 
         private void SavePMG(string filename)
         {
-            File.WriteAllBytes(filename, pmgdata);
+            //shift data 8 bytes forward (1st 8 bytes of pmg data is behind the screen - not visible)
+            byte[] pmgdata2 = new byte[1024];
+            for (int i = 0; i < 1024 - 8; i++)
+                pmgdata2[i + 8] = pmgdata[i];
+
+            File.WriteAllBytes(filename, pmgdata2);
         }
 
         private void LoadPMG(string filename)
         {
-            pmgdata = File.ReadAllBytes(filename);
+            byte[] pmgdata2 = new byte[1024];
+            pmgdata2 = File.ReadAllBytes(filename);
+            
+            //shift data 8 bytes backwards (1st 8 bytes of pmg data is behind the screen - not visible)
+            for (int i = 8; i < 1024; i++)
+                pmgdata[i-8] = pmgdata2[i];
+
+            
         }
 
         private void buttonLoadPMG_Click(object sender, EventArgs e)
