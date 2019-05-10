@@ -1,5 +1,4 @@
 ;TODO:
-;fix full speed glitch when lower statusbar is shown
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -213,7 +212,7 @@ ptryl	equ *-1
 	sta dli_ptr
 	
 	lda showwave.shown
-	beq x1 ;if game started hide level,phase text
+	beq x1 ;if game started thenhide level,phase text
 	
 	mva #$14 colpf0+2
 	mva #$0c colpf0+1 ;white lum
@@ -237,6 +236,7 @@ x1	mva #$94 colpf0+2
 .endl
 
 .local	gameDli
+;first part after leveltext line
 dliy	pha
 	sta wsync
 	mva #$11 prior
@@ -250,6 +250,17 @@ ptr1l	equ *-1
 	pla
 	rti
 
+;second part normal (no statusbar)
+dlix	pha
+	sta wsync
+	mva #>[gamevram+$0400] chbase
+	mwa #dli0 dli_ptr
+:3	sta wsync
+	mva #$2c colpf0+3	;missile
+	pla
+	rti
+
+;second part with statusbar top
 dlix3	pha
 	sta wsync
 	mva #$11 prior ;14
@@ -271,34 +282,9 @@ dlix3	pha
 	mva #$2c colpf0+3	;missile
 	pla
 	rti
-	
-dlix2	pha
-	mva #$11 prior
-	lda #$90
-:4	sta colpm0+:1
-
-	sta wsync
-	mva #$94 colpf0+2
-	mva #>[gamevram+($400*2)] chbase
-	mva #$11 prior
-	mva #$0c colpf0+1
-	mwa #dli1 dli_ptr
-	pla
-	rti
-	
 
 
-dlix	pha
-	sta wsync
-	mva #>[gamevram+$400] chbase
-	mwa #dli0 dli_ptr
-:3	sta wsync
-	mva #$2c colpf0+3	;missile
-	pla
-	rti
-
-
-
+;third part (when no statusbar above)
 dli0	pha
 	sta wsync
 	mva #>[gamevram+($400*2)] chbase
@@ -307,7 +293,21 @@ dli0	pha
 	pla
 	rti
 
+;third part (when statusbar top above)	
+dlix2	pha
+	mva #$11 prior
+	lda #$90
+:4	sta colpm0+:1
 
+	mva #$94 colpf0+2
+	mva #>[gamevram+($400*2)] chbase
+	mva #$11 prior
+	mva #$0c colpf0+1
+	mwa #dli1 dli_ptr
+	pla
+	rti
+
+;fourth,fifth,sixth part	
 .rept 3,#+1,#+2,#+3
 dli:1	pha
 	sta wsync
@@ -323,6 +323,7 @@ ptr:2l	equ *-1
 	pla
 	rti
 .endr
+
 
 .rept 1,#+1+3,#+2+3,#+3+3
 dli:1	pha
@@ -343,7 +344,6 @@ ptr:2l	equ *-1
 	pla
 	rti
 .endr
-
 
 ;bottom statusbar
 dli4x	pha
@@ -372,7 +372,6 @@ dli5x	pha
 :4	sta colpm0+:1	
 	
 	;enemybar
-	sta wsync
 	mva #>[gamevram+($1800)] chbase
 	mva #$94 colpf0+2
 	mva #$0c colpf0+1
