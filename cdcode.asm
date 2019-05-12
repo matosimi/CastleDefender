@@ -5681,5 +5681,5 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;org mypmbase-$100
 
 	org mypmbase
-	;ins 'pmg\lvl1.pmg'
-	ins 'pmg\lvl2.pmg'
+	ins 'pmg\lvl1.pmg'
+	;ins 'pmg\lvl2.pmg'

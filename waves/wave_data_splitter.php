@@ -6,7 +6,7 @@ $headersize = 6; //bytes
 $levels = 4;
 $waves = 5; 
 
-$name = getcwd() . "\\wave_data.xex";
+$name = getcwd() . "\\wave_data.obx";
 
 $fi=fopen($name,"rb");
 if (!$fi) { echo "Can't open file $name.\n"; exit(); }
@@ -26,8 +26,11 @@ for ($i = 0; $i < $levels; $i++)
         $fi=fopen($name,"wb");
         if (!$fi) { echo "Can't open file $name.\n"; exit(); }
         for ($k = 0; $k < $wavesize; $k++)
-        	fwrite($fi, $wavedata[$headersize + $k + $i*$j*$wavesize]);
-        
+        	{
+					fwrite($fi, $wavedata[$headersize + $k + $j*$wavesize + $i*$waves*$wavesize]);
+					//echo $headersize + $k + $j*$wavesize + $i*$waves*$wavesize," ";
+					}
+        echo "$name\n";
         fclose($fi);
     }
 
