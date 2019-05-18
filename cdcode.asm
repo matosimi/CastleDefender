@@ -1,4 +1,4 @@
-;TODO:
+;TODO: implement inflate of whole levels and pmg overlays
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -28,6 +28,7 @@ vcount	equ $d40b
 nmien	equ $d40e
 nmist	equ $d40f
 
+inflate_zp	equ $a0	;10 bytes for inflater
 vbi_ptr	equ $b0 ;vbi vector
 dli_ptr	equ $b2 ;dli vector
 w1	equ $b4 
@@ -51,6 +52,7 @@ keytable	equ $0500 ;table of keycodes
 mypmbase	equ $6c00
 
 	icl "matosimi_macros.asx"
+	icl "data_relocator.asm"
 	icl "headercode.asm"
 
 	org $0600
@@ -541,19 +543,6 @@ skipblanktowers
 	stx cursorcount
 
 	stx currentlocation             ; Draw initial "cursor" - Should be new "screen" rather than wave
-
-	; Open the wave file
-	lda level
-	and #15			; Strip top bits used for display
-	ora #$30		; add '0' to make this ascii
-	sta wavefilenumber
-	lda #$40
-	ldx #<(wavefilename)
-	ldy #>(wavefilename)
-/* atari off - loaded as data block to $3000
-	jsr $ffce
-*/
-	sta openfile
 
 	; Wave base setups setups
 newwave
@@ -3639,20 +3628,32 @@ clearstatusboxloop
 
 
 loadwave
-/* atari off - loaded as data block in headercode
+	lda level
+	and #$0f
+	sub #1
+	sta tmp
+	asl @
+	asl @
+	add tmp ;(level-1)*5
+	sta tmp
+	lda wave
+	and #$0f
+	sub #1
+	add tmp
+	asl @ 	
+	tax
+	;X now contains index of wave from packed_waves
 
-	; Uses OSBGET to read byte so we can have multiples waves per file.
-	ldy openfile
-	ldx #0
-loadwaveloop
-	jsr $ffd7
-	sta wavedata,x
-	inx
-	cpx #wavedataend-wavedata			; Level data structure size
-	bne loadwaveloop
-*/
+	mwa packed_waves,x inflater.inputPointer
+	mwa #wavedata inflater.outputPointer
+	jsr inflater.inflate
 
 	rts
+tmp	dta 0
+packed_waves	
+.rept 20,#+1
+	dta a(datareloc.moveto + datareloc.z:1 - datareloc.loadarea) 
+.endr
 
 .proc	choose_sprites
 /* atari off
@@ -5676,6 +5677,12 @@ x3	sta old+1 ;fire pressed/released
 	rts
 old	dta 0,0
 .endp
+
+.local	inflater
+inflate_data	equ $fc00
+;inflate_zp defined at the beginning of this file
+	icl "inflate.asm"
+.endl
 
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;org mypmbase-$100

@@ -176,7 +176,7 @@ etype			; Enemy type list - reserve bytes
 wavedataend
 varend	
 
-	org wavedata ;wave file   - TODO: this will eventually be inflated 
+	;org wavedata ;wave file   - TODO: this will eventually be inflated 
 	;ins 'waves\L1W1.bin'
-	ins 'waves\L1W3.bin'
+	;ins 'waves\L1W3.bin'
 	
