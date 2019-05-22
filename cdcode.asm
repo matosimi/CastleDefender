@@ -53,10 +53,11 @@ mypmbase	equ $6c00
 
 	icl "matosimi_macros.asx"
 	icl "data_relocator.asm"
+;relocated data starts at $ac00 till $ffff (w/o os rom)
 	icl "headercode.asm"
 
 	org $0600
-	pause 5
+	pause 1
 	mva #$ff portb ;turn on osrom a load next block
 	rts
 	
@@ -214,7 +215,7 @@ ptryl	equ *-1
 	sta dli_ptr
 	
 	lda showwave.shown
-	beq x1 ;if game started thenhide level,phase text
+	beq x1 ;if game started then hide level,phase text
 	
 	mva #$14 colpf0+2
 	mva #$0c colpf0+1 ;white lum
