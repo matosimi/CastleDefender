@@ -39,13 +39,13 @@ lastplot=$83
 gamevram	equ $4000
 
 	org typos ;level data
-	ins 'levels\L1data.bin'
-	;ins 'levels\L2data.bin'
+	;ins 'levels\L3data.bin'
+	ins 'levels\L4data.bin'
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	ins 'levels\L1.fnt'
-	;ins 'levels\L2.fnt'
+	;ins 'levels\L3.fnt'
+	ins 'levels\L4.fnt'
 :256	dta 0
 	ins 'scoreboard\scoreboard.fnt'
 	
@@ -149,7 +149,7 @@ lasthitsprite	dta 0
 
 startdelay	dta 0
 
-wavedata	; Wave data structure?
+wavedata	; Wave data structure - inflated
 ; Enemy Data
 goldvalues      ;Values of gold for each enemy (bcd)    
 	dta $00,$00,$00,$00
@@ -176,7 +176,4 @@ etype			; Enemy type list - reserve bytes
 wavedataend
 varend	
 
-	;org wavedata ;wave file   - TODO: this will eventually be inflated 
-	;ins 'waves\L1W1.bin'
-	;ins 'waves\L1W3.bin'
 	
