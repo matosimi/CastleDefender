@@ -45,7 +45,7 @@ gamevram	equ $4000
 	org gamevram
 ;:7600	dta 255 ;white background	
 	;ins 'levels\L3.fnt'
-	ins 'levels\L4.fnt'
+	ins 'levels\L41.fnt'
 :256	dta 0
 	ins 'scoreboard\scoreboard.fnt'
 	

@@ -43,7 +43,7 @@ l2d	ins "levels\L2data.bin.deflate"
 p1	ins "pmg\lvl1.pmg.deflate"
 p2	ins "pmg\lvl2.pmg.deflate"
 p3	ins "pmg\lvl3.pmg.deflate"
-p4	ins "pmg\lvl4.pmg.deflate"
+p4	ins "pmg\lvl4_1.pmg.deflate"
 
 dataend
 
@@ -82,7 +82,7 @@ x2	mva (w1),y (w2),y
 	org loadarea
 ;level fonts
 l3f	ins "levels\L3.fnt.deflate"
-l4f	ins "levels\L4.fnt.deflate"
+l4f	ins "levels\L41.fnt.deflate"
 ;leel data
 l3d	ins "levels\L3data.bin.deflate"
 l4d	ins "levels\L4data.bin.deflate"

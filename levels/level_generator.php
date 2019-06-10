@@ -3,14 +3,33 @@
 //strips binary level data to Lxdata.bin and
 //converts bbc micro videodata mode 1 to atari mode $0f (gr.8)
 
-convert("1",0,1,0,1);
-convert("2",0,1,0,1);
-convert("3",0,1,0,1);
-convert("4",0,1,1,1);
+convert("1",0,1,0,1,0);
+convert("2",0,1,0,1,0);
+convert("3",0,1,0,1,0);
+convert("4",0,1,1,1,256); //convert for g2f editor (add 256 bytes)
+shorten("l4\\L4_final_edit","41",256+1024); //shorten after g2f edit by (256+1024 bytes)
 
 
+function shorten($src,$target,$cutBytes)
+{
+	$name = getcwd() . "\\" . $src . ".fnt";
+	$fi=fopen($name,"rb");
+	if (!$fi) { echo "Can't open file $name.\n"; exit(); }
+	$gfxsize=filesize($name);
+	$data=@fread($fi,$gfxsize-$cutBytes);
+	fclose($fi);
 
-function convert($number,$c0,$c1,$c2,$c3)
+	$name = getcwd() . "\\L" . $target . ".fnt";
+	$fi=fopen($name,"wb");
+	if (!$fi) { echo "Can't open file $name.\n"; exit(); }
+	
+	for ($i = 0; $i < $gfxsize-$cutBytes; $i++)
+		fwrite($fi, $data[$i]);
+	fclose($fi);
+	echo "$name\n";		
+}
+
+function convert($number,$c0,$c1,$c2,$c3,$emptyBytes)
 {
 	$levelheader = 1824;	//size of the header in bytes
 	
@@ -50,6 +69,9 @@ function convert($number,$c0,$c1,$c2,$c3)
 		fwrite($fi, pack("C*",$myByte));
 	  }
 	}
+	
+	for ($i = 0; $i < $emptyBytes; $i++)
+		fwrite($fi, pack("C*",0));
 	
 	fclose($fi);
 	echo "$name\n";
