@@ -1423,7 +1423,7 @@ plotsprite
 .endr
 
 	lda xshift ;compensation for 3rd drawn char in row
-	a_lt #6 notribit
+	a_lt #5 notribit
 	
 	tax
 	lda zsoff+2
@@ -1446,7 +1446,7 @@ notribit
 	tAX                   ; use as loop counter
 ; atari add {
 	lda xshift
-	a_lt #6 spriteloop1x
+	a_lt #5 spriteloop1x
 ; }
 spriteloop1          ; plot loop for first block of 8
 	lDA(zsoff),Y
@@ -1552,7 +1552,7 @@ spriteloop3x          ; Plot final sprite row
 	rts
 	
 tribitadd dta 0,0,0,0
-	dta 0,0,sprows*4,sprows
+	dta 0,sprows*3,sprows*4,sprows
 ; }
 
 spmoverow             ; sprite row increment routine zt contains number of rows to subtract
@@ -5346,21 +5346,21 @@ xloop33	ldy #enemyno-1
 	bne xloop33
 	
 */	
-	mva #8 temp
+	mva #240 temp
 loop_x	mva #10 sy
 	mva temp sx
 
 	ldy #enemyno-1
-	lda #20
+	lda #1
 	sta etype,y
 	sty $8d
 
 	jsr plotter
-	inc temp
+	dec temp
 	pause 2
 ;	waittostart
 	lda temp
-	cmp #180
+	cmp #0
 	bne loop_x
 
 .rept 10,#
@@ -5368,9 +5368,9 @@ loop_x	mva #10 sy
 	ldy #enemyno-1
 	sta etype,Y
 	sty $8d
-	lda #28+:1*20
+	lda #28+:1
 	sta sx
-	lda #8+:1*2
+	lda #8+:1*20
 	sta sy
 	jsr plotter
 	pause 50
@@ -5689,5 +5689,5 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;org mypmbase-$100
 
 	org mypmbase
-	ins 'pmg\lvl4_1.pmg'
-	;ins 'pmg\lvl2.pmg'
+	;ins 'pmg\lvl4_1.pmg'
+	ins 'pmg\lvl2.pmg'

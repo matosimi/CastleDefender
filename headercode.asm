@@ -39,13 +39,13 @@ lastplot=$83
 gamevram	equ $4000
 
 	org typos ;level data
-	;ins 'levels\L3data.bin'
-	ins 'levels\L4data.bin'
+	ins 'levels\L2data.bin'
+	;ins 'levels\L4data.bin'
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	;ins 'levels\L3.fnt'
-	ins 'levels\L41.fnt'
+	ins 'levels\L2.fnt'
+	;ins 'levels\L41.fnt'
 :256	dta 0
 	ins 'scoreboard\scoreboard.fnt'
 	
