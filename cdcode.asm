@@ -1732,7 +1732,6 @@ canafford
 	lda #$20        
 	sta $71       ; clear screen start in high byte
 	lda txpos,X   ; a conains value 0-63 ish - assumed to be top left of tower.
-
 	sec
 /* atari remove
 	sbc #3    ; Find top left
@@ -1770,8 +1769,22 @@ canafford
 	sta tfcount,X
 
 starttowerplot
-	txa
-	pha         ; Save x for later
+;atari replace {
+;	txa
+;	pha         ; Save x for later
+	stx draw_3x3_tower.xstore
+; }
+
+;*atari add {
+	lda txpos,x
+	and #$01
+	beq towcont4
+	draw_3x3_tower
+	jmp printgold
+	
+towcont4	;continue with 4x3 tower
+; }
+
   ; move the location of hte tower sprite data into $72,$73  
 	lda ttype,X   ; Get the tower type
 	lsr @         ; shift it to the right once
@@ -1833,8 +1846,12 @@ towerdrawloop
 	bne towerrowloop
 	
   ; Decrement the gold amount?
-	pla
-	tax         ; Get x back.
+/*atari remove
+;atari replace { 
+;	pla
+;	tax         ; Get x back.
+	ldx draw_3x3_tower.xstore
+; }
 	ldy ttype,X   ; Get the tower type
 	lda towercosts,Y        ; Get the gold cost - this is /10
 	asl @
@@ -1867,7 +1884,10 @@ towerdrawloop
 	sbc #0
 	sta gold                ; subtract rest of value
 	cld
-
+*/
+;atari add {
+	decrement_gold ;buy tower
+;}
 	; Now draw dots under tower for level $70,$71 points at row beneath first tower
 	inc $70
 			; Allow a pixel difference
@@ -4956,6 +4976,9 @@ towerlocations		; Locations of tower sprites
   .word towers+24*6*2 ; 24x24/4 ppb
 */
 :3	.word towers+:1*12*8
+towerlocations2
+  .word notower2
+:3	.word towers2+:1*9*8
 
 colourtable
 	dta %0001,%10000,%10001
@@ -5126,7 +5149,7 @@ lowcodeend
 temp	dta 0
 
 	org $b000
-towers	ins 'towers\towers_shifted.fnt'	
+towers	ins 'towers\towers_shifted.fnt' ;4x3 chars	
 notower	ins 'towers\notower_shifted.fnt'
 towermask	
 .rept 3
@@ -5134,6 +5157,8 @@ towermask
 :16	dta $00
 :8	dta $0f
 .endr
+towers2	ins 'towers\towers.fnt'  ;3x3 chars
+notower2	ins 'towers\notower.fnt'
 
 spritelowtable
   ;for x,0,nosprites-1
@@ -5679,6 +5704,174 @@ x3	sta old+1 ;fire pressed/released
 old	dta 0,0
 .endp
 
+;modified plottower procedure for non-shifted towers
+.proc	draw_3x3_tower
+
+  ; move the location of hte tower sprite data into $72,$73  
+	lda ttype,X   ; Get the tower type
+	lsr @         ; shift it to the right once
+	and #%11111110 ;Clear the bottom bit
+	tax
+	lda towerlocations2,X
+  ;lda #towers mod 256
+	sta $72
+	inx
+	lda towerlocations2,X
+  ;lda #towers div 256
+	sta $73
+  ; Now draw the damn thing!
+	ldx #3         ; 3 rows
+	
+	;3x3 tower delta offset compared to 4x3
+	lda $70
+	add #4
+	sta $70
+	lda #0
+	adc $71
+	sta $71
+	
+towerrowloop
+/*atari remove
+	ldy #47        ; 24/4*8
+*/
+;atari add {
+	ldy #23 ; +8
+	;mwa #towermask w1
+; }
+towerdrawloop
+	;lda ($70),Y
+	;eor #$ff ;debug
+;atari add {
+	;and (w1),y     ;towermasking
+	lda ($72),y	
+; }	
+	sta ($70),Y    ; draw sprite
+	dey
+	bpl towerdrawloop
+	lda $71 
+	clc
+/*atari remove
+	adc #2    ; increase screen row
+*/
+;atari add
+	adc #1
+	
+	sta $71
+	lda $72       ; incrase offset into sprite
+/* atari remove
+	adc #48       ; number of bytes just plotted
+*/
+;atari add {
+	adc #24 ;+8
+; }
+	sta $72
+	lda $73       ; Add the carry as necessary
+	adc #0
+	sta $73
+	
+;atari add {
+	;masking
+	;inw w1
+; }	
+	dex
+	bne towerrowloop
+	
+	decrement_gold ;buy tower
+
+	; Now draw dots under tower for level $70,$71 points at row beneath first tower
+	inc $70
+			; Allow a pixel difference
+
+	;add dot offset
+	lda ttype,X
+	beq nodotstodraw	; Don't draw dots for no tower
+	and #3			; Find out tower level
+	beq nodotstodraw		; Don't draw dots for level zero
+	sec
+	sbc #1		; Subtract 1 to give 0-2 index.
+	asl @
+	asl @
+	asl @
+/*atari remove
+	asl @	; Multiply by 16 to give byte offset (each column)
+*/
+	tay			; Store in index.
+
+	; draw dot. (c3, 3c)
+/*atari remove
+	lda #$83
+	sta ($70),Y
+	iny
+	sta ($70),Y
+	tya
+	clc
+	adc #7
+	tay
+	lda #$38
+	sta ($70),Y
+	iny
+	sta ($70),y
+*/
+;atari add {
+	lda #%11111100
+	and ($70),y
+	sta ($70),y
+	iny
+	sta ($70),y
+	tya
+	add #7
+	tay
+	lda #%00011111
+	and ($70),y
+	sta ($70),y
+	iny
+	sta ($70),y
+
+; }
+
+nodotstodraw
+	rts
+xstore	dta 0	
+.endp
+
+.proc	decrement_gold ;buy tower
+	; Decrement the gold amount?
+	ldx draw_3x3_tower.xstore
+	ldy ttype,X   ; Get the tower type
+	lda towercosts,Y        ; Get the gold cost - this is /10
+	asl @
+	asl @
+	asl @
+	asl @ ; Multiply by 10 *BCD
+	sta $72                 ; Save for later
+	sed
+	lda gold+2
+	sec
+	sbc $72
+	sta gold+2
+	lda gold+1
+	sbc #0
+	sta gold+1
+	lda gold
+	sbc #0         ; subtract from gold - might be better way
+	sta gold
+	lda towercosts,Y
+	lsr @
+	lsr @
+	lsr @
+	lsr @ ; Divide by 10
+	sta $72
+	lda gold+1
+	sec
+	sbc $72
+	sta gold+1
+	lda gold
+	sbc #0
+	sta gold                ; subtract rest of value
+	cld
+	rts
+.endp
+
 .local	inflater
 inflate_data	equ $fc00
 ;inflate_zp defined at the beginning of this file
@@ -5690,4 +5883,4 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 	org mypmbase
 	;ins 'pmg\lvl4_1.pmg'
-	ins 'pmg\lvl2.pmg'
+	ins 'pmg\lvl3.pmg'
