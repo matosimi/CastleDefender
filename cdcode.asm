@@ -5731,48 +5731,25 @@ old	dta 0,0
 	sta $71
 	
 towerrowloop
-/*atari remove
-	ldy #47        ; 24/4*8
-*/
-;atari add {
-	ldy #23 ; +8
-	;mwa #towermask w1
-; }
+	ldy #23 
+
 towerdrawloop
-	;lda ($70),Y
-	;eor #$ff ;debug
-;atari add {
-	;and (w1),y     ;towermasking
 	lda ($72),y	
-; }	
 	sta ($70),Y    ; draw sprite
 	dey
 	bpl towerdrawloop
 	lda $71 
 	clc
-/*atari remove
-	adc #2    ; increase screen row
-*/
-;atari add
 	adc #1
 	
 	sta $71
-	lda $72       ; incrase offset into sprite
-/* atari remove
-	adc #48       ; number of bytes just plotted
-*/
-;atari add {
-	adc #24 ;+8
-; }
+	lda $72       ; increase offset into sprite
+	adc #24 
 	sta $72
 	lda $73       ; Add the carry as necessary
 	adc #0
 	sta $73
 	
-;atari add {
-	;masking
-	;inw w1
-; }	
 	dex
 	bne towerrowloop
 	
@@ -5781,7 +5758,6 @@ towerdrawloop
 	; Now draw dots under tower for level $70,$71 points at row beneath first tower
 	inc $70
 			; Allow a pixel difference
-
 	;add dot offset
 	lda ttype,X
 	beq nodotstodraw	; Don't draw dots for no tower
@@ -5792,42 +5768,14 @@ towerdrawloop
 	asl @
 	asl @
 	asl @
-/*atari remove
-	asl @	; Multiply by 16 to give byte offset (each column)
-*/
 	tay			; Store in index.
 
-	; draw dot. (c3, 3c)
-/*atari remove
-	lda #$83
-	sta ($70),Y
-	iny
-	sta ($70),Y
-	tya
-	clc
-	adc #7
-	tay
-	lda #$38
-	sta ($70),Y
-	iny
-	sta ($70),y
-*/
-;atari add {
-	lda #%11111100
+	; draw dot. 
+	lda #%11000001 
 	and ($70),y
 	sta ($70),y
 	iny
 	sta ($70),y
-	tya
-	add #7
-	tay
-	lda #%00011111
-	and ($70),y
-	sta ($70),y
-	iny
-	sta ($70),y
-
-; }
 
 nodotstodraw
 	rts
