@@ -3375,8 +3375,10 @@ drawbox
 	; Takes X as index into tower list
 	; Preserves X
 	; Uses $70 and $71 to store offsets
-	txa:pha
-
+;atari replace {
+;	txa:pha
+	stx xstore
+; }
 	lda #$20        
 	sta $71       ; clear screen start in high byte
 	lda txpos,X   ; a conains value 0-63 ish - assumed to be top left of tower.
@@ -3419,6 +3421,13 @@ tfc1x
 ;atari add {
 	lda topflag
 	beq tfc2
+	
+	;decide if even or odd x position
+	ldx xstore
+	lda txpos,x
+	and #$01
+	jne oddframe.draw ;alternate frame drawing routine
+
 ; }
 	ldy #4		;#4
 boxtopleft
@@ -3549,10 +3558,14 @@ boxtopright
 	sta ($70),Y
 
 
-tbc3	pla
-	tax
+tbc3	;pla
+	;tax
+	ldx xstore
 	rts
 topflag	dta 0 ;0=do not draw top part of box
+xstore	dta 0 ;stores X register
+
+
 	;Routine to print the levels and waves
 .proc showwave 
 
@@ -5843,6 +5856,96 @@ xstore	dta 0
 	cld
 	rts
 .endp
+
+;alternate frame (cursor) drawing routine
+.local	oddframe
+draw
+	lda $70
+	add #4
+	sta $70
+	lda #0
+	add:sta $71
+	
+	ldy #4
+boxtopleft
+	lda #%11000000
+	eor ($70),Y
+	sta ($70),Y
+	dey
+	bne boxtopleft
+	lda #%11110000
+	eor ($70),Y
+	sta ($70),Y
+	iny
+	lda #%00110000
+	eor ($70),Y
+	sta ($70),Y
+	; Bottom left
+	lda $71
+	clc
+	adc #2
+	sta $71	
+	ldy #3		
+boxbotleft
+	lda #%11000000
+	eor ($70),Y
+	sta ($70),Y
+	iny
+	cpy #6
+	bne boxbotleft
+	lda #%11110000
+	eor ($70),Y
+	sta ($70),Y
+	iny
+	lda #%11110000
+	eor ($70),Y
+	sta ($70),Y
+	; bottom right
+	clc
+	lda $70
+	adc #8*2
+	sta $70
+	lda #0
+	adc $71
+	sta $71
+
+	ldy #3		
+boxbotright
+	lda #%00000011
+	eor ($70),Y
+	sta ($70),Y
+	iny
+	cpy #6
+	bne boxbotright
+	lda #%00001111
+	eor ($70),Y
+	sta ($70),Y
+	iny
+	lda #%00001111
+	eor ($70),Y
+	sta ($70),Y
+	;Top Right
+	lda $71
+	sec
+	sbc #2
+	sta $71
+	ldy #4		
+boxtopright
+	lda #%00000011
+	eor ($70),Y
+	sta ($70),Y
+	dey
+	bne boxtopright
+	lda #%00001111
+	eor ($70),Y
+	sta ($70),Y
+	iny 
+	lda #%00001100
+	eor ($70),Y
+	sta ($70),Y
+	jmp tbc3 ;return back
+.endl
+
 
 .local	inflater
 inflate_data	equ $fc00
