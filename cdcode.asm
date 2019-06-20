@@ -2741,6 +2741,10 @@ maketower
 	sta ttype,X             ; Change tower type to be Y
 	jsr erasebox             ; Erase box
 	jsr buildsound		; Make tower being built sound (will be cancelled if not afforadable)
+;atari add {
+	jsr showwave.restore
+	ldx currentlocation
+; }
 	jsr plottower           ; Create tower
 	ldx currentlocation
 	jsr plotbox             ; redraw box
@@ -3391,6 +3395,14 @@ drawbox
 	lda typos,X   ; Get y position - this will be 0 - 63 - does not need to be divided to 512 - towers can't be at half positions
 ;atari add {
 	lsr @
+	cmp #1
+	bne tfc1
+	ldx showwave.shown
+	beq tfc1
+	mvx #0 topflag
+	jmp tfc1x	
+tfc1	mvx #$ff topflag
+tfc1x
 ; }
 	sec
 /* atari remove
@@ -3404,6 +3416,10 @@ drawbox
 	adc $71   ; Add to the x offset high byte 
 	sta $71       ; And save $70 and $71 now point to the top left of the tower box
 
+;atari add {
+	lda topflag
+	beq tfc2
+; }
 	ldy #4		;#4
 boxtopleft
 	;lda #%10001000
@@ -3430,7 +3446,9 @@ boxtopleft
 	eor ($70),Y
 	sta ($70),Y
 
-
+;atari add {
+tfc2
+;}
 	; Bottom left
 	lda $71
 	clc
@@ -3499,7 +3517,10 @@ boxbotright
 	eor ($70),Y
 	sta ($70),Y
 
-
+;atari add {
+	lda topflag
+	beq tbc3
+;}
 	;Top Right
 	lda $71
 	sec
@@ -3528,17 +3549,16 @@ boxtopright
 	sta ($70),Y
 
 
-	pla
+tbc3	pla
 	tax
 	rts
-
+topflag	dta 0 ;0=do not draw top part of box
 	;Routine to print the levels and waves
 .proc showwave 
 
 	lda shown
 	cmp #1
 	beq x0 ;do not show if already shown
-	
 	mva #1 shown
 	pause 1
 	;move data under text to temp space
@@ -3607,7 +3627,11 @@ x2	lda lephtmp,y
 	sta gamevram,y
 	dey
 	bne x2
+	ldx currentlocation
+	jsr erasebox
 	mva #0 shown
+	jsr plotbox
+	
 	rts	
 	
 shown	dta 0
