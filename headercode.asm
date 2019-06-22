@@ -39,15 +39,15 @@ lastplot=$83
 gamevram	equ $4000
 
 	org typos ;level data
-	ins 'levels\L3data.bin'
-	;ins 'levels\L4data.bin'
+	;ins 'levels\L3data.bin'
+	ins 'levels\L1data.bin'
 
 	org gamevram
 ;:7600	dta 255 ;white background	
-	ins 'levels\L3.fnt'
+	ins 'levels\L1.fnt'
 	;ins 'levels\L41.fnt'
 :256	dta 0
-	ins 'scoreboard\scoreboard.fnt'
+	ins 'scoreboard\scoreboard.fnt'  ;to be inflated
 	
 	org $a000 ;sprites
 allsprites	;4*explosions, 19*enemies

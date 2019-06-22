@@ -39,8 +39,10 @@ cut("S8a","sprs");
 
 fclose($ofi);
 
-//packing does not make sense here - all sprite data needed all the time
-//exec(getcwd() . "\\..\\tools\\zopfli --deflate --i150 allsprites.fnt");
+//packing - all sprite data needed all the time (so maybe no need to pack)
+exec(getcwd() . "\\..\\tools\\zopfli --deflate --i350 $name");
+echo $name, ".deflate - ",filesize($name), " => ",filesize($name . ".deflate"), "\n";
+
 
 function cut($input, $output)
 {

@@ -11,6 +11,9 @@ loadarea	equ $8000
 moveto	equ $d800 ;to $ffff
 moveto2	equ $ac00 ;to $cfff
 
+C_PAGES	equ $27
+C_PAGES2	equ $23
+
 	org loadarea
 ;waves
 z1	ins "waves\L1W1.bin.deflate"
@@ -55,7 +58,7 @@ relocode	lda:cmp:req 20
         	sta nmien
         	sei		;disallow IRQ
 	mva #$fe portb
-	ldx #$27 ;no of pages (zero based)
+	ldx #C_PAGES ;no of pages (zero based)
 	ldy #0
 	mwa #loadarea w1
 	mwa #moveto w2
@@ -83,10 +86,11 @@ x2	mva (w1),y (w2),y
 ;level fonts
 l3f	ins "levels\L3.fnt.deflate"
 l4f	ins "levels\L41.fnt.deflate"
-;leel data
+;level data
 l3d	ins "levels\L3data.bin.deflate"
 l4d	ins "levels\L4data.bin.deflate"
-
+sboard	ins "scoreboard\scoreboard.fnt.deflate"
+allsprit	ins "sprites\allsprites.fnt.deflate"
 
 dataend2
 .print "relocate from:",loadarea,"-",dataend2," (",dataend2-loadarea,")"
@@ -98,7 +102,7 @@ relocode	lda:cmp:req 20
         	sta nmien
         	sei		;disallow IRQ
 	mva #$fe portb
-	ldx #$23 ;no of pages (zero based)
+	ldx #C_PAGES2 ;no of pages (zero based)
 	ldy #0
 	mwa #loadarea w1
 	mwa #moveto2 w2

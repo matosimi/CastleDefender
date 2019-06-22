@@ -2,7 +2,7 @@
 //score board generator
 //converts bbc micro videodata mode 1 to atari mode $0f (gr.8)
 
-convert("$.ScoreB", "scoreboard.fnt");
+convert("$.ScoreB", "scoreboard_raw.fnt");
 
 
 function convert($source,$target)

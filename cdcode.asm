@@ -46,22 +46,26 @@ sbarmin	equ $c2 ;status bar - min line index to select
 stick	equ $c3 ;stick status (no repeat)
 trig	equ $c4 ;trig status (no repeat)
 
+;memory areas
 lephtmp	equ $0200 ;temp space for level,phase text
-temppage	equ $0400 ;temporary page (loading)
-keytable	equ $0500 ;table of keycodes
+temppage	equ $0300 ;temporary page (loading)
+keytable	equ $0400 ;table of keycodes
 mypmbase	equ $6c00
+
+;deflated data (data_relocator.asm)
+;	    $ae00 - $cfff
+;	    $d800 - $fff6
 
 	icl "matosimi_macros.asx"
 	icl "data_relocator.asm"
-;relocated data starts at $ac00 till $ffff (w/o os rom)
 	icl "headercode.asm"
 
-	org $0600
+	org $2000
 	pause 1
 	mva #$ff portb ;turn on osrom a load next block
 	rts
 	
-	ini $0600
+	ini $2000
 	
 	org $8000 ;atari init code
 	pause 1
@@ -5958,4 +5962,4 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 	org mypmbase
 	;ins 'pmg\lvl4_1.pmg'
-	ins 'pmg\lvl31.pmg'
+	ins 'pmg\lvl1.pmg'
