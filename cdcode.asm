@@ -1,5 +1,5 @@
 ;TODO: implement inflate of whole levels and pmg overlays
-
+; PMG is currently somehow messed
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -28,6 +28,15 @@ vcount	equ $d40b
 nmien	equ $d40e
 nmist	equ $d40f
 
+;zero page:
+zspos	equ $70 ;8bytes
+zsoff	equ $78 ;8bytes
+zt	equ $80
+sy	equ $80
+sx	equ $81
+lastplotidx	equ $82
+lastplot	equ $83
+
 inflate_zp	equ $a0	;10 bytes for inflater
 vbi_ptr	equ $b0 ;vbi vector
 dli_ptr	equ $b2 ;dli vector
@@ -50,368 +59,154 @@ trig	equ $c4 ;trig status (no repeat)
 lephtmp	equ $0200 ;temp space for level,phase text
 temppage	equ $0300 ;temporary page (loading)
 keytable	equ $0400 ;table of keycodes
-mypmbase	equ $6c00
+leveldata	equ $0500 ;where leveldata to be inflated
+maincode	equ $2000 ;where code starts (until $3fff)
+gamevram	equ $4000 ;videoram (until $5fff)
+code2	equ $6000 ;continue of code
+mypmbase	equ $7c00 ;ingame pmbase, TODO:place better
 
 ;deflated data (data_relocator.asm)
-;	    $ae00 - $cfff
+;	    $ac00 - $cfff
 ;	    $d800 - $fff6
+
+scorebrd	equ gamevram+$1c00
+
+;constants (from headercode.asm)
+sprows	equ 14
+spritesiz	equ sprows*18 	; 252 Size of sprites in bytes
+enemyno	equ 64          	; Number of enemies in a wave
+towrno 	equ 16           	; Maximum number of towers
+nosprites equ 4		; Number of different sprites
+
+	org leveldata
+;initialized (inflated) data
+typos	.ds towrno	; Location of tower y pos table
+txpos	.ds towrno	; Location of tower x pos table
+path	.ds 1790		; Location of path (length 1790)
+maxlocation
+activetowers .ds 2		; number of active towers
+;uninitialized data
+ehealth	.ds enemyno	; Location of enemy health table
+eshield	.ds enemyno	; Location of enemy shield table
+ttype	.ds towrno	; Location of tower type table
+tfcount	.ds towrno	; Location of tower fire count table
+tftarget	.ds towrno	; Location of tower fire target table
+tftargetx	.ds towrno	; Location of tower fire target x position table
+tftargety	.ds towrno	; Location of tower fire target y position table
+sprites	.ds nosprites*spritesiz ;Location of preshifted sprites
+expl	.ds 4*spritesiz	; Location of preshifted explosions
+tempsprit .ds 3*sprows	; Location of tempsprite (hit sprite)
+
+leveldata_end
+
+score		.ds 4
+wave		.ds 1
+level		.ds 1
+enemieskilled	.ds 2
+attractmode	.ds 1
+lives		.ds 1
+gold		.ds 3
+enemystart 	.ds 1
+enemyend		.ds 1
+enemytimer 	.ds 1
+enemyoffset 	.ds 2
+lastkeypressed 	.ds 1
+currentlocation 	.ds 1
+leftupdaterequired 	.ds 1
+remaincounter 	.ds 1
+
+pathendx		.ds 1
+pathendy		.ds 1
+enemyatend 	.ds 1
+fcoldl		.ds 8
+fcoldh		.ds 8
+fcnewl		.ds 8
+fcnewh		.ds 8
+fctype		.ds 8
+fcstore		.ds 32
+fcnewright 	.ds 8
+fcoldright 	.ds 8
+textcolour 	.ds 1
+previoustower 	.ds 1
+cursordisplayed 	.ds 1
+cursorcount	.ds 1
+gamespeed		.ds 1
+scoretoadd	.ds 4
+loadfileblock	.ds 18
+openfile		.ds 1
+firesoundtype	.ds 1
+lasthitsprite	.ds 1
+startdelay	.ds 1
+
+wavedata	; Wave data structure - inflated
+goldvalues	.ds 4 ; Values of gold for each enemy (bcd)
+enemystrengths	.ds 4
+enemyshields	.ds 4
+enemyspeed	.ds 2 ; distance between enemies in frames
+spritenumbers	.ds 4 ; Types of enemy
+numberofenemies	.ds 1
+etype		.ds enemyno ; Enemy type list - reserve bytes
+
+wavedataend
+
+allsprites	.ds 644 ;sprite gfx - inflated
+
+varend
+
+.print "leveldata_end:",leveldata_end
+.print "wavedata_end: ",wavedataend
+.print "var_end:      ",varend
+
+	guard maincode ;do not allow uninitialized data reach the maincode
 
 	icl "matosimi_macros.asx"
 	icl "data_relocator.asm"
-	icl "headercode.asm"
 
+/*	org leveldata
+	ins 'levels\L1data.bin' ;to be inflated
+	
+	org gamevram
+	ins 'levels\L1.fnt'
+scorebrd	equ *+256
+*/
+
+/*
+:256	dta 0
+scorebrd	ins 'scoreboard\scoreboard.fnt'  ;to be inflated
+*/	
+
+;sprites
+;allsprites	;4*explosions, 19*enemies
+;	ins 'sprites\allsprites.fnt'
+	
+;	icl "headercode.asm"
+
+/*	;not needed osrom disabled within relocator include
 	org $2000
 	pause 1
 	mva #$ff portb ;turn on osrom a load next block
 	rts
 	
 	ini $2000
-	
-	org $8000 ;atari init code
-	pause 1
-	sei
-	mva #$00 nmien
-	sta irqen 	;disable interupts (klavesy)
-	
-	;keyboard init
-	ldy #$7f
-copykeytab
-        	lda ($79),y ; pointer to keytable in osrom
-        	sta keytable,y
-        	dey
-        	bpl copykeytab
+*/	
 
-	mwa #dl dlistl
-	mwa #gameDli.dli1 dli_ptr ;vdslst
-	mwa #gameVbi.vbi vbi_ptr
-	mva #1+12+32 dmactl ;d400 = 559
-	mva #$fe portb	;turn off osrom and basicrom	
-	mwa #NMI $fffa		
-	mva #$c0 nmien ;80 dli, 40 vbi
 	
-	preshift_explosion_sprites
-	
-	rts
-;returns pressed key (code)
-.proc	getkeypressed
-		
-	lda skctl
-	and #4
-	bne keynotpressed
-keypressed
-	lda keystat
-	beq readkey
-	bne stillpressed
-	dta 2 ;code cannot get here
-	
-keynotpressed
-	mva #0 keystat
-	
-stillpressed
-	lda #255
-	rts
-	
-readkey	lda #1
-	sta keystat
-
-	ldx kbcode
-	lda keytable,x
-	
-	a_in #"P" #"Y" num09 ;handle numbers
-	sta keypres
-	rts
-	
-num09	sub #"P"
-	ora #$10
-	
-	sta keypres
-	rts
-.endp
-
-;returns #1 if space is pressed at the moment
-.proc	spacepressed 
-	lda keypres ;last key pressed
-	cmp #"@"
-	bne x0
-	lda keystat
-	beq x0
-	lda #1
-	rts
-x0	lda #0
-	rts
-.endp
-	
-.align $100
-dl	dta $50
-	dta $c2,a(vram),2,2,$82
-:6	dta $42,a(vram),2,2,$82
-	dta $42,a(vram)
-	dta $41,a(dl)
-	
-.align $100
-vram
-:128	dta #
-
-NMI	bit nmist
-	bpl nmi_vbi	;vbi
-	jmp (dli_ptr)	;dli
-nmi_vbi	jmp (vbi_ptr)
-
-;set no status bar
-.proc	set_status0
-	mva >gameDli.dlix gameDli.ptr1h
-	mva <gameDli.dlix gameDli.ptr1l
-	
-	mva >gameDli.dli3 gameDli.ptr3h
-	mva <gameDli.dli3 gameDli.ptr3l
-	;todo: clear sbar selectio0n
-	
-	revert_pmg
-	mva #0 sbarvisib
-	mva sbarmin sbarselec	
-	rts
-.endp
-
-;set status bar top
-.proc	set_status1
-	mva >gameDli.dlix3 gameDli.ptr1h
-	mva <gameDli.dlix3 gameDli.ptr1l
-
-	mva >gameDli.dli3 gameDli.ptr3h
-	mva <gameDli.dli3 gameDli.ptr3l
-	mva #1 sbarvisib
-	mva sbarmin sbarselec	
-	store_pmg
-	sbarcontrols_local.draw_sbarselec
-	rts
-.endp
-
-;set status bar bottom
-.proc	set_status2
-	mva >gameDli.dli4x gameDli.ptr3h
-	mva <gameDli.dli4x gameDli.ptr3l
-	
-	mva >gameDli.dlix gameDli.ptr1h
-	mva <gameDli.dlix gameDli.ptr1l
-	mva #2 sbarvisib
-	mva sbarmin sbarselec	
-	store_pmg
-	sbarcontrols_local.draw_sbarselec
-	rts
-.endp
-
-
-.local	gameVbi
-vbi	phr
-	inc 20
-	
-	;some unknown stuff from orig code
-	;inc timerflag ;had something to do with the palette change (like DLI) 
-	inc vsynccount
-	
-	mva #>gamevram chbase
-	
-	lda >gameDli.dliy
-ptryh	equ *-1
-	sta dli_ptr+1
-	lda <gameDli.dliy
-ptryl	equ *-1
-	sta dli_ptr
-	
-	lda showwave.shown
-	beq x1 ;if game started then hide level,phase text
-	
-	mva #$14 colpf0+2
-	mva #$0c colpf0+1 ;white lum
-	lda #$90
-:4	sta colpm0+:1
-	mva #$a6 colpf0+3	;missile color
-	mva #$14 prior
-	plr
-	rti
-
-; no top textline
-x1	mva #$94 colpf0+2
-	mva #$0c colpf0+1 ;white lum
-	lda #$90
-:4	sta colpm0+:1
-	mva #$a6 colpf0+3	;missile color
-	mva #$11 prior
-	plr
-	rti
-	
-.endl
-
-.local	gameDli
-;first part after leveltext line
-dliy	pha
-	sta wsync
-	mva #$11 prior
-	mva #$94 colpf0+2
-	lda >gameDli.dlix
-ptr1h	equ *-1
-	sta dli_ptr+1
-	lda <gameDli.dlix
-ptr1l	equ *-1
-	sta dli_ptr
-	pla
-	rti
-
-;second part normal (no statusbar)
-dlix	pha
-	sta wsync
-	mva #>[gamevram+$0400] chbase
-	mwa #dli0 dli_ptr
-:3	sta wsync
-	mva #$2c colpf0+3	;missile
-	pla
-	rti
-
-;second part with statusbar top
-dlix3	pha
-	sta wsync
-	mva #$11 prior ;14
-	mva #>[gamevram+$1c00] chbase
-	mva #$08 colpf0+2
-	mva #$08 colpf0+1
-	sta wsync
-	mva #$06 colpf0+2
-	
-	lda #$24 
-:4	sta colpm0+:1
-	sta wsync	
-	
-	mva #$0c colpf0+1
-:6	sta wsync
-	mva #$04 colpf0+2
-	
-	mwa #dlix2 dli_ptr
-	mva #$2c colpf0+3	;missile
-	pla
-	rti
-
-
-;third part (when no statusbar above)
-dli0	pha
-	sta wsync
-	mva #>[gamevram+($400*2)] chbase
-	mva #$94 colpf0+2
-	mwa #dli1 dli_ptr
-	pla
-	rti
-
-;third part (when statusbar top above)	
-dlix2	pha
-	mva #$11 prior
-	lda #$90
-:4	sta colpm0+:1
-
-	mva #$94 colpf0+2
-	mva #>[gamevram+($400*2)] chbase
-	mva #$11 prior
-	mva #$0c colpf0+1
-	mwa #dli1 dli_ptr
-	pla
-	rti
-
-;fourth,fifth,sixth part	
-.rept 3,#+1,#+2,#+3
-dli:1	pha
-	sta wsync
-	mva #>[gamevram+($400*:3)+$0000] chbase
-	
-	;mwa #:2*2+$10 colpf0+4
-	lda #>dli:2
-ptr:2h	equ *-1
-	sta dli_ptr+1
-	lda #<dli:2
-ptr:2l	equ *-1
-	sta dli_ptr
-	pla
-	rti
-.endr
-
-
-.rept 1,#+1+3,#+2+3,#+3+3
-dli:1	pha
-	sta wsync
-	mva #>[gamevram+($400*:3)+$0000] chbase
-	
-	lda #>dli:2
-ptr:2h	equ *-1
-	sta dli_ptr+1
-	lda #<dli:2
-ptr:2l	equ *-1
-	sta dli_ptr
-
-:20	sta wsync
-	mva #$32 colpf0+2 ;enemybar color
-	mva #$0f colpf0+1 ;white lum
-	mva #4+16 prior
-	pla
-	rti
-.endr
-
-;bottom statusbar
-dli4x	pha
-	sta wsync
-	mva #$11 prior ;14
-	mva #>[gamevram+$1c00] chbase
-	mva #$08 colpf0+2
-	mva #$08 colpf0+1
-	sta wsync
-	mva #$06 colpf0+2
-	lda #$24 
-:4	sta colpm0+:1
-	
-	sta wsync
-;	mva #$06 colpf0+2
-	mva #$0c colpf0+1
-:6	sta wsync
-	mva #$04 colpf0+2
-	mwa #dli5x dli_ptr
-	pla
-	rti
-		
-dli5x	pha
-	mva #$11 prior
-	lda #$90
-:4	sta colpm0+:1	
-	
-	;enemybar
-	mva #>[gamevram+($1800)] chbase
-	mva #$94 colpf0+2
-	mva #$0c colpf0+1
-	mwa #dli5 dli_ptr
-
-:20	sta wsync	
-	mva #$32 colpf0+2 ;enemybar color
-	mva #$0f colpf0+1 ;white lum
-	mva #4+16 prior
-	pla
-	rti
-	
-dli5	pha
-	sta wsync
-	mva #>[gamevram+($400*7)] chbase
-:2	sta wsync
-	mva #0 colpf0+2 ;hide part right under enemybar
-	sta colpf0+1
-	pla
-	rti 
-.endl	
-	
+/* atari replace
 	run $1b00
 	
 	ORG $1b00
+*/
+	run maincode
+	org maincode
+
 ;  GUARD $3000-40	; So we can load code without losing it between screen modes.
-codeoffset=$0900
-.print "Assembling for ",codeoffset
+;atari remove	codeoffset=$0900
+;.print "Assembling for ",codeoffset
 
 	;38.12
 
 start
-	jsr $8000 ;atari init stuff
+	jsr atariinit ;atari init stuff
 	
 	
 	;; Turn sound on/off for attract mode
@@ -566,11 +361,11 @@ newwave
 	lda #0
 clearspritesloop
 	sta sprites,X
-	sta sprites+spritesize,X
-	sta sprites+spritesize*2,X
-	sta sprites+spritesize*3,X
+	sta sprites+spritesiz,X
+	sta sprites+spritesiz*2,X
+	sta sprites+spritesiz*3,X
 	inx
-	cpx #spritesize
+	cpx #spritesiz
 	bne clearspritesloop
 
 	;Setup status display
@@ -610,10 +405,14 @@ setuptclear
 	bpl setuptclear
 
 	; Find the last coordinate in the path that is an actual coordinate
+/* atari replace
 	lda #$3ffe % 256
 	sta $70
 	lda #$3ffe / 256
 	sta $71
+	*/
+	mwa #activetowers $70
+
 setupfindendloop
 	ldy #1
 	lda ($70),Y
@@ -662,7 +461,7 @@ loadspriteloop
 	sta $72
 	lda spritehightable,x
 	sta $73         ; Store where the result needs to be put
-	ldy #spritesize-1
+	ldy #spritesiz-1
 	;ATARI add
 coolloop
 	mva ($70),y ($72),y
@@ -4470,21 +4269,21 @@ hitspritebitszero
 hitspriteloop
 	lda (zsoff),y
 	and #%01010101 
-	sta tempsprite,y
+	sta tempsprit,y
 	dey
 	bmi alreadydonehit
 	
 	lda (zsoff),y
 	and #%10101010	;alter the mask to get "checkerboard"
-	sta tempsprite,y
+	sta tempsprit,y
 	dey
 	bpl hitspriteloop
 ;}
 
 alreadydonehit
-	lda #>(tempsprite)
+	lda #>(tempsprit)
 	sta zsoff+1
-	lda #<(tempsprite)
+	lda #<(tempsprit)
 	sta zsoff
 	pla
 	tax
@@ -4690,10 +4489,374 @@ wavetext	;2ce2
 
 endage
 
-	ORG codeoffset
-;	guard codeoffset+$ff
 
-	jmp initinterrupts
+atariinit	;org $8000 ;atari init code
+	pause 1
+	sei
+	mva #$00 nmien
+	sta irqen 	;disable interupts (klavesy)
+	
+	;keyboard init
+	ldy #$7f
+copykeytab
+        	lda ($79),y ; pointer to keytable in osrom
+        	sta keytable,y
+        	dey
+        	bpl copykeytab
+
+	mwa #dl dlistl
+	mwa #gameDli.dli1 dli_ptr ;vdslst
+	mwa #gameVbi.vbi vbi_ptr
+	mva #1+12+32 dmactl ;d400 = 559
+	mva #$fe portb	;turn off osrom and basicrom	
+	mwa #NMI $fffa		
+	mva #$c0 nmien ;80 dli, 40 vbi
+
+	;inflate scoreboard
+	mwa #[datareloc.sboard-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
+	mwa #scorebrd inflater.outputPointer
+	jsr inflater.inflate
+
+	;inflate allsprites	
+	mwa #[datareloc.allsprit-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
+	mwa #allsprites inflater.outputPointer
+	jsr inflater.inflate
+
+	preshift_explosion_sprites
+
+;TODO: move following inflates elsewhere + parametrize
+	
+	;inflate pmg overlay
+	mwa #[datareloc.p1-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
+	mwa #mypmbase inflater.outputPointer
+	jsr inflater.inflate
+	
+	;inflate level
+	mwa #[datareloc.l1f-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
+	mwa #gamevram inflater.outputPointer
+	jsr inflater.inflate
+	
+	;inflate leveldata
+	mwa #[datareloc.l1d-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
+	mwa #leveldata inflater.outputPointer
+	jsr inflater.inflate
+	
+	rts
+;returns pressed key (code)
+.proc	getkeypressed
+		
+	lda skctl
+	and #4
+	bne keynotpressed
+keypressed
+	lda keystat
+	beq readkey
+	bne stillpressed
+	dta 2 ;code cannot get here
+	
+keynotpressed
+	mva #0 keystat
+	
+stillpressed
+	lda #255
+	rts
+	
+readkey	lda #1
+	sta keystat
+
+	ldx kbcode
+	lda keytable,x
+	
+	a_in #"P" #"Y" num09 ;handle numbers
+	sta keypres
+	rts
+	
+num09	sub #"P"
+	ora #$10
+	
+	sta keypres
+	rts
+.endp
+
+;returns #1 if space is pressed at the moment
+.proc	spacepressed 
+	lda keypres ;last key pressed
+	cmp #"@"
+	bne x0
+	lda keystat
+	beq x0
+	lda #1
+	rts
+x0	lda #0
+	rts
+.endp
+	
+.align $100,0
+vram
+:128	dta #
+
+dl	dta $50
+	dta $c2,a(vram),2,2,$82
+:6	dta $42,a(vram),2,2,$82
+	dta $42,a(vram)
+	dta $41,a(dl)
+
+NMI	bit nmist
+	bpl nmi_vbi	;vbi
+	jmp (dli_ptr)	;dli
+nmi_vbi	jmp (vbi_ptr)
+
+;set no status bar
+.proc	set_status0
+	mva >gameDli.dlix gameDli.ptr1h
+	mva <gameDli.dlix gameDli.ptr1l
+	
+	mva >gameDli.dli3 gameDli.ptr3h
+	mva <gameDli.dli3 gameDli.ptr3l
+	;todo: clear sbar selectio0n
+	
+	revert_pmg
+	mva #0 sbarvisib
+	mva sbarmin sbarselec	
+	rts
+.endp
+
+;set status bar top
+.proc	set_status1
+	mva >gameDli.dlix3 gameDli.ptr1h
+	mva <gameDli.dlix3 gameDli.ptr1l
+
+	mva >gameDli.dli3 gameDli.ptr3h
+	mva <gameDli.dli3 gameDli.ptr3l
+	mva #1 sbarvisib
+	mva sbarmin sbarselec	
+	store_pmg
+	sbarcontrols_local.draw_sbarselec
+	rts
+.endp
+
+;set status bar bottom
+.proc	set_status2
+	mva >gameDli.dli4x gameDli.ptr3h
+	mva <gameDli.dli4x gameDli.ptr3l
+	
+	mva >gameDli.dlix gameDli.ptr1h
+	mva <gameDli.dlix gameDli.ptr1l
+	mva #2 sbarvisib
+	mva sbarmin sbarselec	
+	store_pmg
+	sbarcontrols_local.draw_sbarselec
+	rts
+.endp
+
+
+.local	gameVbi
+vbi	phr
+	inc 20
+	
+	;some unknown stuff from orig code
+	;inc timerflag ;had something to do with the palette change (like DLI) 
+	inc vsynccount
+	
+	mva #>gamevram chbase
+	
+	lda >gameDli.dliy
+ptryh	equ *-1
+	sta dli_ptr+1
+	lda <gameDli.dliy
+ptryl	equ *-1
+	sta dli_ptr
+	
+	lda showwave.shown
+	beq x1 ;if game started then hide level,phase text
+	
+	mva #$14 colpf0+2
+	mva #$0c colpf0+1 ;white lum
+	lda #$90
+:4	sta colpm0+:1
+	mva #$a6 colpf0+3	;missile color
+	mva #$14 prior
+	plr
+	rti
+
+; no top textline
+x1	mva #$94 colpf0+2
+	mva #$0c colpf0+1 ;white lum
+	lda #$90
+:4	sta colpm0+:1
+	mva #$a6 colpf0+3	;missile color
+	mva #$11 prior
+	plr
+	rti
+	
+.endl
+
+.local	gameDli
+;first part after leveltext line
+dliy	pha
+	sta wsync
+	mva #$11 prior
+	mva #$94 colpf0+2
+	lda >gameDli.dlix
+ptr1h	equ *-1
+	sta dli_ptr+1
+	lda <gameDli.dlix
+ptr1l	equ *-1
+	sta dli_ptr
+	pla
+	rti
+
+;second part normal (no statusbar)
+dlix	pha
+	sta wsync
+	mva #>[gamevram+$0400] chbase
+	mwa #dli0 dli_ptr
+:3	sta wsync
+	mva #$2c colpf0+3	;missile
+	pla
+	rti
+
+;second part with statusbar top
+dlix3	pha
+	sta wsync
+	mva #$11 prior ;14
+	mva #>[gamevram+$1c00] chbase
+	mva #$08 colpf0+2
+	mva #$08 colpf0+1
+	sta wsync
+	mva #$06 colpf0+2
+	
+	lda #$24 
+:4	sta colpm0+:1
+	sta wsync	
+	
+	mva #$0c colpf0+1
+:6	sta wsync
+	mva #$04 colpf0+2
+	
+	mwa #dlix2 dli_ptr
+	mva #$2c colpf0+3	;missile
+	pla
+	rti
+
+
+;third part (when no statusbar above)
+dli0	pha
+	sta wsync
+	mva #>[gamevram+($400*2)] chbase
+	mva #$94 colpf0+2
+	mwa #dli1 dli_ptr
+	pla
+	rti
+
+;third part (when statusbar top above)	
+dlix2	pha
+	mva #$11 prior
+	lda #$90
+:4	sta colpm0+:1
+
+	mva #$94 colpf0+2
+	mva #>[gamevram+($400*2)] chbase
+	mva #$11 prior
+	mva #$0c colpf0+1
+	mwa #dli1 dli_ptr
+	pla
+	rti
+
+;fourth,fifth,sixth part	
+.rept 3,#+1,#+2,#+3
+dli:1	pha
+	sta wsync
+	mva #>[gamevram+($400*:3)+$0000] chbase
+	
+	;mwa #:2*2+$10 colpf0+4
+	lda #>dli:2
+ptr:2h	equ *-1
+	sta dli_ptr+1
+	lda #<dli:2
+ptr:2l	equ *-1
+	sta dli_ptr
+	pla
+	rti
+.endr
+
+
+.rept 1,#+1+3,#+2+3,#+3+3
+dli:1	pha
+	sta wsync
+	mva #>[gamevram+($400*:3)+$0000] chbase
+	
+	lda #>dli:2
+ptr:2h	equ *-1
+	sta dli_ptr+1
+	lda #<dli:2
+ptr:2l	equ *-1
+	sta dli_ptr
+
+:20	sta wsync
+	mva #$32 colpf0+2 ;enemybar color
+	mva #$0f colpf0+1 ;white lum
+	mva #4+16 prior
+	pla
+	rti
+.endr
+
+;bottom statusbar
+dli4x	pha
+	sta wsync
+	mva #$11 prior ;14
+	mva #>[gamevram+$1c00] chbase
+	mva #$08 colpf0+2
+	mva #$08 colpf0+1
+	sta wsync
+	mva #$06 colpf0+2
+	lda #$24 
+:4	sta colpm0+:1
+	
+	sta wsync
+;	mva #$06 colpf0+2
+	mva #$0c colpf0+1
+:6	sta wsync
+	mva #$04 colpf0+2
+	mwa #dli5x dli_ptr
+	pla
+	rti
+		
+dli5x	pha
+	mva #$11 prior
+	lda #$90
+:4	sta colpm0+:1	
+	
+	;enemybar
+	mva #>[gamevram+($1800)] chbase
+	mva #$94 colpf0+2
+	mva #$0c colpf0+1
+	mwa #dli5 dli_ptr
+
+:20	sta wsync	
+	mva #$32 colpf0+2 ;enemybar color
+	mva #$0f colpf0+1 ;white lum
+	mva #4+16 prior
+	pla
+	rti
+	
+dli5	pha
+	sta wsync
+	mva #>[gamevram+($400*7)] chbase
+:2	sta wsync
+	mva #0 colpf0+2 ;hide part right under enemybar
+	sta colpf0+1
+	pla
+	rti 
+.endl	
+
+
+;atari replace
+;	ORG codeoffset
+codeoffset
+;	guard codeoffset+$ff
+;atari off
+;	jmp initinterrupts
 
 clearscreen
 	; Routine to clear the screen data block ($3000 to $7fff)
@@ -4714,7 +4877,7 @@ clearscreenloop
 	cpx #$80
 	bne clearscreenloop
 	rts
-
+/* atari off
 	; Interrupt routine
 initinterrupts
 	;lda #19
@@ -4724,7 +4887,7 @@ initinterrupts
 	;.intwait
 	;dex
 	;bne intwait
-/* atari off
+
 	sei
 	lda $204
 	sta prev_irq
@@ -4747,9 +4910,9 @@ initinterrupts
 	lda #$26
 	sta $fe45
 	cli
-*/
-	rts
 
+	rts
+*/
 	;vsynctotop=(32*8*64-64)-2
 	;secondtime=(7*4*64+32)-2
 
@@ -4871,11 +5034,11 @@ gamewinsounddurations
 numberend
 
 eventend
-
+/*atari remove
 	org codeoffset+$100
 ;	guard codeoffset+$1ff
 	ins "srcdata/numbers.bin" ;bin.fnt (for debug)
-
+*/
 	;INCBIN "/home/chris/bem/spriter/numbers.bin"
 /* atari remove
 	dta     $44,$AA,$AA,$AA,$AA,$AA,$44,$00,$44,$CC,$44,$44,$44,$44,$EE
@@ -4972,10 +5135,11 @@ printlives
 	ldx #0
 	jmp numberplot          
 	;rts
-*/
+
 apage
 
 	org codeoffset+$200
+*/
 ;	guard codeoffset+$3ff
   ; Tower cost/damage data structures
   ; Each tower has 4 levels - for each of the three towers
@@ -5138,7 +5302,7 @@ firetypes_right
 
 
 lowcodeend
-
+/*
 .pRINT "Event Code End ",eventend
 .pRINT "Enemy health ",ehealth
 .pRINT "Enemy shield ",eshield
@@ -5169,6 +5333,7 @@ lowcodeend
 .print "level data size = ",varend-wavedata
 .print "A Page",codeoffset+$1ff-apage," ",apage
 .print "pal ",palt
+*/
 /*.print "firsttime ",firsttime
 .print "secondtime ",secondtime
 .print "intflag",intflag
@@ -5189,7 +5354,9 @@ lowcodeend
 	;ins 'towers\towers_shifted.fnt'
 temp	dta 0
 
-	org $b000
+	guard gamevram ;do not allow code reaching the videoram area
+
+	org code2
 towers	ins 'towers\towers_shifted.fnt' ;4x3 chars	
 notower	ins 'towers\notower_shifted.fnt'
 towermask	
@@ -5209,7 +5376,7 @@ spritelowtable
 ?x=#
 .rept 8 ;4
 ?y=#
-  dta [sprites+14*?y*2+?x*spritesize] % 256
+  dta [sprites+14*?y*2+?x*spritesiz] % 256
   ;next
   ;next
 .endr
@@ -5221,7 +5388,7 @@ spritelowtable
 ?x=#
 .rept 8 ;4
 ?y=#
-  dta [expl+14*?y*2+?x*spritesize] % 256
+  dta [expl+14*?y*2+?x*spritesiz] % 256
   ;next
   ;next
 .endr
@@ -5234,7 +5401,7 @@ spritehightable
 ?x=#
 .rept 8 ;4
 ?y=#
-  dta [sprites+14*?y*2+?x*spritesize] / 256
+  dta [sprites+14*?y*2+?x*spritesiz] / 256
   ;next
   ;next
 .endr
@@ -5246,7 +5413,7 @@ spritehightable
 ?x=#
 .rept 8 ;4
 ?y=#
-  dta [expl+14*?y*2+?x*spritesize] / 256
+  dta [expl+14*?y*2+?x*spritesiz] / 256
   ;next
   ;next
 .endr
@@ -5322,7 +5489,7 @@ x1	mva (w1),y (w2),y
 	lda spritehightable,x
 	sta w1+1
 	
-	ldy #spritesize
+	ldy #spritesiz
 x2	mva temppage,y (w1),y
 	dey
 	bne x2
@@ -5958,8 +6125,9 @@ inflate_data	equ $fc00
 .endl
 
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
-	;org mypmbase-$100
 
+/*
 	org mypmbase
 	;ins 'pmg\lvl4_1.pmg'
 	ins 'pmg\lvl1.pmg'
+	*/

@@ -129,5 +129,5 @@ _______x1
 
 ;guard if compiler reaches given address
 .macro guard
-	ert *>:1
+	ert *>=:1
 .endm
