@@ -1,4 +1,4 @@
-;TODO: implement inflate of whole levels and pmg overlays
+;TODO: switching levels causes crash
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -3580,12 +3580,12 @@ clearloadblock
 
 	rts
 
-*/
+
 	; Colour definitions
 	green=%10000
 	red=%00001
 	cyan=%10001
-
+*/
 printscore
 
 ; atari add {
@@ -4323,6 +4323,8 @@ loadscreen
 
 
 	lda level
+/* atari off - loaded as data block
+
 	and #15
 	ora #$30				; Get ascii of of level number
 	sta screenfilenumber
@@ -4334,9 +4336,7 @@ loadscreen
 	sta loadfileblock+2
 	lda #>(typos)
 	sta loadfileblock+3
-/* atari off - loaded as data block
 	jsr loadfile
-*/
 	lda #$26			; Rest palette
 	sta palt
 	lda #$a1
@@ -4353,7 +4353,47 @@ loadscreen
 	jmp delay
 
 	;rts
-
+*/
+	and #$0f
+	sub #1
+	asl @
+	tax
+	
+	;inflate level
+	mwa levelptr,x inflater.inputPointer
+	mwa #gamevram inflater.outputPointer
+	jsr inflater.inflate
+	
+	;inflate leveldata
+	mwa leveldtaptr,x inflater.inputPointer
+	mwa #leveldata inflater.outputPointer
+	jsr inflater.inflate
+	
+	;inflate pmg overlay
+	mwa levelpmgptr,x inflater.inputPointer
+	mwa #mypmbase inflater.outputPointer
+	jsr inflater.inflate
+	
+	jmp deletestatusrows
+	
+levelptr	dta a(datareloc.l1f+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.l2f+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.l3f+datareloc.moveto2-datareloc.loadarea)
+	dta a(datareloc.l4f+datareloc.moveto2-datareloc.loadarea)
+	
+leveldtaptr
+	dta a(datareloc.l1d+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.l2d+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.l3d+datareloc.moveto2-datareloc.loadarea)
+	dta a(datareloc.l4d+datareloc.moveto2-datareloc.loadarea)
+	
+levelpmgptr
+	dta a(datareloc.p1+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.p2+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.p3+datareloc.moveto-datareloc.loadarea)
+	dta a(datareloc.p4+datareloc.moveto-datareloc.loadarea)
+	
+	
 deletestatusrows		; Delete sprite status rows
 	; Store plot location in $8e and $8f.  8c,8d as line:8b as counter
 	lda #(13317+$4000) % 256
@@ -4525,7 +4565,7 @@ copykeytab
 	preshift_explosion_sprites
 
 ;TODO: move following inflates elsewhere + parametrize
-	
+/*	
 	;inflate pmg overlay
 	mwa #[datareloc.p1-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
 	mwa #mypmbase inflater.outputPointer
@@ -4540,7 +4580,7 @@ copykeytab
 	mwa #[datareloc.l1d-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
 	mwa #leveldata inflater.outputPointer
 	jsr inflater.inflate
-	
+*/	
 	rts
 ;returns pressed key (code)
 .proc	getkeypressed
@@ -5558,10 +5598,10 @@ x1     	lda sprite_shift.data,y
 	rts
 .endp
 
-	
+/*	
 .proc	sprite_test
 	
-/*	mva #0 temp
+	mva #0 temp
 xloop33	ldy #enemyno-1
 	lda temp
 	sta etype,Y
@@ -5578,7 +5618,7 @@ xloop33	ldy #enemyno-1
 	cmp #5
 	bne xloop33
 	
-*/	
+
 	mva #240 temp
 loop_x	mva #10 sy
 	mva temp sx
@@ -5611,6 +5651,7 @@ loop_x	mva #10 sy
 	jmp *
 	rts
 .endp
+*/
 
 ;wait until start button is pressed and released
 .proc	waittostart
