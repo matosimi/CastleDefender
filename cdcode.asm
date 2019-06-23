@@ -1,5 +1,5 @@
 ;TODO: implement inflate of whole levels and pmg overlays
-; PMG is currently somehow messed
+
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -150,7 +150,7 @@ etype		.ds enemyno ; Enemy type list - reserve bytes
 wavedataend
 
 allsprites	.ds 644 ;sprite gfx - inflated
-
+inflate_data	.ds 764 ;inflate buffer
 varend
 
 .print "leveldata_end:",leveldata_end
@@ -5638,7 +5638,12 @@ x2     	lda consol
 	pmg_status
 	;set_status0
 	
+	;inflate pmg overlay
+	/*mwa #[datareloc.p1-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
+	mwa #mypmbase inflater.outputPointer
+	jsr inflater.inflate
 	
+	*/
 	rts
 .endp
 
@@ -6119,7 +6124,7 @@ boxtopright
 
 
 .local	inflater
-inflate_data	equ $fc00
+;inflate_data defined at the beginning of this file
 ;inflate_zp defined at the beginning of this file
 	icl "inflate.asm"
 .endl
@@ -6130,4 +6135,4 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	org mypmbase
 	;ins 'pmg\lvl4_1.pmg'
 	ins 'pmg\lvl1.pmg'
-	*/
+*/

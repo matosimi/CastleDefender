@@ -120,7 +120,7 @@ x2	mva (w1),y (w2),y
 	iny
 	cpy #<dataend2
 	bne x2	
-	
+
 	mva #$ff portb ;continue loading
 	cli
 	mva #$c0 nmien
