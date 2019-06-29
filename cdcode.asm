@@ -1,4 +1,3 @@
-;TODO: switching levels causes crash
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -260,8 +259,9 @@ setup
 	sta enemieskilled
 	sta enemieskilled+1
 
-	lda #$a1
+	lda #$a5
 	sta wave
+	lda #$a1
 	sta level	; Level set by basic (not anymore)
 	;TODO:check the level stuff from acorn basic
 	
@@ -845,11 +845,13 @@ nextlevel
 	lda #$a1
 	sta wave
 
+/* atari off - TODO: handle next level load
+
 	;Close wave file
+
 	lda #0
 	ldy openfile
 	sta openfile
-/* atari off - TODO: handle next level load
 	jsr $ffce
 */
 	; Add lives $ 10000 to score
@@ -3997,12 +3999,13 @@ levellosesoundloop
 	;asl @:asl @
 	lda #0
 	sta gocolflag
-
-	lda #<($5678)	;atari - ??? crazy absolute values
-	sta golscreenaddress
-	lda #>($5678)
-	sta golscreenaddress+1
-
+;atari replace {
+;	lda #<($5678)	;atari - ??? crazy absolute values
+;	sta golscreenaddress
+;	lda #>($5678)
+;	sta golscreenaddress+1
+	mwa #gamevram+$700 golscreenaddress
+;}
 	jsr gologo
 
 	;lda #25:jsr delay
@@ -4033,10 +4036,14 @@ showlevlogo
 	lda #0
 	sta gocolflag
 
-	lda #<($6878)	;atari - ??? crazy absolute values
-	sta golscreenaddress
-	lda #>($6878)
-	sta golscreenaddress+1
+;atari replace {
+;	lda #<($6878)	;atari - ??? crazy absolute values
+;	sta golscreenaddress
+;	lda #>($6878)
+;	sta golscreenaddress+1
+	mwa #gamevram+$700 golscreenaddress
+;TODO: convert gfx
+; }
 
 	lda #<(levcolourmap)
 	sta gocolourmaplocation+1
@@ -4120,11 +4127,13 @@ winloop
 	asl @
 	sta gocolflag
 
-	lda #<($5670)
-	sta golscreenaddress
-	lda #>($5670)
-	sta golscreenaddress+1
-
+;atari replace {
+;	lda #<($5670) ;atari - crazy absolute addressing
+;	sta golscreenaddress
+;	lda #>($5670)
+;	sta golscreenaddress+1
+	mwa #gamevram+$700 golscreenaddress
+; }
 	jsr gologo
 
 	lda #25
@@ -4357,6 +4366,7 @@ loadscreen
 	and #$0f
 	sub #1
 	asl @
+	sta tmpx
 	tax
 	
 	;inflate level
@@ -4365,11 +4375,13 @@ loadscreen
 	jsr inflater.inflate
 	
 	;inflate leveldata
+	ldx tmpx
 	mwa leveldtaptr,x inflater.inputPointer
 	mwa #leveldata inflater.outputPointer
 	jsr inflater.inflate
 	
 	;inflate pmg overlay
+	ldx tmpx
 	mwa levelpmgptr,x inflater.inputPointer
 	mwa #mypmbase inflater.outputPointer
 	jsr inflater.inflate
@@ -4392,7 +4404,7 @@ levelpmgptr
 	dta a(datareloc.p2+datareloc.moveto-datareloc.loadarea)
 	dta a(datareloc.p3+datareloc.moveto-datareloc.loadarea)
 	dta a(datareloc.p4+datareloc.moveto-datareloc.loadarea)
-	
+tmpx	dta 0	
 	
 deletestatusrows		; Delete sprite status rows
 	; Store plot location in $8e and $8f.  8c,8d as line:8b as counter
