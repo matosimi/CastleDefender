@@ -61,11 +61,12 @@ keytable	equ $0400 ;table of keycodes
 leveldata	equ $0500 ;where leveldata to be inflated
 maincode	equ $2000 ;where code starts (until $3fff)
 gamevram	equ $4000 ;videoram (until $5fff)
+gamevram.status	equ gamevram+$1c00
 code2	equ $6000 ;continue of code
 mypmbase	equ $7c00 ;ingame pmbase, TODO:place better
 
 ;deflated data (data_relocator.asm)
-;	    $ac00 - $cfff
+;	    $ab00 - $cfff
 ;	    $d800 - $fff6
 
 scorebrd	equ gamevram+$1c00
@@ -268,6 +269,11 @@ setup
 	; Once per "Screen" setups
 
 newlevel
+;atari debug {
+	jsr showlevlogo
+	jmp *
+; }
+
 	;jsr clearstatusbox  ;3 lines at the bottom
 	;showwave 	;Level 1 Wave 1 (in the box)
 	;load screen (should include screen $ Path $ tower positions)
@@ -3964,6 +3970,12 @@ levellosesounddurations
 showloselogo
 	lda #75
 	jsr delay
+;atari add {
+	show_defeat_logo
+	rts
+;}
+	
+/*	atari remove
 
 	ldx #0
 levellosesoundloop
@@ -4017,11 +4029,18 @@ levellosesoundloop
 	;bne loseloop
 
 	;rts
+*/
 
 showlevlogo
 	lda #25
 	jsr delay
 
+;atari add {
+	show_level_complete_logo
+	rts
+;}
+
+/* atari remove
 	lda #68
 	sta gologolength+1	;Modify the length check
 
@@ -4074,13 +4093,14 @@ levelwinsoundloop
 
 
 	;rts
-
-
-
-
+*/
 
 showwinlogo
 
+	show_victory_logo
+	rts
+	
+/* atari remove
 	ldx #0
 gamewinsoundloop
 	txa
@@ -4219,6 +4239,7 @@ golinelength
 
 gofinish
 	rts
+*/
 
 createhitsprite
 	and #%11111
@@ -4406,6 +4427,7 @@ levelpmgptr
 	dta a(datareloc.p4+datareloc.moveto-datareloc.loadarea)
 tmpx	dta 0	
 	
+;TODO: take care of this garbage
 deletestatusrows		; Delete sprite status rows
 	; Store plot location in $8e and $8f.  8c,8d as line:8b as counter
 	lda #(13317+$4000) % 256
@@ -4453,6 +4475,36 @@ notblockof8
 
 	rts
 
+;logo stuff
+.proc	show_victory_logo
+	;TODO
+.endp
+
+.proc	show_defeat_logo
+	;TODO
+.endp
+	
+.proc	show_level_complete_logo
+	;TODO: hide the statusbar if shown
+
+	;inflate to statusbar location
+	;mwa datareloc.levcomp-datareloc.loadarea+datareloc.moveto2 inflater.inputPointer
+	;mwa #gamevram.status inflater.outputPointer
+	;jsr inflater.inflate
+	
+	;TODO: create empty frame
+	
+	;TODO: adjust PMG overlay
+	
+	;TODO: copy logo from statusbar to videoram
+	
+	;TODO: play jingle
+	
+	pause 50
+	
+	rts
+.endp
+
 	;.gocolourmap
 	;dta %00000000
 	;dta %00000011
@@ -4473,15 +4525,18 @@ notblockof8
 	;dta %11001100
 	;dta %11111111
 
-
+/*atari remove
 levelwinsoundpitches
 	dta 108,124,136,124,128
 levelwinsounddurations
 	dta 5,5,5,5,10
-
+*/
 
 wavetext	;2ce2
 	ins "leveltext\leveltext.fnt",0,12*8
+	
+/* atari remove
+	
 .print "wavetext (supposed to be $2ce2): ",wavetext
 ;	incbin "/home/chris/bem/spriter/leveltext.bin"
 ;towers	equ wavetext+$2d72-$2ce2 ;2d72
@@ -4490,7 +4545,6 @@ wavetext	;2ce2
 ;notower	equ wavetext+$2f22-$2ce2 ;2f22
 ;	iNCBIN "/home/chris/bem/spriter/notower.bin"
 .print "notower ",notower
-/* atari remove
 	dta $07,$02,$02,$02,$02,$02,$07,$00,$00,$00,$00
 	dta $00,$00,$02,$0E,$00,$00,$00,$06,$09,$0F,$08,$07,$00,$00,$00,$05
 	dta $05,$05,$05,$02,$00,$00,$00,$03,$04,$07,$04,$03,$00,$06,$02,$02
@@ -4575,25 +4629,8 @@ copykeytab
 	jsr inflater.inflate
 
 	preshift_explosion_sprites
-
-;TODO: move following inflates elsewhere + parametrize
-/*	
-	;inflate pmg overlay
-	mwa #[datareloc.p1-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
-	mwa #mypmbase inflater.outputPointer
-	jsr inflater.inflate
-	
-	;inflate level
-	mwa #[datareloc.l1f-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
-	mwa #gamevram inflater.outputPointer
-	jsr inflater.inflate
-	
-	;inflate leveldata
-	mwa #[datareloc.l1d-datareloc.loadarea+datareloc.moveto] inflater.inputPointer
-	mwa #leveldata inflater.outputPointer
-	jsr inflater.inflate
-*/	
 	rts
+
 ;returns pressed key (code)
 .proc	getkeypressed
 		
@@ -5237,12 +5274,14 @@ towerlocations2
   .word notower2
 :3	.word towers2+:1*9*8
 
+/* atari remove
 colourtable
 	dta %0001,%10000,%10001
-
+*/
 towertempnum
 	dta 00,$0a		; Needs to be defined because od $0a
 
+/* atari remove
 explosionfilename
 	dta "EXPLODE"
 	dta $0d
@@ -5306,6 +5345,8 @@ levcolourmap
 	dta %00000011
 	dta %00001100
 	dta %00001111
+
+*/
 
 firetypes
 /*atari remove

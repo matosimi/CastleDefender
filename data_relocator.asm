@@ -9,12 +9,13 @@ nmien	equ $d40e
 
 loadarea	equ $8000
 moveto	equ $d800 ;to $ffff
-moveto2	equ $ac00 ;to $cfff
+moveto2	equ $ab00 ;to $cfff
 
 C_PAGES	equ $27
 C_PAGES2	equ $23
 
 	org loadarea
+;to moveto
 ;waves
 z1	ins "waves\L1W1.bin.deflate"
 z2	ins "waves\L1W2.bin.deflate"
@@ -83,6 +84,7 @@ x2	mva (w1),y (w2),y
 	ini relocode
 	
 	org loadarea
+;to moveto2
 ;level fonts
 l3f	ins "levels\L3.fnt.deflate"
 l4f	ins "levels\L41.fnt.deflate"
@@ -91,6 +93,8 @@ l3d	ins "levels\L3data.bin.deflate"
 l4d	ins "levels\L4data.bin.deflate"
 sboard	ins "scoreboard\scoreboard.fnt.deflate"
 allsprit	ins "sprites\allsprites.fnt.deflate"
+windef	ins "logos\windef.fnt.deflate"
+levcomp	ins "logos\levcomp2.fnt.deflate"
 
 dataend2
 .print "relocate from:",loadarea,"-",dataend2," (",dataend2-loadarea,")"
