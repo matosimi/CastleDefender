@@ -12,7 +12,7 @@ moveto	equ $d800 ;to $ffff
 moveto2	equ $ab00 ;to $cfff
 
 C_PAGES	equ $27
-C_PAGES2	equ $23
+C_PAGES2	equ $24
 
 	org loadarea
 ;to moveto

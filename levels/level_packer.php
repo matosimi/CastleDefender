@@ -8,7 +8,7 @@ $levels = 4;
 for ($i = 0; $i < $levels; $i++)
     {
 	    $name = getcwd() . "\\L" . ($levelnames[$i]) . ".fnt";
-        exec(getcwd() . "\\..\\tools\\zopfli --deflate --i150 $name");
+        exec(getcwd() . "\\..\\tools\\zopfli --deflate --i350 $name");
         echo $name, ".deflate - ",filesize($name), " => ",filesize($name . ".deflate"), "\n";
     }
 
@@ -16,7 +16,7 @@ for ($i = 0; $i < $levels; $i++)
 for ($i = 0; $i < $levels; $i++)
     {
 	    $name = getcwd() . "\\L" . ($i+1) . "data.bin";
-        exec(getcwd() . "\\..\\tools\\zopfli --deflate --i150 $name");
+        exec(getcwd() . "\\..\\tools\\zopfli --deflate --i350 $name");
         echo $name, ".deflate - ",filesize($name), " => ",filesize($name . ".deflate"), "\n";
     }
 ?>

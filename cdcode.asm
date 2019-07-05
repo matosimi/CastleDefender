@@ -1,3 +1,6 @@
+;TODO
+;level complete does some weird pmg garbage under the screen 
+;defeat does the same
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -60,9 +63,10 @@ temppage	equ $0300 ;temporary page (loading)
 keytable	equ $0400 ;table of keycodes
 leveldata	equ $0500 ;where leveldata to be inflated
 maincode	equ $2000 ;where code starts (until $3fff)
-gamevram	equ $4000 ;videoram (until $5fff)
-gamevram.status	equ gamevram+$1c00
-code2	equ $6000 ;continue of code
+gamevram	equ $4000 ;videoram (until $5fff)+$100 for additional buffer
+gamevram.logo	equ gamevram+$0d00
+gamevram.status	equ gamevram+$1d00
+code2	equ $6100 ;continue of code
 mypmbase	equ $7c00 ;ingame pmbase, TODO:place better
 
 ;deflated data (data_relocator.asm)
@@ -270,8 +274,8 @@ setup
 
 newlevel
 ;atari debug {
-	jsr showlevlogo
-	jmp *
+	;jsr showlevlogo
+	;jmp *
 ; }
 
 	;jsr clearstatusbox  ;3 lines at the bottom
@@ -2621,6 +2625,10 @@ sbarcontrols
 	cmp #";"* ;return
 	jeq returnpressed
 	
+	cmp #"x" ;DEBUG
+	jeq logo.show_level_complete
+
+	
 ;joystick controls
 	lda #$01
 	bit stick
@@ -3971,7 +3979,7 @@ showloselogo
 	lda #75
 	jsr delay
 ;atari add {
-	show_defeat_logo
+	logo.show_defeat
 	rts
 ;}
 	
@@ -4036,7 +4044,7 @@ showlevlogo
 	jsr delay
 
 ;atari add {
-	show_level_complete_logo
+	logo.show_level_complete
 	rts
 ;}
 
@@ -4097,7 +4105,7 @@ levelwinsoundloop
 
 showwinlogo
 
-	show_victory_logo
+	logo.show_victory
 	rts
 	
 /* atari remove
@@ -4476,34 +4484,108 @@ notblockof8
 	rts
 
 ;logo stuff
-.proc	show_victory_logo
-	;TODO
-.endp
+.local	logo
 
-.proc	show_defeat_logo
-	;TODO
-.endp
-	
-.proc	show_level_complete_logo
-	;TODO: hide the statusbar if shown
+.proc	show_victory
+	;hide the statusbar if shown
+	set_status0
 
 	;inflate to statusbar location
-	;mwa datareloc.levcomp-datareloc.loadarea+datareloc.moveto2 inflater.inputPointer
-	;mwa #gamevram.status inflater.outputPointer
-	;jsr inflater.inflate
+	mwa #[datareloc.moveto2+datareloc.windef-datareloc.loadarea] inflater.inputPointer
+	mwa #gamevram.status inflater.outputPointer
+	jsr inflater.inflate
+
+	;copy logo from statusbar to videoram
+	ldx #127
+x1	
+:4	mva gamevram.status+256*:1,x gamevram.logo+64+256*:1,x
+	dex
+	bpl x1	
 	
-	;TODO: create empty frame
+	mva #50 animate.delay
+	animate
 	
-	;TODO: adjust PMG overlay
+	;todo: play jingle
+	rts
+.endp
+
+.proc	show_defeat
+	;hide the statusbar if shown
+	set_status0
+
+	;inflate to statusbar location
+	mwa #[datareloc.moveto2+datareloc.windef-datareloc.loadarea] inflater.inputPointer
+	mwa #gamevram.status inflater.outputPointer
+	jsr inflater.inflate
+
+	;copy logo from statusbar to videoram
+	ldx #127
+x1	
+:4	mva gamevram.status+256*:1+128,x gamevram.logo+64+256*:1,x
+	dex
+	bpl x1	
 	
-	;TODO: copy logo from statusbar to videoram
+	mva #50 animate.delay
+	animate
+	
+	;todo: play jingle
+.endp
+	
+.proc	show_level_complete
+	;hide the statusbar if shown
+	set_status0
+
+	;inflate to statusbar location
+	mwa #[datareloc.moveto2+datareloc.levcomp-datareloc.loadarea] inflater.inputPointer
+	mwa #gamevram.status inflater.outputPointer
+	jsr inflater.inflate
+	
+	;clear pmg overlay
+	ldx #127-9
+	lda #$ff
+x2	sta mypmbase+$100,x
+	sta mypmbase+$200,x
+	inx
+	cpx #127+16-9
+	bne x2
+		
+	;copy logo from statusbar to videoram
+	ldx #127
+x1	
+:2	mva gamevram.status+256*:1,x gamevram+$0d00+64+256*:1,x
+	dex
+	bpl x1
 	
 	;TODO: play jingle
-	
 	pause 50
 	
 	rts
 .endp
+
+.proc	animate
+	;animate
+x3	ldx #127-9
+x21	txa
+	add 20
+	and #$03
+	bne x22
+x23	sta mypmbase+$100,x
+	sta mypmbase+$200,x
+	inx
+	cpx #127+32-9
+	bne x21	
+	pause 2
+	dec delay
+	bne x3
+	rts
+	
+x22	lda #$ff
+	jmp x23
+		
+delay	equ 0
+.endp
+
+.endl
 
 	;.gocolourmap
 	;dta %00000000
