@@ -65,6 +65,7 @@ leveldata	equ $0500 ;where leveldata to be inflated
 maincode	equ $2000 ;where code starts (until $3fff)
 gamevram	equ $4000 ;videoram (until $5fff)+$100 for additional buffer
 gamevram.logo	equ gamevram+$0d00
+gamevram.enemies	equ gamevram+$1b00
 gamevram.status	equ gamevram+$1d00
 code2	equ $6100 ;continue of code
 mypmbase	equ $7c00 ;ingame pmbase, TODO:place better
@@ -2626,7 +2627,7 @@ sbarcontrols
 	jeq returnpressed
 	
 	cmp #"x" ;DEBUG
-	jeq logo.show_level_complete
+	jeq nextlevel
 
 	
 ;joystick controls
@@ -4435,8 +4436,14 @@ levelpmgptr
 	dta a(datareloc.p4+datareloc.moveto-datareloc.loadarea)
 tmpx	dta 0	
 	
-;TODO: take care of this garbage
 deletestatusrows		; Delete sprite status rows
+
+;atari add {
+	clear_enemy_list
+	rts
+; }
+
+/* atari remove
 	; Store plot location in $8e and $8f.  8c,8d as line:8b as counter
 	lda #(13317+$4000) % 256
 	sta $8e
@@ -4482,6 +4489,33 @@ notblockof8
 	bne clearlineouterloop
 
 	rts
+*/
+
+;clears the videoram space where enemy types are shown
+.proc	clear_enemy_list
+	ldx #0
+	txa
+x1	sta gamevram.enemies,x
+	dex
+	bne x1
+	
+x2	lda #0 ;%01010101
+	sta gamevram.enemies+$100,x
+	sta gamevram.enemies+$100+1,x
+	txa
+	add #8
+	tax
+	bne x2
+	
+x3	lda #0 ;#%01010101
+:4	sta gamevram.enemies-$100+4+:1,x
+	txa
+	add #8
+	tax
+	bne x3
+
+	rts
+.endp
 
 ;logo stuff
 .local	logo
@@ -4502,7 +4536,9 @@ x1
 	dex
 	bpl x1	
 	
-	mva #50 animate.delay
+	mva #250 animate.delay
+	animate
+	mva #250 animate.delay
 	animate
 	
 	;todo: play jingle
@@ -4525,7 +4561,7 @@ x1
 	dex
 	bpl x1	
 	
-	mva #50 animate.delay
+	mva #250 animate.delay
 	animate
 	
 	;todo: play jingle
@@ -4557,7 +4593,9 @@ x1
 	bpl x1
 	
 	;TODO: play jingle
-	pause 50
+	pause 100
+	
+	;TODO: fade out (to white)
 	
 	rts
 .endp
