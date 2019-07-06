@@ -1,6 +1,3 @@
-;TODO
-;level complete does some weird pmg garbage under the screen 
-;defeat does the same
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -6015,6 +6012,7 @@ bars	dta 45,173 ;pmg positions of top&bottom statusbar
 .proc	revert_pmg
           ldx sbarvisib
 	dex
+	bmi x0	;if not visible, do not revert
 	lda store_pmg.bars,x
 	add #32
 	tax
@@ -6027,7 +6025,7 @@ x1
 	dex
 	dey
 	bne x1
-     	rts
+x0     	rts
 .endp
 
 ;draw number with atari font
