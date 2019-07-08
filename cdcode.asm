@@ -1,3 +1,5 @@
+;TODO: remove attract mode references/conditions - acorn leftover
+;TODO: remove intflag references - acorn leftover
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -877,33 +879,37 @@ nextlevel
 
 gameover
 	; We're dead - finish and return.
+/* atari off
 	;Close open files
 	ldy openfile
 	beq noopenfile
 	lda #0
-/* atari off
+
 	jsr $ffce
-*/
+
 noopenfile
 
 	;lda #50
 	;jsr delay
 	lda attractmode
 	bne returntobasic	; Skip "game over" message for attract mode
-
+*/
 	jsr showloselogo
-
 returntobasic
+/* atari remove
 	lda #0
 	sta intflag
 
 ;	rTS                   ; Return back to basic.
-	jmp *
+*/
 
+;atari add {
+;TODO: go to title screen
+	jmp *
+;}
 
 winner
 	;We've won.
-
 	jsr showwinlogo
 	jmp returntobasic
 
@@ -4562,6 +4568,9 @@ x1
 	animate
 	
 	;todo: play jingle
+	
+	;TODO: fade out (to black)
+	rts
 .endp
 	
 .proc	show_level_complete
@@ -4602,14 +4611,14 @@ x1
 x3	ldx #127-9
 x21	txa
 	add 20
-	and #$03
+	and #$01
 	bne x22
 x23	sta mypmbase+$100,x
 	sta mypmbase+$200,x
 	inx
 	cpx #127+32-9
 	bne x21	
-	pause 2
+	pause 0
 	dec delay
 	bne x3
 	rts
