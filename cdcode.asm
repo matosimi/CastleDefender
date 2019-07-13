@@ -1,5 +1,8 @@
 ;TODO: remove attract mode references/conditions - acorn leftover
 ;TODO: remove intflag references - acorn leftover
+;TODO: fix hitsprite glitch
+;TODO: fix tower3 bullet leftover
+;TODO: finish level colors routines
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -2632,6 +2635,8 @@ sbarcontrols
 	cmp #"x" ;DEBUG
 	jeq nextlevel
 
+	cmp #"c" ;DEBUG color
+	jeq color.set
 	
 ;joystick controls
 	lda #$01
@@ -4887,7 +4892,9 @@ ptryl	equ *-1
 	
 	mva #$14 colpf0+2
 	mva #$0c colpf0+1 ;white lum
+pc00	equ *-4
 	lda #$90
+pc01	equ *-1
 :4	sta colpm0+:1
 	mva #$a6 colpf0+3	;missile color
 	mva #$14 prior
@@ -4896,8 +4903,11 @@ ptryl	equ *-1
 
 ; no top textline
 x1	mva #$94 colpf0+2
+pc04	equ *-4
 	mva #$0c colpf0+1 ;white lum
+pc02	equ *-4
 	lda #$90
+pc03	equ *-1
 :4	sta colpm0+:1
 	mva #$a6 colpf0+3	;missile color
 	mva #$11 prior
@@ -4912,6 +4922,7 @@ dliy	pha
 	sta wsync
 	mva #$11 prior
 	mva #$94 colpf0+2
+pc05	equ *-4
 	lda >gameDli.dlix
 ptr1h	equ *-1
 	sta dli_ptr+1
@@ -4960,6 +4971,7 @@ dli0	pha
 	sta wsync
 	mva #>[gamevram+($400*2)] chbase
 	mva #$94 colpf0+2
+pc06	equ *-4
 	mwa #dli1 dli_ptr
 	pla
 	rti
@@ -4968,12 +4980,15 @@ dli0	pha
 dlix2	pha
 	mva #$11 prior
 	lda #$90
+pc12	equ *-1
 :4	sta colpm0+:1
 
 	mva #$94 colpf0+2
+pc07	equ *-4
 	mva #>[gamevram+($400*2)] chbase
 	mva #$11 prior
 	mva #$0c colpf0+1
+pc08	equ *-4
 	mwa #dli1 dli_ptr
 	pla
 	rti
@@ -5040,12 +5055,15 @@ dli4x	pha
 dli5x	pha
 	mva #$11 prior
 	lda #$90
+pc09	equ *-1
 :4	sta colpm0+:1	
 	
 	;enemybar
 	mva #>[gamevram+($1800)] chbase
 	mva #$94 colpf0+2
+pc10	equ *-4
 	mva #$0c colpf0+1
+pc11	equ *-4
 	mwa #dli5 dli_ptr
 
 :20	sta wsync	
@@ -5519,6 +5537,47 @@ firetypes_right
 :2	dta %00001001
 	dta %00001111
 
+;manipulation with level colors
+.local 	color
+
+.proc	set
+	mwa #ptrdata1 w1
+	ldy #0
+	
+.rept 3,#
+	ldx data2+:1
+x1:1	mva (w1),y ptr:1
+	iny
+	mva (w1),y ptr:1+1
+	lda data0+:1
+	sta $ffff
+ptr:1	equ *-2
+	iny
+	dex
+	bne x1:1
+.endr	
+	rts
+.endp
+
+data0	dta $0c,$04,$00	;actual colors
+	
+data1	dta $0c,$14,$10	;red
+	dta $0c,$b4,$b0	;green
+	dta $0c,$94,$90	;blueish
+	dta $0c,$e4,$e0	;yellow
+data2	dta 4,5,4
+
+;pf1 - white lum (brightest)
+ptrdata1	dta a(gamevbi.pc00),a(gamevbi.pc02)
+	dta a(gameDli.pc08),a(gamedli.pc11)
+;pf2 - midbright color
+ptrdata2	dta a(gamevbi.pc04),a(gameDli.pc05)
+	dta a(gameDli.pc06),a(gameDli.pc07)
+	dta a(gameDli.pc10)
+;pmx - pm color (darkest)
+ptrdatap	dta a(gamevbi.pc01),a(gamevbi.pc03)
+	dta a(gameDli.pc09),a(gameDli.pc12)
+.endl
 
 lowcodeend
 /*
