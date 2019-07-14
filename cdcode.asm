@@ -3,6 +3,7 @@
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
 ;TODO: finish level colors routines
+;TODO: implement title screen + instructions
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -254,7 +255,8 @@ setup
 
 	jsr loadexplosions
 */
-
+	color.black
+	
 	;Reset score
 	lda #0
 	sta score
@@ -314,6 +316,11 @@ ttypeclear
 
 ;atari add {
 	mva #$99 gold+1 ;debug - lot of gold
+
+	lda level
+	sub #$a1
+	tax
+	color.fade_in_from_black
 ;}
 
 
@@ -878,6 +885,7 @@ nextlevel
 	stx level		; Store level before compare to allow highscore to work.
 	cpx #$a5
 	beq winner
+	color.fade_out_to_black
 	jmp newlevel
 
 gameover
@@ -2636,7 +2644,10 @@ sbarcontrols
 	jeq nextlevel
 
 	cmp #"c" ;DEBUG color
-	jeq color.set
+	jeq color.fade_in_from_black
+	
+	cmp #"v" ;DEBUG color
+	jeq color.fade_out_to_black
 	
 ;joystick controls
 	lda #$01
@@ -5559,13 +5570,109 @@ ptr:1	equ *-2
 	rts
 .endp
 
+.proc	level
+	
+	rts
+.endp
+
+.proc	fade_out_to_black
+x3	ldx #2
+	mva #0 flag
+x1	lda data0,x
+	and #$0f
+	bne x2
+	
+x5	dex
+	bpl x1
+	
+	color.set
+	pause 0
+	
+	lda flag
+	bne x3	;repeat until change	
+	black
+	rts
+
+x2	;and #$0f
+	;beq x4	;set black
+	dec data0,x
+	dec data0,x
+	inc flag
+	jmp x5
+	
+/*x4	mva #$00 data0,x
+	inc flag
+	jmp x5
+*/
+.endp
+
+;set black colors
+.proc	black
+	lda #$00
+	sta data0
+	sta data0+1
+	sta data0+2
+	color.set
+	rts
+.endp
+
+;x - level number (0..3)
+.proc	fade_in_from_black
+	stx temp
+	txa
+	asl @
+	add temp
+	add #2
+	sta temp ;(data1 index - last color)
+	
+	ldy temp
+	ldx #2
+x1	lda data1,y
+	and #$f0
+	sta data0,x
+	dey
+	dex
+	bpl x1
+	
+	color.set
+	pause 0
+
+	;color changes
+x5	mva #0 flag
+	ldx #2
+	ldy temp
+x3	lda data0,x
+	cmp data1,y
+	bne x2 
+x4	dey
+	dex
+	bpl x3
+	
+	color.set
+	pause 0
+	
+	lda flag
+	bne x5	;repeat until no change
+	rts
+
+;update color
+x2	inc data0,x
+	inc data0,x
+	inc flag
+	jmp x4	
+	
+.endp
+
 data0	dta $0c,$04,$00	;actual colors
 	
-data1	dta $0c,$14,$10	;red
-	dta $0c,$b4,$b0	;green
-	dta $0c,$94,$90	;blueish
-	dta $0c,$e4,$e0	;yellow
+data1	dta $9c,$94,$90	;blueish
+	dta $bc,$b4,$b0	;green
+	dta $ec,$e4,$e0	;yellow
+	dta $2c,$26,$20	;red
+	
 data2	dta 4,5,4
+temp	dta 0
+flag	dta 0
 
 ;pf1 - white lum (brightest)
 ptrdata1	dta a(gamevbi.pc00),a(gamevbi.pc02)
