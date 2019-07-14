@@ -4,6 +4,8 @@
 ;TODO: fix tower3 bullet leftover
 ;TODO: finish level colors routines
 ;TODO: implement title screen + instructions
+;TODO: remove logo PMG animation
+;TODO: initialize missiles (status columns)
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -885,7 +887,8 @@ nextlevel
 	stx level		; Store level before compare to allow highscore to work.
 	cpx #$a5
 	beq winner
-	color.fade_out_to_black
+	;color.fade_out_to_black
+	color.fade_out_to_black2
 	jmp newlevel
 
 gameover
@@ -2647,7 +2650,7 @@ sbarcontrols
 	jeq color.fade_in_from_black
 	
 	cmp #"v" ;DEBUG color
-	jeq color.fade_out_to_black
+	jeq color.fade_out_to_black2
 	
 ;joystick controls
 	lda #$01
@@ -4554,6 +4557,10 @@ x1
 :4	mva gamevram.status+256*:1,x gamevram.logo+64+256*:1,x
 	dex
 	bpl x1	
+
+	;set color of the logo
+	mva #$62 gameDli.pc15
+	sta gameDli.pc14
 	
 	mva #250 animate.delay
 	animate
@@ -4579,6 +4586,10 @@ x1
 :4	mva gamevram.status+256*:1+128,x gamevram.logo+64+256*:1,x
 	dex
 	bpl x1	
+	
+	;set color of the logo
+	mva #$d2 gameDli.pc15
+	sta gameDli.pc14
 	
 	mva #250 animate.delay
 	animate
@@ -4615,7 +4626,6 @@ x1
 	bpl x1
 	
 	;set color of the logo
-	;add:sta gameDli.pc15
 	mva #$62 gameDli.pc15
 	
 	;TODO: play jingle
@@ -5628,6 +5638,7 @@ ptr:1	equ *-2
 	rts
 .endp
 
+/*
 .proc	fade_out_to_black
 x3	ldx #3
 	mva #0 flag
@@ -5646,17 +5657,47 @@ x5	dex
 	black
 	rts
 
-x2	;and #$0f
-	;beq x4	;set black
-	dec data0,x
+x2	dec data0,x
 	dec data0,x
 	inc flag
 	jmp x5
 	
-/*x4	mva #$00 data0,x
+.endp
+*/
+
+.proc	fade_out_to_black2
+x3	ldx #15*2
+	mva #0 flag
+	
+x1	lda ptrdata1,x
+	sta w1
+	lda ptrdata1+1,x
+	sta w1+1
+	
+	ldy #0
+	lda (w1),y
+	
+	and #$0f
+	bne x2
+	
+x5	dex
+	dex
+	bpl x1
+	
+	pause 0
+	
+	lda flag
+	bne x3	;repeat until change	
+	black
+	rts
+
+x2	lda (w1),y
+	sub #2
+	sta (w1),y
 	inc flag
 	jmp x5
-*/
+	
+	rts
 .endp
 
 ;set black colors
