@@ -67,7 +67,7 @@ keytable	equ $0400 ;table of keycodes
 leveldata	equ $0500 ;where leveldata to be inflated
 maincode	equ $2000 ;where code starts (until $3fff)
 gamevram	equ $4000 ;videoram (until $5fff)+$100 for additional buffer
-gamevram.logo	equ gamevram+$0d00
+gamevram.logo	equ gamevram+$0c00
 gamevram.enemies	equ gamevram+$1b00
 gamevram.status	equ gamevram+$1d00
 code2	equ $6100 ;continue of code
@@ -4599,20 +4599,24 @@ x1
 	jsr inflater.inflate
 	
 	;clear pmg overlay
-	ldx #127-9
+	ldx #127-1-16
 	lda #$ff
 x2	sta mypmbase+$100,x
 	sta mypmbase+$200,x
 	inx
-	cpx #127+16-9
+	cpx #127+16-1-16
 	bne x2
 		
 	;copy logo from statusbar to videoram
 	ldx #127
 x1	
-:2	mva gamevram.status+256*:1,x gamevram+$0d00+64+256*:1,x
+:2	mva gamevram.status+256*:1,x gamevram.logo+64+256*:1,x
 	dex
 	bpl x1
+	
+	;set color of the logo
+	;add:sta gameDli.pc15
+	mva #$62 gameDli.pc15
 	
 	;TODO: play jingle
 	pause 100
@@ -4624,7 +4628,7 @@ x1
 
 .proc	animate
 	;animate
-x3	ldx #127-9
+x3	ldx #127-9-8
 x21	txa
 	add 20
 	and #$01
@@ -4632,7 +4636,7 @@ x21	txa
 x23	sta mypmbase+$100,x
 	sta mypmbase+$200,x
 	inx
-	cpx #127+32-9
+	cpx #127+32-9-8
 	bne x21	
 	pause 0
 	dec delay
@@ -4828,7 +4832,10 @@ vram
 
 dl	dta $50
 	dta $c2,a(vram),2,2,$82
-:6	dta $42,a(vram),2,2,$82
+:2	dta $42,a(vram),2,2,$82
+	dta $42,a(vram),$82,2,$82
+:3	dta $42,a(vram),2,2,$82
+;:6	dta $42,a(vram),2,2,$82
 	dta $42,a(vram)
 	dta $41,a(dl)
 
@@ -5004,13 +5011,44 @@ pc08	equ *-4
 	pla
 	rti
 
-;fourth,fifth,sixth part	
-.rept 3,#+1,#+2,#+3
+;fourth part - logo
+.rept 1,#+1,#+2,#+3
 dli:1	pha
 	sta wsync
 	mva #>[gamevram+($400*:3)+$0000] chbase
 	
-	;mwa #:2*2+$10 colpf0+4
+	mva #$00 colpm0+1
+pc15	equ *-4
+	sta colpm0+2
+	lda #>dliulog ;dli:2
+ptr:2h	equ *-1
+	sta dli_ptr+1
+	lda #<dliulog ;dli:2
+ptr:2l	equ *-1
+	sta dli_ptr
+	pla
+	rti
+.endr
+
+;fourth part (half under level complete logo)
+dliulog	pha
+	sta wsync
+	mva #$00 colpm0+1
+pc14	equ *-4
+	sta colpm0+2
+	mwa #dli2 dli_ptr
+	pla
+	rti
+
+;fifth (under logo)
+.rept 1,#+2,#+3,#+4
+dli:1	pha
+	sta wsync
+	mva #>[gamevram+($400*:3)+$0000] chbase
+	
+	mva #$0 colpm0+1
+pc13	equ *-4
+	sta colpm0+2
 	lda #>dli:2
 ptr:2h	equ *-1
 	sta dli_ptr+1
@@ -5021,6 +5059,21 @@ ptr:2l	equ *-1
 	rti
 .endr
 
+;sixth part
+.rept 1,#+3,#+4,#+5
+dli:1	pha
+	sta wsync
+	mva #>[gamevram+($400*:3)+$0000] chbase
+	
+	lda #>dli:2
+ptr:2h	equ *-1
+	sta dli_ptr+1
+	lda #<dli:2
+ptr:2l	equ *-1
+	sta dli_ptr
+	pla
+	rti
+.endr
 
 .rept 1,#+1+3,#+2+3,#+3+3
 dli:1	pha
@@ -5576,7 +5629,7 @@ ptr:1	equ *-2
 .endp
 
 .proc	fade_out_to_black
-x3	ldx #2
+x3	ldx #3
 	mva #0 flag
 x1	lda data0,x
 	and #$0f
@@ -5612,21 +5665,27 @@ x2	;and #$0f
 	sta data0
 	sta data0+1
 	sta data0+2
+	sta data0+3
 	color.set
 	rts
 .endp
 
 ;x - level number (0..3)
 .proc	fade_in_from_black
-	stx temp
+	txa
+	asl @
+	asl @
+	add #3
+	sta temp
+	/*stx temp
 	txa
 	asl @
 	add temp
 	add #2
 	sta temp ;(data1 index - last color)
-	
+	*/
 	ldy temp
-	ldx #2
+	ldx #3
 x1	lda data1,y
 	and #$f0
 	sta data0,x
@@ -5639,7 +5698,7 @@ x1	lda data1,y
 
 	;color changes
 x5	mva #0 flag
-	ldx #2
+	ldx #3
 	ldy temp
 x3	lda data0,x
 	cmp data1,y
@@ -5663,14 +5722,17 @@ x2	inc data0,x
 	
 .endp
 
-data0	dta $0c,$04,$00	;actual colors
+data0	dta $0c,$04,$00,$62	;actual colors
 	
-data1	dta $9c,$94,$90	;blueish
-	dta $bc,$b4,$b0	;green
-	dta $ec,$e4,$e0	;yellow
-	dta $2c,$26,$20	;red
-	
-data2	dta 4,5,4
+data1	dta $9c,$94,$90,$62	;blueish
+	dta $bc,$b4,$b0,$62	;green
+	dta $ec,$e4,$e0,$62	;yellow
+	dta $2c,$26,$20,$62	;red
+;fadein:	
+data2	dta 4,5,7		;amount of ptrdatas
+;fadeout:
+data2x	dta 4,5,6		;amount of ptrdatas
+
 temp	dta 0
 flag	dta 0
 
@@ -5684,6 +5746,8 @@ ptrdata2	dta a(gamevbi.pc04),a(gameDli.pc05)
 ;pmx - pm color (darkest)
 ptrdatap	dta a(gamevbi.pc01),a(gamevbi.pc03)
 	dta a(gameDli.pc09),a(gameDli.pc12)
+	dta a(gameDli.pc13),a(gameDli.pc14)
+ptrdatac	dta a(gameDli.pc15)
 .endl
 
 lowcodeend
