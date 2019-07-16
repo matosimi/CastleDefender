@@ -5,7 +5,6 @@
 ;TODO: finish level colors routines
 ;TODO: implement title screen + instructions
 ;TODO: remove logo PMG animation
-;TODO: initialize missiles (status columns)
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -3515,12 +3514,13 @@ clearstatusboxloop
 ; }
 	bne clearstatusboxloop
 
-
+/* atari remove
 	;write the "decenders"
 	; $7af0=192 $7b40=192
 	lda #192
 	sta $7af0
 	sta $7b40
+*/
 	pla
 	tax
 	pla
@@ -4785,6 +4785,15 @@ copykeytab
 	jsr inflater.inflate
 
 	preshift_explosion_sprites
+	
+;clean up memory areas
+/*
+	ldx #0
+	txa
+x1	sta SOMETHING,x
+	dex
+	bne x1
+*/	
 	rts
 
 ;returns pressed key (code)
@@ -5414,7 +5423,6 @@ printlives
 	; Uses number print - so $70-$75 - does not preserve registers
 	
 ; atari add {
-
 	mva #$f0 missile_drawchar.mask
 	mva #$0f missile_drawchar.mask2
 
