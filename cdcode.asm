@@ -25,6 +25,7 @@ portb	equ $d301
 dmactl	equ $d400
 dlistl	equ $d402
 hscrol	equ $d404
+vscrol	equ $d405
 pmbase	equ $d407
 chbase	equ $d409
 wsync	equ $d40a
@@ -214,7 +215,8 @@ scorebrd	ins 'scoreboard\scoreboard.fnt'  ;to be inflated
 
 start
 	jsr atariinit ;atari init stuff
-	
+	title_screen
+	game_init
 	
 	;; Turn sound on/off for attract mode
 /* atari off
@@ -4781,7 +4783,7 @@ atariinit	;org $8000 ;atari init code
 	sei
 	mva #$00 nmien
 	sta irqen 	;disable interupts (klavesy)
-	
+		
 	;keyboard init
 	ldy #$7f
 copykeytab
@@ -4790,14 +4792,9 @@ copykeytab
         	dey
         	bpl copykeytab
 
-	mwa #dl dlistl
-	mwa #gameDli.dli1 dli_ptr ;vdslst
-	mwa #gameVbi.vbi vbi_ptr
-	mva #1+12+32 dmactl ;d400 = 559
 	mva #$fe portb	;turn off osrom and basicrom	
-	mwa #NMI $fffa		
-	mva #$c0 nmien ;80 dli, 40 vbi
-
+	mwa #NMI $fffa
+		
 	;inflate scoreboard
 	mwa #[datareloc.sboard-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
 	mwa #scorebrd inflater.outputPointer
@@ -4819,6 +4816,16 @@ x1	sta SOMETHING,x
 	bne x1
 */	
 	rts
+
+;initialization for the game
+.proc	game_init
+	mwa #dl dlistl
+	mwa #gameDli.dli1 dli_ptr ;vdslst
+	mwa #gameVbi.vbi vbi_ptr
+	mva #1+12+32 dmactl ;d400 = 559
+	mva #$c0 nmien ;80 dli, 40 vbi
+	rts
+.endp
 
 ;returns pressed key (code)
 .proc	getkeypressed
@@ -5879,6 +5886,7 @@ temp	dta 0
 	guard gamevram ;do not allow code reaching the videoram area
 
 	org code2
+
 towers	ins 'towers\towers_shifted.fnt' ;4x3 chars	
 notower	ins 'towers\notower_shifted.fnt'
 towermask	
@@ -6660,3 +6668,140 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;ins 'pmg\lvl4_1.pmg'
 	ins 'pmg\lvl1.pmg'
 */
+
+.proc	title_screen
+	
+	mwa #dl2 dlistl
+	mva #1+12+32 dmactl ;narrow
+	mva #>titlefont chbase
+	mwa #titleDli dli_ptr ;vdslst
+	mwa #titleVbi vbi_ptr
+	mva #$c0 nmien
+	
+x2	ldx #255-7
+x1	stx vscrol
+	stx hscrol
+	pause 5
+	inx
+	bmi x1
+	add16 #32 tcptr
+	jmp x2
+	rts
+	
+titleDli	rti
+titleVbi	phr
+	inc 20
+	lda random
+	sta colpf0
+	plr
+	rti
+
+dl2	dta $70,$70,$70
+	dta $44
+	dta a(title_logo)
+:3	dta 4
+	dta $42+32
+tcptr	dta a(title_cont)
+:19	dta 2+32
+	dta $41,a(dl2)
+	
+title_logo
+	dta d'    this is CASTLE DEFENDER     '
+	dta d'      by Martin Simecek and     '
+	dta d'       Chris Bradburne  2019    '
+	dta d'--------------------------------'
+	
+title_cont
+	dta d'would you like instructions?    '
+	dta d"                                "
+	dta d"The hordes are coming! Wave     "
+	dta d"after wave of goblins,          "
+	dta d"skeletons, zombies, snakes,     "
+	dta d"wizards and all manner of       "
+	dta d"creatures from the nether       "
+	dta d"dimensions are attacking our    "
+	dta d"castle. It is up to you to      "
+	dta d"save us from the onslaught using"
+	dta d"our defensive towers!           "
+	dta d"                                "
+	dta d"Enemies will emerge from the    " 
+	dta d"portal and move along the path  "
+	dta d"to our castle. Place different  "
+	dta d"tower types that automatically  "
+	dta d"attack anything that gets within"
+	dta d"their range.                    "
+	dta d"                                "
+	dta d" Press any key to continue      "
+	
+	dta d" Controls:                      "
+	dta d"Arrow keys move your cursor.    "
+	dta d"Number keys 1,2 and 3 build a   "
+	dta d"tower of that type in a vacant  "
+	dta d"space.                          "
+	dta d"U upgrades an existing tower.   "
+	dta d"<Space> speeds the game up      "
+	dta d"whilst held.                    "
+	dta d"<Shift><Escape> Quit.           "
+
+	dta d" Towers:                        "
+	dta d"Each tower has various          "
+	dta d"attributes which are shown in   "
+	dta d"the status bar.                 "
+	dta d"Lvl  - Tower level (0-3).       "
+	dta d"Dmg  - Amount of physical damage"
+	dta d"       each shot inflicts.      "
+	dta d"Shld - Amount of shield damage  "
+	dta d"       each shot inflicts.      "
+	dta d"Rng  - Tower range.             "
+	dta d"Rate - Rate of fire.            "
+	dta d"Cost - Cost of tower or upgrade."
+
+	dta d" Status Area:                   "
+	dta d"When an empty space is selected "
+	dta d"the centre area shows           "
+	dta d"information for all available   "
+	dta d"towers. If a tower is selected  "
+	dta d"the current and upgrade values  "
+	dta d"are shown.                      "
+	dta d"The left area shows your lives  "
+	dta d"and available gold.             "
+	dta d"The right area shows the current"
+	dta d"health and shield of the enemy  "
+	dta d"nearest the castle. * is the    "
+	dta d"number of enemies left to       "
+	dta d"destroy.                        "
+
+	dta d" Enemies:                       "
+	dta d"Each enemy has a starting       "
+	dta d"strength and shield‚value shown "
+	dta d"above the status area.          "
+	dta d"If an enemy has a shield then   "
+	dta d"any damage will be reduced by   "
+	dta d"the shield amount.              "
+	dta d"Destroying an enemy gives you a "
+	dta d"little gold but letting one     "
+	dta d"reach the castle will cost you  "
+	dta d"one life.                       "
+	dta d"   ...Good Luck!                " 
+
+	dta d" Thanks...                      "
+	dta d"A huge thank you to the         "
+	dta d"incredibly talented John Blythe "
+	dta d"without whom this game would    "
+	dta d"look very plain.                "
+	dta d"Please visit his website at:    "
+	dta d" http://johnblythe5.wixsite.com "
+	dta d" /rucksackgames                 "
+	dta d"Thanks also to the members of   "
+	dta d"StarDot for their advice,support"
+	dta d"and tools.                      "
+	dta d"Lastly thank you to my familyfor"
+	dta d"putting up with mylittleproject!"
+
+	
+	
+	.align $400,0
+titlefont	ins 'title\title.fnt'
+
+	
+.endp
