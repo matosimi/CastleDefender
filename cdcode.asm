@@ -2,9 +2,7 @@
 ;TODO: remove intflag references - acorn leftover
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
-;TODO: finish level colors routines
 ;TODO: implement title screen + instructions
-;TODO: remove logo PMG animation
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -4558,17 +4556,38 @@ x1
 	dex
 	bpl x1	
 
-	;set color of the logo
-	mva #$62 gameDli.pc15
+	;set pmg overlay
+	mva #32 logo_pmg_bg.lines
+	logo_pmg_bg
+	
+	;set green color of the logo
+	mva #$c4 gameDli.pc15
 	sta gameDli.pc14
 	
-	mva #250 animate.delay
-	animate
-	mva #250 animate.delay
-	animate
+	;mva #250 animate.delay
+	;animate
+	;mva #250 animate.delay
+	;animate
+	pause 250
+	pause 250
 	
 	;todo: play jingle
 	rts
+.endp
+
+;set logo pmg background (overlay)
+.proc	logo_pmg_bg
+	;set pmg overlay
+	ldx #127-1-16
+	ldy lines
+	lda #$ff
+x1	sta mypmbase+$100,x
+	sta mypmbase+$200,x
+	inx
+	dey
+	bpl x1
+	rts
+lines	dta 0
 .endp
 
 .proc	show_defeat
@@ -4587,12 +4606,18 @@ x1
 	dex
 	bpl x1	
 	
-	;set color of the logo
-	mva #$d2 gameDli.pc15
+	;set pmg overlay
+	mva #32 logo_pmg_bg.lines
+	logo_pmg_bg
+	
+	;set red color of the logo
+	mva #$34 gameDli.pc15
 	sta gameDli.pc14
 	
-	mva #250 animate.delay
-	animate
+	;mva #250 animate.delay
+	;animate
+	pause 250
+	pause 250
 	
 	;todo: play jingle
 	
@@ -4604,19 +4629,17 @@ x1
 	;hide the statusbar if shown
 	set_status0
 
+	;hide wave info if shown
+	jsr showwave.restore
+
 	;inflate to statusbar location
 	mwa #[datareloc.moveto2+datareloc.levcomp-datareloc.loadarea] inflater.inputPointer
 	mwa #gamevram.status inflater.outputPointer
 	jsr inflater.inflate
 	
-	;clear pmg overlay
-	ldx #127-1-16
-	lda #$ff
-x2	sta mypmbase+$100,x
-	sta mypmbase+$200,x
-	inx
-	cpx #127+16-1-16
-	bne x2
+	;set pmg overlay
+	mva #16 logo_pmg_bg.lines
+	logo_pmg_bg
 		
 	;copy logo from statusbar to videoram
 	ldx #127
@@ -4636,6 +4659,7 @@ x1
 	rts
 .endp
 
+/*
 .proc	animate
 	;animate
 x3	ldx #127-9-8
@@ -4658,7 +4682,7 @@ x22	lda #$ff
 		
 delay	equ 0
 .endp
-
+*/
 .endl
 
 	;.gocolourmap
