@@ -6663,47 +6663,80 @@ boxtopright
 
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
-/*
-	org mypmbase
-	;ins 'pmg\lvl4_1.pmg'
-	ins 'pmg\lvl1.pmg'
-*/
-
 .proc	title_screen
 	
-	mwa #dl2 dlistl
+	jsr g2ftitle.main
+	;mwa #dl2 dlistl
 	mva #1+12+32 dmactl ;narrow
 	mva #>titlefont chbase
 	mwa #titleDli dli_ptr ;vdslst
 	mwa #titleVbi vbi_ptr
 	mva #$c0 nmien
 	
-x2	ldx #255-7
-x1	stx vscrol
-	stx hscrol
+xx2	ldx #0
+xx1	stx vscrol
 	pause 5
 	inx
-	bmi x1
+	cpx #8
+	bne xx1
 	add16 #32 tcptr
-	jmp x2
+	jmp xx2
 	rts
-	
-titleDli	rti
+
+
 titleVbi	phr
 	inc 20
-	lda random
-	sta colpf0
 	plr
-	rti
+titleDli	rti
 
-dl2	dta $70,$70,$70
+	
+/*dl2	dta $70
 	dta $44
 	dta a(title_logo)
-:3	dta 4
+:2	dta 4
+	dta 4 */
+dlcont	dta $80
 	dta $42+32
 tcptr	dta a(title_cont)
 :19	dta 2+32
-	dta $41,a(dl2)
+	dta 2+$80,$42,a(title_cont)
+	;dta $44,a(title_logo+96)
+	dta $41,a(g2ftitle.ant)
+	
+;dli under g2f	
+dlix1	pha
+	
+	mva #1+12+32 dmactl ;narrow
+	mva #>titlefont chbase
+	sta wsync
+	mva #$54 colpf0+2 	;text background
+	mva #$04 colpf0+1 	;text luminance
+	sta wsync
+	mva #$52 colpf0+2 	
+	mva #$02 colpf0+1 	
+	sta wsync
+	mva #$50 colpf0+2 	
+	mva #$00 colpf0+1 
+	sta wsync
+	mva #$0c colpf0+1 
+	mwa #dlix2 g2ftitle.NMI.dliv
+	pla
+	rti
+	
+dlix2	pha
+	sta wsync
+	mva #$50 colpf0+2 	 
+	sta wsync
+	mva #$52 colpf0+2 	
+	mva #$02 colpf0+1 	
+	sta wsync
+	mva #$54 colpf0+2 	;text background
+	mva #$04 colpf0+1 	;text luminance
+	sta wsync
+	mva #$00 colpf0+2
+	sta colpf0+1	
+	pla
+	rti
 	
 title_logo
 	dta d'    this is CASTLE DEFENDER     '
@@ -6711,97 +6744,127 @@ title_logo
 	dta d'       Chris Bradburne  2019    '
 	dta d'--------------------------------'
 	
+	.align $4000
 title_cont
-	dta d'would you like instructions?    '
+
+:20	dta d"                                "
+	dta d" The hordes are coming! Wave    "
+	dta d" after wave of goblins,         "
+	dta d" skeletons, zombies, snakes,    "
+	dta d" wizards and all manner of      "
+	dta d" creatures from the nether      "
+	dta d" dimensions are attacking our   "
+	dta d" castle. It is up to you to     "
+	dta d" save us from the onslaught     "
+	dta d" using our defensive towers!    "
 	dta d"                                "
-	dta d"The hordes are coming! Wave     "
-	dta d"after wave of goblins,          "
-	dta d"skeletons, zombies, snakes,     "
-	dta d"wizards and all manner of       "
-	dta d"creatures from the nether       "
-	dta d"dimensions are attacking our    "
-	dta d"castle. It is up to you to      "
-	dta d"save us from the onslaught using"
-	dta d"our defensive towers!           "
+	dta d" Enemies will emerge from the   " 
+	dta d" portal and move along the path "
+	dta d" to our castle. Place different "
+	dta d" tower types that automatically "
+	dta d" attack anything that gets      "
+	dta d" within their range.            "       
 	dta d"                                "
-	dta d"Enemies will emerge from the    " 
-	dta d"portal and move along the path  "
-	dta d"to our castle. Place different  "
-	dta d"tower types that automatically  "
-	dta d"attack anything that gets within"
-	dta d"their range.                    "
-	dta d"                                "
-	dta d" Press any key to continue      "
-	
 	dta d" Controls:                      "
-	dta d"Arrow keys move your cursor.    "
-	dta d"Number keys 1,2 and 3 build a   "
-	dta d"tower of that type in a vacant  "
-	dta d"space.                          "
-	dta d"U upgrades an existing tower.   "
-	dta d"<Space> speeds the game up      "
-	dta d"whilst held.                    "
-	dta d"<Shift><Escape> Quit.           "
-
+	dta d" =========                      "
+	dta d"^WASD"*,d" keys or joystick move     "
+	dta d" your cursor.                   "
+	dta d"                                "
+	dta d"^Fire"*,d" or",d"^Return"*,d" shows build and "
+	dta d" upgrade options of selected    "
+	dta d" tower or vacant space.         "
+	dta d"                                "
+	dta d" Number keys ",d"^123"*,d" build a tower "
+	dta d" of that type in a vacant space."
+	dta d"                                "
+	dta d"^U"*,d" upgrades an existing tower.  "
+	dta d"                                "
+	dta d"^Space"*,d" speeds the game up       "
+	dta d" whilst held.                   "
+	dta d"                                "
+	dta d"^Start"*,d" +",d"^Select"*,d" +",d"^Option"*," Quit.  "
+	dta d"                                "
 	dta d" Towers:                        "
-	dta d"Each tower has various          "
-	dta d"attributes which are shown in   "
-	dta d"the status bar.                 "
-	dta d"Lvl  - Tower level (0-3).       "
-	dta d"Dmg  - Amount of physical damage"
-	dta d"       each shot inflicts.      "
-	dta d"Shld - Amount of shield damage  "
-	dta d"       each shot inflicts.      "
-	dta d"Rng  - Tower range.             "
-	dta d"Rate - Rate of fire.            "
-	dta d"Cost - Cost of tower or upgrade."
-
-	dta d" Status Area:                   "
-	dta d"When an empty space is selected "
-	dta d"the centre area shows           "
-	dta d"information for all available   "
-	dta d"towers. If a tower is selected  "
-	dta d"the current and upgrade values  "
-	dta d"are shown.                      "
-	dta d"The left area shows your lives  "
-	dta d"and available gold.             "
-	dta d"The right area shows the current"
-	dta d"health and shield of the enemy  "
-	dta d"nearest the castle. * is the    "
-	dta d"number of enemies left to       "
-	dta d"destroy.                        "
-
+	dta d" =======                        "
+	dta d" Each tower has various         "
+	dta d" attributes which are shown in  "
+	dta d" the build bar accessible by    "
+	dta d"^Fire"*,d" or",d"^Return"*,d".                "
+	dta d"                                "
+	dta 0,65,66,67,d": Tower level (0-3).        "
+	dta 0,68,69,70,d": Amount of physical damage "
+	dta d"      each shot inflicts.       "
+	dta 0,71,72,73,d": Amount of shield damage   "
+	dta d"      each shot inflicts.       "
+	dta 0,74,75,76,d": Tower range.              "
+	dta 0,77,78,79,d": Rate of fire.             "
+	dta 0,80,81,82,d": Cost of tower or upgrade. "
+	dta d"                                "
+	dta d" Build bar:                     "
+	dta d" ==========                     "
+	dta d" When an empty space is         "
+	dta d" selected build bar shows       "
+	dta d" information for all available  "
+	dta d" towers. If a tower is selected "
+	dta d" the current and upgrade values "
+	dta d" are shown.                     "
+	dta d"                                "
+	dta d" Status columns:                "
+	dta d" ===============                "
+	dta d" The left column shows your     "
+	dta d" lives, gold and score.         "
+	dta d"                                "
+	dta d" The right column shows the     "
+	dta d" current health and shield of   "
+	dta d" the enemy nearest the castle.  "
+	dta d"                                "
+	dta d" * is the number of enemies     "
+	dta d" left to destroy.               "
+	dta d"                                "
 	dta d" Enemies:                       "
-	dta d"Each enemy has a starting       "
-	dta d"strength and shield‚value shown "
-	dta d"above the status area.          "
-	dta d"If an enemy has a shield then   "
-	dta d"any damage will be reduced by   "
-	dta d"the shield amount.              "
-	dta d"Destroying an enemy gives you a "
-	dta d"little gold but letting one     "
-	dta d"reach the castle will cost you  "
-	dta d"one life.                       "
+	dta d" ========                       "
+	dta d" Each enemy has a starting      "
+	dta d" strength and shield, values    "
+	dta d" shown on bottom red enemy bar. "
+	dta d"                                "
+	dta d" If an enemy has a shield then  "
+	dta d" any damage will be reduced by  "
+	dta d" the shield amount.             "
+	dta d"                                "
+	dta d" Destroying an enemy gives you  "
+	dta d" a little gold but letting one  "
+	dta d" reach the castle will cost you "
+	dta d" one life.                      "
+	dta d"                                "
 	dta d"   ...Good Luck!                " 
-
-	dta d" Thanks...                      "
-	dta d"A huge thank you to the         "
-	dta d"incredibly talented John Blythe "
-	dta d"without whom this game would    "
-	dta d"look very plain.                "
-	dta d"Please visit his website at:    "
-	dta d" http://johnblythe5.wixsite.com "
-	dta d" /rucksackgames                 "
-	dta d"Thanks also to the members of   "
-	dta d"StarDot for their advice,support"
-	dta d"and tools.                      "
-	dta d"Lastly thank you to my familyfor"
-	dta d"putting up with mylittleproject!"
-
+	dta d"                                "
+	dta d"                                "
+	dta d" Some greetings:                "
+	dta d" ===============                "
+	dta d" Thanks to Chris Bradburne the  "
+	dta d" author of original BBC Micro   "
+	dta d" Castle Defender for the game   "
+	dta d" sources and support during     "
+	dta d" early stages of this           "
+	dta d" conversion. I hope you are     "
+	dta d" going to like this Atari       "
+	dta d" version of your game.          "
+	dta d"                                "
+	dta d" Thank you to my wife for       "
+	dta d" letting me work on this        "
+	dta d" project.                       "
 	
-	
+
+.endp
+
 	.align $400,0
 titlefont	ins 'title\title.fnt'
-
 	
-.endp
+
+
+g2ftitle_org
+
+.local	g2ftitle
+	icl "title\cd_title\cd_title_adjusted.asm"
+	
+.endl
