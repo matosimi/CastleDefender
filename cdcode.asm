@@ -6674,6 +6674,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	mva #$c0 nmien
 	
 xx2	ldx #0
+	jmp *
 xx1	stx vscrol
 	pause 5
 	inx
@@ -6697,7 +6698,7 @@ titleDli	rti
 	dta 4 */
 dlcont	dta $80
 	dta $42+32
-tcptr	dta a(title_cont)
+tcptr	dta a(title_logo)
 :19	dta 2+32
 	dta 2+$80,$42,a(title_cont)
 	;dta $44,a(title_logo+96)
@@ -6739,11 +6740,28 @@ dlix2	pha
 	rti
 	
 title_logo
-	dta d'    this is CASTLE DEFENDER     '
-	dta d'      by Martin Simecek and     '
-	dta d'       Chris Bradburne  2019    '
-	dta d'--------------------------------'
+	dta d"                                "
+	dta d"                                "
+	dta d"       High score: 00000000     "
+	dta d"   Enemies killed: 00.0%        "
+	dta d"         Progress: 00%          "
+	dta d"                                "
+	dta d"                                "
+	dta d"       Last score: 00000000     "
+	dta d"   Enemies killed: 00.0%        "
+	dta d"         Progress: 00%          "
+	dta d"                                "
+	dta d"                                "
+	dta d"                                "
+	dta d"                                "
+	dta d"          Instructions          "
+	dta d"              Play              "
+	dta d"                                "
+	dta d"                                "
+	dta d"                                "
+	dta d"   http://matosimi.atari.org    "
 	
+	             
 	.align $4000
 title_cont
 
@@ -6839,21 +6857,23 @@ title_cont
 	dta d"   ...Good Luck!                " 
 	dta d"                                "
 	dta d"                                "
-	dta d" Some greetings:                "
-	dta d" ===============                "
-	dta d" Thanks to Chris Bradburne the  "
-	dta d" author of original BBC Micro   "
-	dta d" Castle Defender for the game   "
-	dta d" sources and support during     "
-	dta d" early stages of this           "
-	dta d" conversion. I hope you are     "
-	dta d" going to like this Atari       "
-	dta d" version of your game.          "
+	dta d" Credits:                       "
+	dta d" ========                       "
+	dta d" Original BBC Micro code:       "
+	dta d"                Chris Bradburne "
 	dta d"                                "
-	dta d" Thank you to my wife for       "
-	dta d" letting me work on this        "
-	dta d" project.                       "
-	
+	dta d" Original BBC Micro design:     "
+	dta d"                    John Blythe "
+	dta d"                                "
+	dta d" Atari code and design:         "
+	dta d"                 Martin Simecek "
+	dta d"                                "
+	dta d" Title screen:                  "
+	dta d"                  Piotr Radecki "
+	dta d"                                "
+	dta d" Music:                         "
+	dta d"                 Michal Radecki "
+	dta d"                                "
 
 .endp
 

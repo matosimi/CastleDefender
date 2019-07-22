@@ -24,7 +24,7 @@ HEIGHT	= 30
 ; ---	MAIN PROGRAM
 	org $2000
 ant	dta $F0
-	dta $C4,a(scr),$84,$84,$04,$84,$84,$04,$70,$70,$70,$70,$70,$70,$70,$70,$70
+	dta $C4,a(scr),$84,$84,$04,$84,$84,$84,$70,$70,$70,$70,$70,$70,$70,$70,$70
 	dta $70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70
 	dta $41,a(ant)
 
@@ -212,15 +212,14 @@ c17	lda #$2C
 c18	lda #$26
 	sta wsync		;line=52
 	sta color2
-	DLINEW dli3 1 0 0
+	DLINEW dli10 1 0 0
 
-dli3
+dli10
 	sta regA
 	stx regX
 	sty regY
-	lda >fnt+$400*$00
+
 	sta wsync		;line=56
-	sta chbase
 	sta wsync		;line=57
 	sta wsync		;line=58
 	sta wsync		;line=59
@@ -237,10 +236,15 @@ c22	ldy #$06
 	sty color2
 c23	lda #$0A
 	sta color3
+	DLINEW dli3 1 1 1
+
+dli3
+	sta regA
+	lda >fnt+$400*$00
+	sta wsync		;line=64
+	sta chbase
 
 	lda regA
-	ldx regX
-	ldy regY
 	rti
 
 .endl

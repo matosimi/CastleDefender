@@ -220,9 +220,9 @@ dli3
 	sta regA
 	stx regX
 	sty regY
-	lda >fnt+$400*$00
+	;lda >fnt+$400*$00
 	sta wsync		;line=56
-	sta chbase
+	;sta chbase
 	sta wsync		;line=57
 	sta wsync		;line=58
 	sta wsync		;line=59
