@@ -3,7 +3,6 @@
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
 ;TODO: implement title screen + instructions
-;TODO: pack the rmt module
 ;TODO: pack the title logo data
 
 hposp0	equ $d000
@@ -81,7 +80,8 @@ scorebrd	equ gamevram+$1c00
 ;different code loop with data on same spot at gamevram
 title_scroll	equ $4000
 title_static	equ title_scroll+$1000
-titlefont		equ title_scroll+$1400
+titlefont		equ title_scroll+$1400	;to $57ff
+music		equ $5b00			;to $5fxx
 
 code2	equ $6100 ;continue of code
 
@@ -6655,10 +6655,6 @@ PLAYER	equ *+$400
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 .proc	title_screen
-	ldx #<music
-	ldy #>music
-	lda #0
-	jsr rmt.rmt_init	;initialize the music
 	
 	jsr g2ftitle.main
 	;mwa #dl2 dlistl
@@ -6673,10 +6669,22 @@ xx2
 	mwa #packed_text inflater.inputPointer
 	mwa #title_scroll inflater.outputPointer
 	jsr inflater.inflate
+	;$4000->$53xx
 	
 	mwa #packed_titlefont inflater.inputPointer
 	mwa #titlefont inflater.outputPointer
 	jsr inflater.inflate
+	;$5400->$5800
+	
+	mwa #packed_music inflater.inputPointer
+	mwa #music-6 inflater.outputPointer ;-6 => "skipping" the header
+	jsr inflater.inflate
+	;$5b00->$5fxx
+	
+	ldx #<music
+	ldy #>music
+	lda #0
+	jsr rmt.rmt_init	;initialize the music
 	
 	
 xx3	ldx #0
@@ -6749,7 +6757,8 @@ packed_text
 	ins "title\scrolltext.xex.deflate"
 packed_titlefont
 	ins "title\title.fnt.deflate"
-	
+packed_music
+	ins "msx\menu_stripped_5b00.rmt.deflate"
 .endp
 
 g2ftitle_org
@@ -6759,9 +6768,9 @@ g2ftitle_org
 	
 .endl
 
-	org $5b00
+/*	org $5b00
 music
 	opt h-
 	ins "msx\menu_stripped_5b00.rmt"
 	opt h+
-	
+	*/
