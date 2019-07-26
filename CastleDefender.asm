@@ -80,13 +80,19 @@ scorebrd	equ gamevram+$1c00
 ;different code loop with data on same spot at gamevram
 titlelogoscr	equ leveldata		;280 bytes
 titlelogofnt	equ leveldata+$380		;$0800-$0fff 
+music		equ $1000			;$1000-$14ff
 
-title_scroll	equ $4000
+
+title_scroll	equ gamevram
 title_static	equ title_scroll+$1000
 titlefont		equ title_scroll+$1400	;to $57ff
-music		equ $5b00			;to $5fxx
 
-code2	equ $6100 ;continue of code
+;3rd data rewrite (splash screen)
+splashlogoscr	equ leveldata		;to $0930: 1200 bytes
+;watch out!, music is still inplace from $1000-$14ff
+splashlogofnt	equ gamevram
+
+code2	equ $6400 ;$6100 ;continue of code
 
 ;space until $ab00
 
@@ -175,7 +181,6 @@ etype		.ds enemyno ; Enemy type list - reserve bytes
 wavedataend
 
 allsprites	.ds 644 ;sprite gfx - inflated
-inflate_data	.ds 764 ;inflate buffer
 varend
 
 .print "leveldata_from:",leveldata
@@ -201,8 +206,16 @@ varend
 	;38.12
 
 start
-	jsr atariinit ;atari init stuff
-	title_screen
+
+	;keyboard init
+	ldy #$7f
+copykeytab
+        	lda ($79),y ; pointer to keytable in osrom
+        	sta keytable,y
+        	dey
+        	bpl copykeytab
+
+gameloop	title_screen
 	game_init
 	
 	;; Turn sound on/off for attract mode
@@ -905,13 +918,13 @@ returntobasic
 
 ;atari add {
 ;TODO: go to title screen
-	jmp *
+	jmp gameloop
 ;}
 
 winner
 	;We've won.
 	jsr showwinlogo
-	jmp returntobasic
+	jmp gameloop
 
 flashcursor
 	inc cursorcount
@@ -4765,42 +4778,19 @@ wavetext	;2ce2
 endage
 
 
-atariinit	;org $8000 ;atari init code
+;initialization for the game
+.proc	game_init
+
 	pause 1
 	sei
 	mva #$00 nmien
-	sta irqen 	;disable interupts (klavesy)
-		
-	;keyboard init
-	ldy #$7f
-copykeytab
-        	lda ($79),y ; pointer to keytable in osrom
-        	sta keytable,y
-        	dey
-        	bpl copykeytab
+	sta irqen 	;disable interupts (keyboard)
 
 	mva #$fe portb	;turn off osrom and basicrom	
 	mwa #NMI $fffa
-		
-	;inflate allsprites	
-	mwa #[datareloc.allsprit-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
-	mwa #allsprites inflater.outputPointer
-	jsr inflater.inflate
 
-	preshift_explosion_sprites
-	
-;clean up memory areas
-/*
-	ldx #0
-	txa
-x1	sta SOMETHING,x
-	dex
-	bne x1
-*/	
-	rts
+	jsr rmt.rmt_silence
 
-;initialization for the game
-.proc	game_init
 	mwa #dl dlistl
 	mwa #gameDli.dli1 dli_ptr ;vdslst
 	mwa #gameVbi.vbi vbi_ptr
@@ -4812,6 +4802,20 @@ x1	sta SOMETHING,x
 	mwa #scorebrd inflater.outputPointer
 	jsr inflater.inflate
 
+	;inflate allsprites	
+	mwa #[datareloc.allsprit-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
+	mwa #allsprites inflater.outputPointer
+	jsr inflater.inflate
+
+	preshift_explosion_sprites
+
+;clean up memory areas
+	ldx #0
+	txa
+x1	sta mypmbase-$100,x
+	dex
+	bne x1
+	
 	rts
 .endp
 
@@ -6649,26 +6653,23 @@ boxtopright
 	icl "inflate.asm"
 .endl
 
-	.align $100
-.local	rmt
-PLAYER	equ *+$400
-	icl "msx/rmtplayr.a65"
-.endl
-
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 .proc	title_screen
+	mwa #packed_music inflater.inputPointer
+	mwa #music-6 inflater.outputPointer ;-6 => "skipping" the header
+	jsr inflater.inflate
+	;$1000->$14ff
+	;$5b00->$5fxx (old)
 	
-	jsr g2ftitle.main
-	;mwa #dl2 dlistl
-	mva #1+12+32 dmactl ;narrow
-	mva #>titlefont chbase
-	mwa #titleDli dli_ptr ;vdslst
-	mwa #titleVbi vbi_ptr
-	mva #$c0 nmien
-	
+	ldx #<music
+	ldy #>music
+	lda #0
+	jsr rmt.rmt_init	;initialize the music	
+
+	jsr g2fsplash.main
+
 	;inflate the title screen stuff
-xx2
 	mwa #packed_text inflater.inputPointer
 	mwa #title_scroll inflater.outputPointer
 	jsr inflater.inflate
@@ -6678,17 +6679,12 @@ xx2
 	mwa #titlefont inflater.outputPointer
 	jsr inflater.inflate
 	;$5400->$5800
-	
-	mwa #packed_music inflater.inputPointer
-	mwa #music-6 inflater.outputPointer ;-6 => "skipping" the header
-	jsr inflater.inflate
-	;$5b00->$5fxx
-	
-	ldx #<music
-	ldy #>music
-	lda #0
-	jsr rmt.rmt_init	;initialize the music
-	
+
+	jsr g2ftitle.main
+	rts
+
+continue	
+	mva #15 counter
 	
 xx3	ldx #0
 	;jmp *
@@ -6698,9 +6694,12 @@ xx1	stx vscrol
 	cpx #8
 	bne xx1
 	add16 #32 tcptr
-	jmp xx3
+	
+	dec counter	;scroll 15 lines
+	bne xx3
+	
 	rts
-
+counter	dta 15
 
 titleVbi	phr
 	inc 20
@@ -6761,15 +6760,30 @@ packed_text
 packed_titlefont
 	ins "title\title.fnt.deflate"
 packed_music
-	ins "msx\menu_stripped_5b00.rmt.deflate"
+	ins "msx\menu_stripped_1000.rmt.deflate"
 .endp
 
 g2ftitle_org
 
 .local	g2ftitle
 	icl "title\cd_title\cd_title_adjusted.asm"
-	
 .endl
+
+g2fsplash_org
+.local	g2fsplash
+	icl "title\splash\splash_adjusted.asm"
+.endl
+
+
+	.align $100
+.local	rmt
+PLAYER	equ *+$400
+	icl "msx/rmtplayr.a65"
+.endl
+
+inflate_data	.ds 764 ;inflate buffer
+
+	guard $ab00 ;guard deflated data
 
 /*	org $5b00
 music

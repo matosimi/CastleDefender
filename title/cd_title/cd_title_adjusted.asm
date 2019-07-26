@@ -55,12 +55,12 @@ main
 	eif
 
 	lda:cmp:req $14		;wait 1 frame
-*/
+
 	sei			;stop IRQ interrupts
 	mva #$00 nmien		;stop NMI interrupts
 	sta dmactl
 	mva #$fe portb		;switch off ROM to get 16k more ram
-
+*/
 	mwa #NMI $fffa		;new NMI handler
 
 	;inflate fnt and scr
@@ -76,6 +76,8 @@ main
 
 	mva #$c0 nmien		;switch on NMI+DLI again
 
+	jmp title_screen.continue
+/*
 	ift CHANGES		;if label CHANGES defined
 
 _lp	lda trig0		; FIRE #0
@@ -88,7 +90,7 @@ _lp	lda trig0		; FIRE #0
 	and #1
 	beq stop
 
-	jmp title_screen.xx2
+	;additional stuff
 
 	lda skctl
 	and #$04
@@ -113,7 +115,7 @@ stop
 	cli			;IRQ enabled
 
 	rts			;return to ... DOS
-
+*/
 ; ---	DLI PROGRAM
 
 .local	DLI
