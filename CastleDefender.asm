@@ -3,6 +3,8 @@
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
 ;TODO: implement title screen + instructions
+;TODO: pack the rmt module
+;TODO: pack the title logo data
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -65,16 +67,23 @@ trig	equ $c4 ;trig status (no repeat)
 ;memory areas
 lephtmp	equ $0200 ;temp space for level,phase text
 temppage	equ $0300 ;temporary page (loading)
-keytable	equ $0400 ;table of keycodes
-leveldata	equ $0500 ;where leveldata to be inflated
+keytable	equ $0400 ;128 bytes - table of keycodes 
+leveldata	equ $0480 ;where leveldata to be inflated
+		;until $1aad
+mypmbase	equ $1c00 ;$1b00-$1fff
 maincode	equ $2000 ;where code starts (until $3fff)
 gamevram	equ $4000 ;videoram (until $5fff)+$100 for additional buffer
 gamevram.logo	equ gamevram+$0c00
 gamevram.enemies	equ gamevram+$1b00
 gamevram.status	equ gamevram+$1d00
 scorebrd	equ gamevram+$1c00
+
+;different code loop with data on same spot at gamevram
+title_scroll	equ $4000
+title_static	equ title_scroll+$1000
+titlefont		equ title_scroll+$1400
+
 code2	equ $6100 ;continue of code
-mypmbase	equ $7c00 ;ingame pmbase, TODO:place better
 
 ;space until $ab00
 
@@ -166,49 +175,19 @@ allsprites	.ds 644 ;sprite gfx - inflated
 inflate_data	.ds 764 ;inflate buffer
 varend
 
+.print "leveldata_from:",leveldata
 .print "leveldata_end:",leveldata_end
 .print "wavedata_end: ",wavedataend
 .print "var_end:      ",varend
-
-	guard maincode ;do not allow uninitialized data reach the maincode
-
+	
+	;do not allow uninitialized data reach the pmbase (missile area)
+	guard mypmbase-$100
+	;do not allow uninitialized data reach the maincode
+	guard maincode 
+	
 	icl "matosimi_macros.asx"
 	icl "data_relocator.asm"
 
-/*	org leveldata
-	ins 'levels\L1data.bin' ;to be inflated
-	
-	org gamevram
-	ins 'levels\L1.fnt'
-scorebrd	equ *+256
-*/
-
-/*
-:256	dta 0
-scorebrd	ins 'scoreboard\scoreboard.fnt'  ;to be inflated
-*/	
-
-;sprites
-;allsprites	;4*explosions, 19*enemies
-;	ins 'sprites\allsprites.fnt'
-	
-;	icl "headercode.asm"
-
-/*	;not needed osrom disabled within relocator include
-	org $2000
-	pause 1
-	mva #$ff portb ;turn on osrom a load next block
-	rts
-	
-	ini $2000
-*/	
-
-	
-/* atari replace
-	run $1b00
-	
-	ORG $1b00
-*/
 	run maincode
 	org maincode
 
@@ -4800,11 +4779,6 @@ copykeytab
 	mva #$fe portb	;turn off osrom and basicrom	
 	mwa #NMI $fffa
 		
-	;inflate scoreboard
-	mwa #[datareloc.sboard-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
-	mwa #scorebrd inflater.outputPointer
-	jsr inflater.inflate
-
 	;inflate allsprites	
 	mwa #[datareloc.allsprit-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
 	mwa #allsprites inflater.outputPointer
@@ -4829,6 +4803,12 @@ x1	sta SOMETHING,x
 	mwa #gameVbi.vbi vbi_ptr
 	mva #1+12+32 dmactl ;d400 = 559
 	mva #$c0 nmien ;80 dli, 40 vbi
+	
+	;inflate scoreboard
+	mwa #[datareloc.sboard-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
+	mwa #scorebrd inflater.outputPointer
+	jsr inflater.inflate
+
 	rts
 .endp
 
@@ -6678,7 +6658,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	ldx #<music
 	ldy #>music
 	lda #0
-	jsr rmt.rmt_init
+	jsr rmt.rmt_init	;initialize the music
 	
 	jsr g2ftitle.main
 	;mwa #dl2 dlistl
@@ -6688,15 +6668,26 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	mwa #titleVbi vbi_ptr
 	mva #$c0 nmien
 	
-xx2	ldx #0
-	jmp *
+	;inflate the title screen stuff
+xx2
+	mwa #packed_text inflater.inputPointer
+	mwa #title_scroll inflater.outputPointer
+	jsr inflater.inflate
+	
+	mwa #packed_titlefont inflater.inputPointer
+	mwa #titlefont inflater.outputPointer
+	jsr inflater.inflate
+	
+	
+xx3	ldx #0
+	;jmp *
 xx1	stx vscrol
 	pause 5
 	inx
 	cpx #8
 	bne xx1
 	add16 #32 tcptr
-	jmp xx2
+	jmp xx3
 	rts
 
 
@@ -6713,9 +6704,9 @@ titleDli	rti
 	dta 4 */
 dlcont	dta $80
 	dta $42+32
-tcptr	dta a(title_logo)
+tcptr	dta a(title_scroll)
 :19	dta 2+32
-	dta 2+$80,$42,a(title_cont)
+	dta 2+$80,$42,a(title_scroll)
 	;dta $44,a(title_logo+96)
 	dta $41,a(g2ftitle.ant)
 	
@@ -6754,148 +6745,12 @@ dlix2	pha
 	pla
 	rti
 	
-title_logo
-	dta d"                                "
-	dta d"                                "
-	dta d"       High score: 00000000     "
-	dta d"   Enemies killed: 00.0%        "
-	dta d"         Progress: 00%          "
-	dta d"                                "
-	dta d"                                "
-	dta d"       Last score: 00000000     "
-	dta d"   Enemies killed: 00.0%        "
-	dta d"         Progress: 00%          "
-	dta d"                                "
-	dta d"                                "
-	dta d"                                "
-	dta d"                                "
-	dta d"          Instructions          "
-	dta d"              Play              "
-	dta d"                                "
-	dta d"                                "
-	dta d"                                "
-	dta d"   http://matosimi.atari.org    "
+packed_text
+	ins "title\scrolltext.xex.deflate"
+packed_titlefont
+	ins "title\title.fnt.deflate"
 	
-	             
-	.align $4000
-title_cont
-
-:20	dta d"                                "
-	dta d" The hordes are coming! Wave    "
-	dta d" after wave of goblins,         "
-	dta d" skeletons, zombies, snakes,    "
-	dta d" wizards and all manner of      "
-	dta d" creatures from the nether      "
-	dta d" dimensions are attacking our   "
-	dta d" castle. It is up to you to     "
-	dta d" save us from the onslaught     "
-	dta d" using our defensive towers!    "
-	dta d"                                "
-	dta d" Enemies will emerge from the   " 
-	dta d" portal and move along the path "
-	dta d" to our castle. Place different "
-	dta d" tower types that automatically "
-	dta d" attack anything that gets      "
-	dta d" within their range.            "       
-	dta d"                                "
-	dta d" Controls:                      "
-	dta d" =========                      "
-	dta d"^WASD"*,d" keys or joystick move     "
-	dta d" your cursor.                   "
-	dta d"                                "
-	dta d"^Fire"*,d" or",d"^Return"*,d" shows build and "
-	dta d" upgrade options of selected    "
-	dta d" tower or vacant space.         "
-	dta d"                                "
-	dta d" Number keys ",d"^123"*,d" build a tower "
-	dta d" of that type in a vacant space."
-	dta d"                                "
-	dta d"^U"*,d" upgrades an existing tower.  "
-	dta d"                                "
-	dta d"^Space"*,d" speeds the game up       "
-	dta d" whilst held.                   "
-	dta d"                                "
-	dta d"^Start"*,d" +",d"^Select"*,d" +",d"^Option"*," Quit.  "
-	dta d"                                "
-	dta d" Towers:                        "
-	dta d" =======                        "
-	dta d" Each tower has various         "
-	dta d" attributes which are shown in  "
-	dta d" the build bar accessible by    "
-	dta d"^Fire"*,d" or",d"^Return"*,d".                "
-	dta d"                                "
-	dta 0,65,66,67,d": Tower level (0-3).        "
-	dta 0,68,69,70,d": Amount of physical damage "
-	dta d"      each shot inflicts.       "
-	dta 0,71,72,73,d": Amount of shield damage   "
-	dta d"      each shot inflicts.       "
-	dta 0,74,75,76,d": Tower range.              "
-	dta 0,77,78,79,d": Rate of fire.             "
-	dta 0,80,81,82,d": Cost of tower or upgrade. "
-	dta d"                                "
-	dta d" Build bar:                     "
-	dta d" ==========                     "
-	dta d" When an empty space is         "
-	dta d" selected build bar shows       "
-	dta d" information for all available  "
-	dta d" towers. If a tower is selected "
-	dta d" the current and upgrade values "
-	dta d" are shown.                     "
-	dta d"                                "
-	dta d" Status columns:                "
-	dta d" ===============                "
-	dta d" The left column shows your     "
-	dta d" lives, gold and score.         "
-	dta d"                                "
-	dta d" The right column shows the     "
-	dta d" current health and shield of   "
-	dta d" the enemy nearest the castle.  "
-	dta d"                                "
-	dta d" * is the number of enemies     "
-	dta d" left to destroy.               "
-	dta d"                                "
-	dta d" Enemies:                       "
-	dta d" ========                       "
-	dta d" Each enemy has a starting      "
-	dta d" strength and shield, values    "
-	dta d" shown on bottom red enemy bar. "
-	dta d"                                "
-	dta d" If an enemy has a shield then  "
-	dta d" any damage will be reduced by  "
-	dta d" the shield amount.             "
-	dta d"                                "
-	dta d" Destroying an enemy gives you  "
-	dta d" a little gold but letting one  "
-	dta d" reach the castle will cost you "
-	dta d" one life.                      "
-	dta d"                                "
-	dta d"   ...Good Luck!                " 
-	dta d"                                "
-	dta d"                                "
-	dta d" Credits:                       "
-	dta d" ========                       "
-	dta d" Original BBC Micro code:       "
-	dta d"                Chris Bradburne "
-	dta d"                                "
-	dta d" Original BBC Micro design:     "
-	dta d"                    John Blythe "
-	dta d"                                "
-	dta d" Atari code and design:         "
-	dta d"                 Martin Simecek "
-	dta d"                                "
-	dta d" Title screen:                  "
-	dta d"                  Piotr Radecki "
-	dta d"                                "
-	dta d" Music:                         "
-	dta d"                 Michal Radecki "
-	dta d"                                "
-
 .endp
-
-	.align $400,0
-titlefont	ins 'title\title.fnt'
-	
-
 
 g2ftitle_org
 
@@ -6904,8 +6759,9 @@ g2ftitle_org
 	
 .endl
 
-	org $4000
+	org $5b00
 music
 	opt h-
-	ins "msx\menu_stripped_4000.rmt"
+	ins "msx\menu_stripped_5b00.rmt"
 	opt h+
+	
