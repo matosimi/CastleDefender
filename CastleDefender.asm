@@ -3,8 +3,8 @@
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
 ;TODO: implement title screen + instructions
-;TODO: pack the title logo data
-
+;TODO: recalculare final score after game... for title screen
+ 
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -78,6 +78,9 @@ gamevram.status	equ gamevram+$1d00
 scorebrd	equ gamevram+$1c00
 
 ;different code loop with data on same spot at gamevram
+titlelogoscr	equ leveldata		;280 bytes
+titlelogofnt	equ leveldata+$380		;$0800-$0fff 
+
 title_scroll	equ $4000
 title_static	equ title_scroll+$1000
 titlefont		equ title_scroll+$1400	;to $57ff

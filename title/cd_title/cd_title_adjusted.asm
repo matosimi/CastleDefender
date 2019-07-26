@@ -16,6 +16,9 @@ HEIGHT	= 30
 ; ---	BASIC switch OFF
 ;	org $2000\ mva #$ff portb\ rts\ ini $2000
 
+scr	equ titlelogoscr
+fnt	equ titlelogofnt
+
 ; ---	MAIN PROGRAM
 	org g2ftitle_org
 ant	dta $F0
@@ -26,10 +29,12 @@ ant	dta $F0
 	;dta $70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70
 	;dta $41,a(ant)
 
-scr	ins "cd_title.scr"
+;scr	ins "cd_title.scr" ;this is to be inflated...
+scrdef	ins "cd_title.scr.deflate"
 
-	.ALIGN $0400
-fnt	ins "cd_title.fnt"
+;	.ALIGN $0400
+;fnt	ins "cd_title.fnt"
+fntdef	ins "cd_title.fnt.deflate"
 
 /*	ift USESPRITES
 	.ALIGN $0800
@@ -57,6 +62,17 @@ main
 	mva #$fe portb		;switch off ROM to get 16k more ram
 
 	mwa #NMI $fffa		;new NMI handler
+
+	;inflate fnt and scr
+	mwa #scrdef inflater.inputPointer
+	mwa #scr inflater.outputPointer
+	jsr inflater.inflate
+	;$0480->$07xx
+
+	mwa #fntdef inflater.inputPointer
+	mwa #fnt inflater.outputPointer
+	jsr inflater.inflate
+	;$0800->$0fff
 
 	mva #$c0 nmien		;switch on NMI+DLI again
 
