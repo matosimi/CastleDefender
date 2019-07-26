@@ -33,6 +33,8 @@ wsync	equ $d40a
 vcount	equ $d40b
 nmien	equ $d40e
 nmist	equ $d40f
+sdlstl	equ $0230 ;dl vector when osrom is on
+pcolr0	equ $02c0	;color0 when osrom is on
 
 ;zero page:
 zspos	equ $70 ;8bytes
@@ -185,6 +187,7 @@ varend
 
 .print "leveldata_from:",leveldata
 .print "leveldata_end:",leveldata_end
+.print "wavedata: ",wavedata
 .print "wavedata_end: ",wavedataend
 .print "var_end:      ",varend
 	
@@ -194,6 +197,36 @@ varend
 	guard maincode 
 	
 	icl "matosimi_macros.asx"
+	
+	;initialization - loading screen
+.local loading_screen
+	org gamevram
+lodl	dta $70
+	dta $4a,a(lodata)
+:47	dta 10
+	dta $10	
+:4	dta $4f,a($2000+:1*$800)
+:8	dta $4f,a($6400+:1*$800)
+:5	dta $4f,a($ab00+:1*$800)
+:5	dta $4f,a($d800+:1*$800)
+	dta $41,a(lodl)
+lodata	ins "cd.gr5"
+
+loading	;mva #>txtfont 756
+	mva #$6a pcolr0
+	mva #$78 pcolr0+1
+	mva #$a4 pcolr0+2
+	mva #$20 pcolr0+4
+	;lda $d014 ;pal/ntsc
+	;and #$0e
+	;cmp #$0e
+	;beq je_to_ntsc
+	mwa #lodl sdlstl
+
+	rts
+	ini loading
+.endl
+	
 	icl "data_relocator.asm"
 
 	run maincode
@@ -4796,6 +4829,14 @@ endage
 	mwa #gameVbi.vbi vbi_ptr
 	mva #1+12+32 dmactl ;d400 = 559
 	mva #$c0 nmien ;80 dli, 40 vbi
+
+	;clean up memory areas
+	ldx #0
+	txa
+x1	sta mypmbase-$100,x
+	sta leveldata_end,x ;game initialization
+	dex
+	bne x1
 	
 	;inflate scoreboard
 	mwa #[datareloc.sboard-datareloc.loadarea+datareloc.moveto2] inflater.inputPointer
@@ -4808,13 +4849,6 @@ endage
 	jsr inflater.inflate
 
 	preshift_explosion_sprites
-
-;clean up memory areas
-	ldx #0
-	txa
-x1	sta mypmbase-$100,x
-	dex
-	bne x1
 	
 	rts
 .endp
@@ -6778,7 +6812,7 @@ g2fsplash_org
 	.align $100
 .local	rmt
 PLAYER	equ *+$400
-	icl "msx/rmtplayr.a65"
+	icl "msx\rmtplayr.a65"
 .endl
 
 inflate_data	.ds 764 ;inflate buffer
