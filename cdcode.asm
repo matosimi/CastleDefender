@@ -59,6 +59,8 @@ sbarmax	equ $c1 ;status bar - max line index to select
 sbarmin	equ $c2 ;status bar - min line index to select
 stick	equ $c3 ;stick status (no repeat)
 trig	equ $c4 ;trig status (no repeat)
+;$cb-$de RMT player
+;$f0-$ff G2F
 
 ;memory areas
 lephtmp	equ $0200 ;temp space for level,phase text
@@ -70,14 +72,17 @@ gamevram	equ $4000 ;videoram (until $5fff)+$100 for additional buffer
 gamevram.logo	equ gamevram+$0c00
 gamevram.enemies	equ gamevram+$1b00
 gamevram.status	equ gamevram+$1d00
+scorebrd	equ gamevram+$1c00
 code2	equ $6100 ;continue of code
 mypmbase	equ $7c00 ;ingame pmbase, TODO:place better
+
+;space until $ab00
 
 ;deflated data (data_relocator.asm)
 ;	    $ab00 - $cfff
 ;	    $d800 - $fff6
 
-scorebrd	equ gamevram+$1c00
+
 
 ;constants (from headercode.asm)
 sprows	equ 14
@@ -6661,9 +6666,19 @@ boxtopright
 	icl "inflate.asm"
 .endl
 
+	.align $100
+.local	rmt
+PLAYER	equ *+$400
+	icl "msx/rmtplayr.a65"
+.endl
+
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 .proc	title_screen
+	ldx #<music
+	ldy #>music
+	lda #0
+	jsr rmt.rmt_init
 	
 	jsr g2ftitle.main
 	;mwa #dl2 dlistl
@@ -6888,3 +6903,9 @@ g2ftitle_org
 	icl "title\cd_title\cd_title_adjusted.asm"
 	
 .endl
+
+	org $4000
+music
+	opt h-
+	ins "msx\menu_stripped_4000.rmt"
+	opt h+

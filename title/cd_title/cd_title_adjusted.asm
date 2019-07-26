@@ -318,6 +318,7 @@ x1	lda #$00
 	mwa #DLI.dli_start dliv	;set the first address of DLI interrupt
 
 ;this area is for yours routines
+	jsr rmt.rmt_play
 
 quit
 	lda regA
