@@ -248,7 +248,7 @@ copykeytab
         	dey
         	bpl copykeytab
 
-gameloop	title_screen
+gameloop	;title_screen
 	game_init
 	
 	;; Turn sound on/off for attract mode
@@ -374,6 +374,7 @@ drawblanktowersloop
 	tax
 	ldy #5
 
+/*atari remove
 	lda attractmode ;TODO: ???
 	bne skipblanktowers		; Don't plot towers in attact mode
 
@@ -381,7 +382,13 @@ drawblanktowersloop
 	jsr bongsound
 
 	lda #11
-;	jsr delay ;atari DEBUG OUT
+	jsr delay ;atari DEBUG OUT
+*/
+;atari add {
+	pause 10
+	ldy #sfx.CURSOR
+	sfx.do
+; }
 
 skipblanktowers
 	pla
@@ -771,7 +778,7 @@ skippopulatehs
 
 	lda #0
 	sta enemystart
-	;jsr levelstartsound
+	sfx.next_level
 	lda #175
 	sta startdelay 
 ;atari add {
@@ -793,10 +800,13 @@ mainloop             ;Main processing loop
 	stx startdelay
 	cpx #25
 	bne instartdelay
-	jsr levelstartsound	; Make start sound	Slightly before start to sync enemies appearing
 /*atari remove {
+	jsr levelstartsound	; Make start sound	Slightly before start to sync enemies appearing
 	jsr forceprinttowerinfo
 */
+;atari add {
+	sfx.next_level
+;}
 	jmp instartdelay
 	cpx #1		; Are we on the last frame?
 	bne instartdelay
@@ -1063,8 +1073,14 @@ timernotzero
 	sta lives
 	cld
 	jsr printlives
-	jsr loselifesound
-
+;atari replace
+;	jsr loselifesound
+	phr
+	ldy #sfx.ENEMY_RCH
+	sfx.do
+	plr
+	
+	
 	; delete plot from screen 
 skiplifecheck
 	lda pathendx
@@ -1586,12 +1602,13 @@ plottower
 	dey                     ; Reduce the already increaed tower type.
 	tya
 	sta ttype,X               ; Save back again
-	jmp errorsound		; Play error sound and exit
+	;jmp errorsound		; Play error sound and exit
+	rts
 toweriszeroalready
 	lda #0                  ; Clear tower type - should have been zero as we can't afford
 	sta ttype,X
-	jmp errorsound		; Play error sound and exit
-	;rts
+	;jmp errorsound		; Play error sound and exit
+	rts
 canafford
   ; First we need to calculate screen output address
 	lda #$20        
@@ -1988,8 +2005,11 @@ skiptowerdecrement
 	jpl towerfireloop
 ; }
 	; Play a sound of a firing tower
-	jmp firesound
-
+;atari replace {
+;	jmp firesound
+	ldy #sfx.ENEMY_HIT
+	sfx.do
+; }
 
 storehit
 	lda $70
@@ -2357,7 +2377,13 @@ noenemieskilledcarry
 	lda #16                ; Set enemy type as 16 - explosion.
 	sta etype,X
 	jsr reduceleft
-	jsr explodesound
+;atari replace {
+;	jsr explodesound
+	phr
+	ldy #sfx.ENEMY_KIL
+	sfx.do
+	plr
+; }
 	lda #0
 
 stillalive           ; you're dying and I'm still alive.
@@ -2412,13 +2438,19 @@ upgradetower
 	inc ttype,x
 	jsr erasebox             ; Erase box
 
-	jsr upgradesound	; Upgrade Sound
+;atari replace {
+;	jsr upgradesound	; Upgrade Sound
+	phr
+	ldy #sfx.TOWER_UPG
+	sfx.do
+	plr
+; }
 	jsr plottower           ; Upgrade tower
 	ldx currentlocation
 	jsr plotbox            ; redraw box
 	jmp finishkeyboard
 alreadymax
-	jsr errorsound
+	;jsr errorsound
 	jmp finishkeyboard
 
 keyboard
@@ -2536,7 +2568,11 @@ notescape
 	rts                   ; Exit to prevent update of tower information.
 
 moveleft
-	jsr movesound
+;atari_replace {
+;	jsr movesound
+	ldy #sfx.CURSOR
+	sfx.do
+; }
 	ldx currentlocation
 	jsr erasebox     ; Erase current box
 	dex
@@ -2548,8 +2584,11 @@ knotzero
 	jmp finishkeyboard
 
 moveright
-	jsr movesound
-	ldx currentlocation
+;atari_replace {
+;	jsr movesound
+	ldy #sfx.CURSOR
+	sfx.do
+; }	ldx currentlocation
 	jsr erasebox     ; Erase current box
 	inx
 	cpx maxlocation
@@ -2562,8 +2601,11 @@ knotmax
 	jmp finishkeyboard
 
 moveup
-	jsr movesound
-	ldx currentlocation
+;atari_replace {
+;	jsr movesound
+	ldy #sfx.CURSOR
+	sfx.do
+; }	ldx currentlocation
 	jsr erasebox     ; Erase current box
 	lda txpos,x     ; Get current tower x position.
 kfindhigher
@@ -2579,8 +2621,11 @@ kmoveupnotzero
 	jmp finishkeyboard
 
 movedown
-	jsr movesound
-	ldx currentlocation
+;atari_replace {
+;	jsr movesound
+	ldy #sfx.CURSOR
+	sfx.do
+; }	ldx currentlocation
 	jsr erasebox     ; Erase current box
 	lda txpos,x     ; Get current tower x position.
 kfindlower
@@ -2605,7 +2650,13 @@ maketower
 	;asl @:asl @             ; Muliply a by 4 to make tower type
 	sta ttype,X             ; Change tower type to be Y
 	jsr erasebox             ; Erase box
-	jsr buildsound		; Make tower being built sound (will be cancelled if not afforadable)
+;atari replace {
+;	jsr buildsound		; Make tower being built sound (will be cancelled if not afforadable)
+	phr
+	ldy #sfx.TOWER_BLD
+	sfx.do
+	plr
+; }
 ;atari add {
 	jsr showwave.restore
 	ldx currentlocation
@@ -2624,7 +2675,7 @@ finishkeyboard
 	rts
 
 toweralreadyhere
-	jsr errorsound
+	;jsr errorsound
 	jmp finishkeyboard
 	
 ;atari add {
@@ -2790,6 +2841,7 @@ addgold
 	;plp
 	rts
 
+/* atari remove
 explodesound
 	txa
 	pha
@@ -2798,9 +2850,8 @@ explodesound
 	lda #7
 	ldx #<(explodesoundparams)
 	ldy #>(explodesoundparams)
-/* atari off
 	jsr $FFF1
-*/	pla
+	pla
 	tay
 	pla
 	tax
@@ -2823,9 +2874,7 @@ firesound
 	ldx #<(firesoundparams)
 	ldy #>(firesoundparams)
 	lda #7
-/* atari off
 	jsr $FFF1
-*/
 	;pla:tax:pla:tay
 nofiresound
 	rts
@@ -2840,9 +2889,8 @@ movesound
 	lda #7
 	ldx #<(movesoundparams)
 	ldy #>(movesoundparams)
-/* atari off
 	jmp $FFF1
-*/	rts ;atari added
+	rts ;atari added
 
 
 movesoundparams
@@ -2855,9 +2903,8 @@ errorsound
 	lda #7
 	ldx #<(errorsoundparams)
 	ldy #>(errorsoundparams)
-/* atari off
 	jmp $FFF1
-*/	rts
+	rts
 
 
 errorsoundparams
@@ -2910,9 +2957,8 @@ playsound
 	lda #7
 	ldx #<(bongparams)
 	ldy #>(bongparams)
-/* atari off
 	jmp $FFF1
-*/	rts
+	rts
 
 bongparams
 	dta $10,0	; channel (with buffer flush)
@@ -2997,7 +3043,7 @@ levelstartsoundpitches
 levelstartsounddurations
 	dta 6,3,3,12
 
-
+*/
 addscore
 	;Routine to add score.  Uses "scoretoadd" as the score to add.  Preserves registers apart from A
 	;php
@@ -4620,7 +4666,7 @@ x1	sta mypmbase+$100,x
 	sta mypmbase+$200,x
 	inx
 	dey
-	bpl x1
+	bne x1
 	rts
 lines	dta 0
 .endp
@@ -4992,6 +5038,8 @@ pc01	equ *-1
 :4	sta colpm0+:1
 	mva #$a6 colpf0+3	;missile color
 	mva #$14 prior
+	
+	jsr rmt.rmt_play
 	plr
 	rti
 
@@ -5909,6 +5957,8 @@ lowcodeend
 	;ins 'towers\towers_shifted.fnt'
 temp	dta 0
 
+inflate_data	.ds 764 ;inflate buffer
+
 	guard gamevram ;do not allow code reaching the videoram area
 
 	org code2
@@ -6696,11 +6746,12 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;$1000->$14ff
 	;$5b00->$5fxx (old)
 	
+	jsr rmt.set_stereo
 	ldx #<music
 	ldy #>music
 	lda #0
 	jsr rmt.rmt_init	;initialize the music	
-
+	
 	jsr g2fsplash.main
 
 	;inflate the title screen stuff
@@ -6788,6 +6839,7 @@ dlix2	pha
 	sta colpf0+1	
 	pla
 	rti
+
 	
 packed_text
 	ins "title\scrolltext.xex.deflate"
@@ -6796,6 +6848,62 @@ packed_titlefont
 packed_music
 	ins "msx\menu_stripped_1000.rmt.deflate"
 .endp
+
+
+;sound effects	
+.local	sfx
+
+.proc	next_level
+	jsr rmt.set_stereo
+	lda #$f0					;initial value
+	sta rmt.RMTSFXVOLUME	
+	;sfx note volume * 16 (0,16,32,...,240)
+	lda #$00
+	jmp init
+.endp
+.proc	next_phase
+	jsr rmt.set_mono
+	lda #$3
+	jmp init
+.endp
+.proc	victory
+	jsr rmt.set_stereo
+	lda #$06
+	jmp init
+.endp
+.proc	defeat
+	jsr rmt.set_stereo
+	lda #$08
+	jmp init
+.endp
+
+CURSOR	equ $08*2
+TOWER_UPG	equ $09*2
+TOWER_BLD	equ $0a*2
+ENEMY_HIT	equ $0b*2
+ENEMY_KIL	equ $0c*2
+ENEMY_RCH equ $0d*2
+;TODO: errorsound
+
+;expects Y=instrument(*2)
+.proc	do
+	lda random ;random channel
+	and #$03
+	tax
+	;ldx #3			;X = 3	channel (0..3 or 0..7 for stereo module)
+	lda #12			;A = 12	note (0..60)
+	jmp rmt.rmt_sfx	 	;RMT_SFX start tone (It works only if FEAT_SFX is enabled !!!)
+	rts
+	
+.endp
+
+init	ldx #<music2
+	ldy #>music2
+	jmp rmt.rmt_init
+	rts
+.endl
+
+
 
 g2ftitle_org
 
@@ -6815,13 +6923,13 @@ PLAYER	equ *+$400
 	icl "msx\rmtplayr.a65"
 .endl
 
-inflate_data	.ds 764 ;inflate buffer
+	
+music2	equ $a529
+	guard music2
 
-	guard $ab00 ;guard deflated data
-
-/*	org $5b00
-music
-	opt h-
-	ins "msx\menu_stripped_5b00.rmt"
-	opt h+
-	*/
+	org music2
+	;does not make sense to deflate
+	ins "msx\game_stripped_a529.rmt",+6 ;until $aaff
+	
+	;$ab00 guard deflated data
+	guard datareloc.moveto2 

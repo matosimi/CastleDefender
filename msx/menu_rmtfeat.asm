@@ -1,9 +1,9 @@
 ;* --------BEGIN--------
-;* merge between game and menu RMT features
-FEAT_SFX		equ 1
+;* C:\!atari\prg\CastleDefender\msx\menu_stripped.rmt
+FEAT_SFX		equ 0
 FEAT_GLOBALVOLUMEFADE	equ 0		;RMTGLOBALVOLUMEFADE variable
 FEAT_NOSTARTINGSONGLINE	equ 0
-FEAT_INSTRSPEED		equ 0
+FEAT_INSTRSPEED		equ 1
 FEAT_CONSTANTSPEED		equ 4		;(0 times)
 FEAT_COMMAND1		equ 1		;(15 times)
 FEAT_COMMAND2		equ 1		;(6 times)
@@ -11,7 +11,7 @@ FEAT_COMMAND3		equ 0		;(0 times)
 FEAT_COMMAND4		equ 0		;(0 times)
 FEAT_COMMAND5		equ 1		;(14 times)
 FEAT_COMMAND6		equ 0		;(0 times)
-FEAT_COMMAND7SETNOTE		equ 1		;(0 times)
+FEAT_COMMAND7SETNOTE		equ 0		;(0 times)
 FEAT_COMMAND7VOLUMEONLY		equ 0		;(0 times)
 FEAT_PORTAMENTO		equ 0		;(0 times)
 FEAT_FILTER		equ 0		;(0 times)
@@ -36,5 +36,5 @@ FEAT_TABLEGO		equ 1		;(1 times)
 FEAT_AUDCTLMANUALSET		equ 0		;(0 times)
 FEAT_VOLUMEMIN		equ 1		;(1 times)
 FEAT_EFFECTVIBRATO		equ 1		;(1 times)
-FEAT_EFFECTFSHIFT		equ 1		;(0 times)
+FEAT_EFFECTFSHIFT		equ 0		;(0 times)
 ;* --------END--------

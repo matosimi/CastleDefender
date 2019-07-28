@@ -1,5 +1,5 @@
 ; ********* MATOSIMI MACROS **********
-; 26.07.2019
+; 27.07.2019
 	 
 .macro	add16 ' '
 	lda :1
@@ -129,5 +129,7 @@ _______x1
 
 ;guard if compiler reaches over given address
 .macro guard
-	ert *>=:1+1
+	ift *>=:1+1
+	.error "Guarded address ",:1+1 , ", actual address ",*
+	eif
 .endm
