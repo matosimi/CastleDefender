@@ -34,7 +34,7 @@ vcount	equ $d40b
 nmien	equ $d40e
 nmist	equ $d40f
 sdlstl	equ $0230 ;dl vector when osrom is on
-pcolr0	equ $02c0	;color0 when osrom is on
+color0	equ $02c4	;color0 when osrom is on
 
 ;zero page:
 zspos	equ $70 ;8bytes
@@ -200,10 +200,11 @@ varend
 	
 	;initialization - loading screen
 .local loading_screen
-	org gamevram
+	org gamevram+$400
 lodl	dta $70
 	dta $4a,a(lodata)
 :47	dta 10
+	dta $42,a(lotext)
 	dta $10	
 :4	dta $4f,a($2000+:1*$800)
 :8	dta $4f,a($6400+:1*$800)
@@ -211,20 +212,24 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "cd.gr5"
+lotext	dta d"      ABBUC Software Contest 2019       "
 
-loading	;mva #>txtfont 756
-	mva #$6a pcolr0
-	mva #$78 pcolr0+1
-	mva #$a4 pcolr0+2
-	mva #$20 pcolr0+4
+loading	mva #>lofont 756
+	mva #$a2 color0
+	mva #$b6 color0+1
+	mva #$cc color0+2
+	mva #$00 color0+4
 	;lda $d014 ;pal/ntsc
 	;and #$0e
 	;cmp #$0e
 	;beq je_to_ntsc
 	mwa #lodl sdlstl
-
 	rts
 	ini loading
+
+	org gamevram
+lofont	ins "title\title.fnt"
+	
 .endl
 	
 	icl "data_relocator.asm"
