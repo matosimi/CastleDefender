@@ -19,13 +19,13 @@ WIDTH	= 40
 HEIGHT	= 30
 
 ; ---	BASIC switch OFF
-	org $2000\ mva #$ff $D301\ rts\ ini $2000
+	org $2000\ mva #$ff portb\ rts\ ini $2000
 
 ; ---	MAIN PROGRAM
 	org $2000
 ant	dta $44,a(scr)
-	dta $04,$04,$04,$04,$84,$84,$84,$84,$84,$04,$84,$84,$04,$84,$04,$84
-	dta $84,$84,$84,$04,$84,$84,$84,$84,$84,$84,$84,$04,$04
+	dta $04,$04,$04,$04,$04,$84,$84,$84,$84,$04,$04,$84,$04,$84,$04,$84
+	dta $04,$84,$84,$04,$84,$04,$04,$04,$84,$04,$84,$04,$04
 	dta $41,a(ant)
 
 scr	ins "splash.scr"
@@ -47,34 +47,34 @@ main
 ; ---	init PMG
 
 	ift USESPRITES
-	mva >pmg $D407		;missiles and players data address
-	mva #$03 $D01D		;enable players and missiles
+	mva >pmg pmbase		;missiles and players data address
+	mva #$03 pmcntl		;enable players and missiles
 	eif
 
 	lda:cmp:req $14		;wait 1 frame
 
 	sei			;stop IRQ interrupts
-	mva #$00 $D40E		;stop NMI interrupts
-	sta $D400
-	mva #$fe $D301		;switch off ROM to get 16k more ram
+	mva #$00 nmien		;stop NMI interrupts
+	sta dmactl
+	mva #$fe portb		;switch off ROM to get 16k more ram
 
 	mwa #NMI $fffa		;new NMI handler
 
-	mva #$c0 $D40E		;switch on NMI+DLI again
+	mva #$c0 nmien		;switch on NMI+DLI again
 
 	ift CHANGES		;if label CHANGES defined
 
-_lp	lda $D010		; FIRE #0
+_lp	lda trig0		; FIRE #0
 	beq stop
 
-	lda $D011		; FIRE #1
+	lda trig1		; FIRE #1
 	beq stop
 
-	lda $D01F		; START
+	lda consol		; START
 	and #1
 	beq stop
 
-	lda $D20F
+	lda skctl
 	and #$04
 	bne _lp			;wait to press any key; here you can put any own routine
 
@@ -86,12 +86,12 @@ null	jmp DLI.dli1		;CPU is busy here, so no more routines allowed
 
 
 stop
-	mva #$00 $D01D		;PMG disabled
+	mva #$00 pmcntl		;PMG disabled
 	tax
-	sta:rne $D000,x+
+	sta:rne hposp0,x+
 
-	mva #$ff $D301		;ROM switch on
-	mva #$40 $D40E		;only NMI interrupts, DLI disabled
+	mva #$ff portb		;ROM switch on
+	mva #$40 nmien		;only NMI interrupts, DLI disabled
 	cli			;IRQ enabled
 
 	rts			;return to ... DOS
@@ -104,122 +104,136 @@ stop
 
 	ift !CHANGES
 
-dli1	lda $D010		; FIRE #0
+dli1	lda trig0		; FIRE #0
 	beq stop
 
-	lda $D011		; FIRE #1
+	lda trig1		; FIRE #1
 	beq stop
 
-	lda $D01F		; START
+	lda consol		; START
 	and #1
 	beq stop
 
-	lda $D20F
+	lda skctl
 	and #$04
 	beq stop
 
-	lda $D40B
+	lda vcount
 	cmp #$02
 	bne dli1
 
-	:3 sta $D40A
+	:3 sta wsync
 
-	sta $D40A		;line=0
-c7	lda #$02
-	sta $D40A		;line=1
-	sta $D019
-c8	lda #$16
-	sta $D40A		;line=2
-	sta $D017
-	sta $D40A		;line=3
-c9	lda #$72
-	sta $D40A		;line=4
-	sta $D016
-	sta $D40A		;line=5
-c10	lda #$18
-	sta $D40A		;line=6
-	sta $D017
-	sta $D40A		;line=7
-c11	lda #$1A
-	sta $D40A		;line=8
-	sta $D017
-c12	lda #$74
-c13	ldx #$04
-	sta $D40A		;line=9
-	sta $D016
-	stx $D019
-	sta $D40A		;line=10
-	sta $D40A		;line=11
-c14	lda #$1C
-	sta $D40A		;line=12
-	sta $D017
-c15	lda #$76
-c16	ldx #$1E
-	sta $D40A		;line=13
-	sta $D016
-	stx $D017
-	sta $D40A		;line=14
+	sta wsync		;line=0
+	sta wsync		;line=1
+c9	lda #$16
+	sta wsync		;line=2
+	sta color1
+	sta wsync		;line=3
+c10	lda #$72
+	sta wsync		;line=4
+	sta color0
+c11	lda #$14
+	sta wsync		;line=5
+	sta color1
+c12	lda #$16
+	sta wsync		;line=6
+	sta color1
+c13	lda #$18
+	sta wsync		;line=7
+	sta color1
+c14	lda #$1A
+	sta wsync		;line=8
+	sta color1
+c15	lda #$74
+c16	ldx #$04
+	sta wsync		;line=9
+	sta color0
+	stx color3
+	sta wsync		;line=10
+	sta wsync		;line=11
 c17	lda #$1C
-	sta $D40A		;line=15
-	sta $D017
-c18	lda #$1A
-	sta $D40A		;line=16
-	sta $D017
-c19	lda #$78
-	sta $D40A		;line=17
-	sta $D016
-	sta $D40A		;line=18
-	sta $D40A		;line=19
-c20	lda #$18
-	sta $D40A		;line=20
-	sta $D017
-	sta $D40A		;line=21
-c21	lda #$7A
-	sta $D40A		;line=22
-	sta $D016
-c22	lda #$78
-	sta $D40A		;line=23
-	sta $D016
+	sta wsync		;line=12
+	sta color1
+c18	lda #$76
+c19	ldx #$0E
+	sta wsync		;line=13
+	sta color0
+	stx color1
+c20	lda #$1E
+	sta wsync		;line=14
+	sta color1
+c21	lda #$1C
+	sta wsync		;line=15
+	sta color1
+c22	lda #$1A
+	sta wsync		;line=16
+	sta color1
+c23	lda #$78
+	sta wsync		;line=17
+	sta color0
+	sta wsync		;line=18
+	sta wsync		;line=19
+c24	lda #$18
+	sta wsync		;line=20
+	sta color1
+c25	lda #$16
+	sta wsync		;line=21
+	sta color1
+c26	lda #$7A
+c27	ldx #$18
+	sta wsync		;line=22
+	sta color0
+	stx color1
+c28	lda #$78
+c29	ldx #$1A
+	sta wsync		;line=23
+	sta color0
+	stx color1
 	lda >fnt+$400*$01
-c23	ldx #$7A
-	sta $D40A		;line=24
-	sta $D409
-	stx $D016
-c24	lda #$16
-	sta $D40A		;line=25
-	sta $D017
-	sta $D40A		;line=26
-c25	lda #$7C
-c26	ldx #$14
-c27	ldy #$06
-	sta $D40A		;line=27
-	sta $D016
-	stx $D017
-	sty $D019
-c28	lda #$7A
-	sta $D40A		;line=28
-	sta $D016
-c29	lda #$16
-	sta $D40A		;line=29
-	sta $D017
-c30	lda #$7C
-c31	ldx #$06
-	sta $D40A		;line=30
-	sta $D016
-	stx $D017
-c32	lda #$7A
-c33	ldx #$26
-	sta $D40A		;line=31
-	sta $D016
-	stx $D017
-c34	lda #$7C
-c35	ldx #$2A
-	sta $D40A		;line=32
-	sta $D016
-	stx $D018
+c30	ldx #$7A
+c31	ldy #$18
+	sta wsync		;line=24
+	sta chbase
+	stx color0
+	sty color1
+	sta wsync		;line=25
+c32	lda #$16
+	sta wsync		;line=26
+	sta color1
+c33	lda #$7C
+c34	ldx #$14
+c35	ldy #$06
+	sta wsync		;line=27
+	sta color0
+	stx color1
+	sty color3
+c36	lda #$7A
+c37	ldx #$12
+	sta wsync		;line=28
+	sta color0
+	stx color1
+c38	lda #$16
+	sta wsync		;line=29
+	sta color1
+c39	lda #$7C
+c40	ldx #$06
+	sta wsync		;line=30
+	sta color0
+	stx color1
+c41	lda #$7A
+c42	ldx #$26
+	sta wsync		;line=31
+	sta color0
+	stx color1
+c43	lda #$7C
+c44	ldx #$2A
+	sta wsync		;line=32
+	sta color0
+	stx color2
 	lda #$02
-	sta $D40A		;line=33
-	sta $D01B
+	sta wsync		;line=33
+	sta gtictl
 	mwa #null null+1
 	jmp null
 
@@ -229,359 +243,494 @@ dli_start
 
 dli2
 	sta regA
-	lda >fnt+$400*$00
-	sta $D40A		;line=48
-	sta $D409
-	DLINEW dli3 1 0 0
-
-dli3
-	sta regA
 	stx regX
-	lda >fnt+$400*$01
-c36	ldx #$7A
-	sta $D40A		;line=56
-	sta $D409
-	stx $D019
-	lda #$04
-	sta $D40A		;line=57
-	sta $D01B
-	DLINEW dli4 1 1 0
-
-dli4
-	sta regA
+	sty regY
 	lda >fnt+$400*$02
-	sta $D40A		;line=64
-	sta $D409
-	DLINEW dli12 1 0 0
-
-dli12
-	sta regA
-
-	sta $D40A		;line=72
-	sta $D40A		;line=73
-	sta $D40A		;line=74
-c37	lda #$26
-	sta $D40A		;line=75
-	sta $D018
-c38	lda #$C4
-	sta $D40A		;line=76
-	sta $D017
-	DLINEW dli13 1 0 0
-
-dli13
-	sta regA
-	stx regX
-	sty regY
-
-	sta $D40A		;line=80
-c39	lda #$6C
-	sta $D40A		;line=81
-	sta $D016
-c40	lda #$7C
-	sta $D40A		;line=82
-	sta $D016
-c41	lda #$6C
-	sta $D40A		;line=83
-	sta $D016
-	sta $D40A		;line=84
-c42	lda #$7C
-	sta $D40A		;line=85
-	sta $D016
-c43	lda #$6C
-	sta $D40A		;line=86
-	sta $D016
-c44	lda #$5C
-	sta $D40A		;line=87
-	sta $D016
-	sta $D40A		;line=88
-c45	lda #$4C
-	sta $D40A		;line=89
-	sta $D016
-c46	lda #$5C
-	sta $D40A		;line=90
-	sta $D016
-c47	lda #$4C
-	sta $D40A		;line=91
-	sta $D016
-	lda #$01
-x4	ldx #$69
-c48	ldy #$4A
-	sta $D40A		;line=92
-	sta $D01B
-	stx $D000
-	sty $D012
-c49	lda #$08
-c50	ldx #$78
-	sta $D40A		;line=93
-	sta $D016
-	stx $D019
-	DLINEW dli5 1 1 1
-
-dli5
-	sta regA
-	lda >fnt+$400*$03
-	sta $D40A		;line=96
-	sta $D409
-	sta $D40A		;line=97
-	sta $D40A		;line=98
-c51	lda #$76
-	sta $D40A		;line=99
-	sta $D019
-	DLINEW dli14 1 0 0
-
-dli14
-	sta regA
-	stx regX
-	sty regY
-
-	lda #$04
-	sta $D40A		;line=104
-	sta $D01B
-c52	lda #$0A
-	sta $D40A		;line=105
-	sta $D016
-c53	lda #$C6
-	sta $D40A		;line=106
-	sta $D018
-	sta $D40A		;line=107
-	sta $D40A		;line=108
-	sta $D40A		;line=109
-	sta $D40A		;line=110
-c54	lda #$7A
-x5	ldx #$6A
-c55	ldy #$12
-	sta $D40A		;line=111
-	sta $D019
-	stx $D000
-	sty $D012
-c56	lda #$E8
-	sta $D40A		;line=112
-	sta $D019
-	sta $D40A		;line=113
-	sta $D40A		;line=114
-	sta $D40A		;line=115
-	sta $D40A		;line=116
-c57	lda #$C6
-c58	ldx #$C4
-	sta $D40A		;line=117
-	sta $D017
-	stx $D018
-	DLINEW dli6 1 1 1
-
-dli6
-	sta regA
-	stx regX
-	sty regY
-	lda >fnt+$400*$04
-	sta $D40A		;line=120
-	sta $D409
-c59	lda #$08
-x6	ldx #$68
-c60	ldy #$14
-	sta $D40A		;line=121
-	sta $D016
-	stx $D000
-	sty $D012
-	sta $D40A		;line=122
-	sta $D40A		;line=123
-	sta $D40A		;line=124
-	sta $D40A		;line=125
-	sta $D40A		;line=126
-c61	lda #$C2
-	sta $D40A		;line=127
-	sta $D018
-	sta $D40A		;line=128
-	sta $D40A		;line=129
-	sta $D40A		;line=130
-	sta $D40A		;line=131
-c62	lda #$E6
-	sta $D40A		;line=132
-	sta $D019
-	DLINEW dli15 1 1 1
-
-dli15
-	sta regA
-
-	sta $D40A		;line=136
-c63	lda #$E4
-	sta $D40A		;line=137
-	sta $D019
-c64	lda #$0A
-	sta $D40A		;line=138
-	sta $D016
-	sta $D40A		;line=139
-	sta $D40A		;line=140
-c65	lda #$16
-	sta $D40A		;line=141
-	sta $D019
-c66	lda #$14
-	sta $D40A		;line=142
-	sta $D019
-	DLINEW dli7 1 0 0
-
-dli7
-	sta regA
-	stx regX
-	lda >fnt+$400*$05
-c67	ldx #$16
-	sta $D40A		;line=144
-	sta $D409
-	stx $D019
-c68	lda #$14
-	sta $D40A		;line=145
-	sta $D019
-c69	lda #$16
-	sta $D40A		;line=146
-	sta $D019
-	DLINEW dli16 1 1 0
-
-dli16
-	sta regA
-
-	sta $D40A		;line=152
-	sta $D40A		;line=153
-c70	lda #$08
-	sta $D40A		;line=154
-	sta $D016
-	DLINEW dli17 1 0 0
-
-dli17
-	sta regA
-	stx regX
-	sty regY
-
-	sta $D40A		;line=160
-c71	lda #$18
-	sta $D40A		;line=161
-	sta $D019
-c72	lda #$16
-	sta $D40A		;line=162
-	sta $D019
-	sta $D40A		;line=163
-c73	lda #$18
-	ldx #$02
-x7	ldy #$AA
-	sta $D40A		;line=164
-	sta $D019
-	stx $D01B
-	sty $D001
-c74	lda #$E6
-	sta $D013
-	sta $D40A		;line=165
-c75	lda #$16
-	sta $D40A		;line=166
-	sta $D019
-c76	lda #$18
-x8	ldx #$B2
-c77	ldy #$E8
-	sta $D40A		;line=167
-	sta $D019
-	stx $D000
-	sty $D012
-	lda >fnt+$400*$06
-	sta $D40A		;line=168
-	sta $D409
-c78	lda #$06
-	sta $D40A		;line=169
-	sta $D016
-	DLINEW dli18 1 1 1
-
-dli18
-	sta regA
-
-c79	lda #$04
-	sta $D40A		;line=176
-	sta $D016
-	DLINEW dli19 1 0 0
-
-dli19
-	sta regA
-
-	sta $D40A		;line=184
-	sta $D40A		;line=185
-	sta $D40A		;line=186
-	sta $D40A		;line=187
-	lda #$04
-	sta $D40A		;line=188
-	sta $D01B
-	sta $D40A		;line=189
-c80	lda #$94
-	sta $D40A		;line=190
-	sta $D016
-	DLINEW dli8 1 0 0
+c45	ldx #$7A
+	sta wsync		;line=56
+	sta chbase
+	stx color3
+	lda #$08
+x7	ldx #$BC
+c46	ldy #$0E
+	sta wsync		;line=57
+	sta gtictl
+	stx hposp0
+	sty colpm0
+	DLINEW dli8 1 1 1
 
 dli8
 	sta regA
-	lda >fnt+$400*$07
-	sta $D40A		;line=192
-	sta $D409
-	sta $D40A		;line=193
-	sta $D40A		;line=194
-	sta $D40A		;line=195
-c81	lda #$96
-	sta $D40A		;line=196
-	sta $D016
-	DLINEW dli20 1 0 0
 
-dli20
-	sta regA
-
-	sta $D40A		;line=200
-c82	lda #$98
-	sta $D40A		;line=201
-	sta $D019
-c83	lda #$98
-	sta $D40A		;line=202
-	sta $D016
-c84	lda #$9A
-	sta $D40A		;line=203
-	sta $D019
-	DLINEW dli21 1 0 0
-
-dli21
-	sta regA
-
-	sta $D40A		;line=208
-	sta $D40A		;line=209
-	sta $D40A		;line=210
-	sta $D40A		;line=211
-	sta $D40A		;line=212
-	sta $D40A		;line=213
-c85	lda #$9C
-	sta $D40A		;line=214
-	sta $D019
+	sta wsync		;line=64
+	sta wsync		;line=65
+	sta wsync		;line=66
+	lda #$04
+	sta wsync		;line=67
+	sta gtictl
 	DLINEW dli9 1 0 0
 
 dli9
 	sta regA
 	stx regX
 	sty regY
-	lda >fnt+$400*$08
-c86	ldx #$C8
-c87	ldy #$C4
-	sta $D40A		;line=216
-	sta $D409
-	stx $D017
-	sty $D018
-	DLINEW dli22 1 1 1
 
-dli22
+	sta wsync		;line=72
+	sta wsync		;line=73
+	sta wsync		;line=74
+c47	lda #$26
+x8	ldx #$79
+c48	ldy #$2A
+	sta wsync		;line=75
+	sta color2
+	stx hposp0
+	sty colpm0
+c49	lda #$C4
+	sta wsync		;line=76
+	sta color1
+	DLINEW dli10 1 1 1
+
+dli10
 	sta regA
+	stx regX
+	sty regY
 
-	sta $D40A		;line=224
-	sta $D40A		;line=225
-	sta $D40A		;line=226
-c88	lda #$9A
-	sta $D40A		;line=227
-	sta $D016
-	sta $D40A		;line=228
-	sta $D40A		;line=229
-	sta $D40A		;line=230
-c89	lda #$9E
-	sta $D40A		;line=231
-	sta $D019
+	sta wsync		;line=80
+c50	lda #$6C
+	sta wsync		;line=81
+	sta color0
+c51	lda #$7C
+	sta wsync		;line=82
+	sta color0
+c52	lda #$6C
+	sta wsync		;line=83
+	sta color0
+s5	lda #$01
+x9	ldx #$36
+c53	ldy #$C6
+	sta wsync		;line=84
+	sta sizep1
+	stx hposp1
+	sty colpm1
+c54	lda #$7C
+	sta wsync		;line=85
+	sta color0
+c55	lda #$6C
+	sta wsync		;line=86
+	sta color0
+c56	lda #$5C
+	sta wsync		;line=87
+	sta color0
+	lda >fnt+$400*$03
+	sta wsync		;line=88
+	sta chbase
+c57	lda #$4C
+	sta wsync		;line=89
+	sta color0
+c58	lda #$5C
+	sta wsync		;line=90
+	sta color0
+c59	lda #$4C
+	sta wsync		;line=91
+	sta color0
+x10	lda #$69
+c60	ldx #$4A
+	sta wsync		;line=92
+	sta hposp0
+	stx colpm0
+c61	lda #$06
+c62	ldx #$78
+	sta wsync		;line=93
+	sta color0
+	stx color3
+c63	lda #$7A
+	sta wsync		;line=94
+	sta color3
+c64	lda #$78
+	sta wsync		;line=95
+	sta color3
+	sta wsync		;line=96
+	sta wsync		;line=97
+	sta wsync		;line=98
+c65	lda #$08
+c66	ldx #$76
+	sta wsync		;line=99
+	sta color0
+	stx color3
+c67	lda #$78
+	sta wsync		;line=100
+	sta color3
+c68	lda #$76
+	sta wsync		;line=101
+	sta color3
+	DLINEW dli11 1 1 1
+
+dli11
+	sta regA
+	stx regX
+	sty regY
+
+	sta wsync		;line=104
+c69	lda #$0A
+x11	ldx #$B6
+c70	ldy #$08
+	sta wsync		;line=105
+	sta color0
+	stx hposp1
+	sty colpm1
+c71	lda #$C6
+	sta wsync		;line=106
+	sta color2
+	sta wsync		;line=107
+	sta wsync		;line=108
+	sta wsync		;line=109
+	sta wsync		;line=110
+c72	lda #$7A
+x12	ldx #$6A
+c73	ldy #$12
+	sta wsync		;line=111
+	sta color3
+	stx hposp0
+	sty colpm0
+	lda >fnt+$400*$04
+c74	ldx #$E8
+	sta wsync		;line=112
+	sta chbase
+	stx color3
+	sta wsync		;line=113
+	sta wsync		;line=114
+	sta wsync		;line=115
+	sta wsync		;line=116
+c75	lda #$C6
+c76	ldx #$C4
+	sta wsync		;line=117
+	sta color1
+	stx color2
+	DLINEW dli12 1 1 1
+
+dli12
+	sta regA
+	stx regX
+	sty regY
+
+	sta wsync		;line=120
+c77	lda #$08
+s6	ldx #$00
+s7	ldy #$01
+	sta wsync		;line=121
+	sta color0
+	stx sizep1
+	sty sizem
+x13	lda #$68
+	sta hposp0
+x14	lda #$B8
+	sta hposp1
+c78	lda #$14
+	sta colpm0
+c79	lda #$0A
+	sta colpm1
+	sta wsync		;line=122
+	sta wsync		;line=123
+	sta wsync		;line=124
+	sta wsync		;line=125
+	sta wsync		;line=126
+c80	lda #$C2
+	sta wsync		;line=127
+	sta color2
+x15	lda #$5F
+c81	ldx #$B8
+	sta wsync		;line=128
+	sta hposp3
+	stx colpm3
+s8	lda #$05
+x16	ldx #$42
+	sta wsync		;line=129
+	sta sizem
+	stx hposm1
+	sta wsync		;line=130
+	sta wsync		;line=131
+c82	lda #$E6
+	sta wsync		;line=132
+	sta color3
+	DLINEW dli3 1 1 1
+
+dli3
+	sta regA
+	stx regX
+	sty regY
+	lda >fnt+$400*$05
+	sta wsync		;line=136
+	sta chbase
+c83	lda #$E4
+	sta wsync		;line=137
+	sta color3
+c84	lda #$0A
+	sta wsync		;line=138
+	sta color0
+	sta wsync		;line=139
+	sta wsync		;line=140
+c85	lda #$16
+	sta wsync		;line=141
+	sta color3
+c86	lda #$14
+	sta wsync		;line=142
+	sta color3
+x17	lda #$BF
+c87	ldx #$0C
+	sta wsync		;line=143
+	sta hposp0
+	stx colpm0
+c88	lda #$16
+	sta wsync		;line=144
+	sta color3
+c89	lda #$14
+	sta wsync		;line=145
+	sta color3
+c90	lda #$16
+	sta wsync		;line=146
+	sta color3
+s9	lda #$01
+x18	ldx #$68
+c91	ldy #$18
+	sta wsync		;line=147
+	sta sizep2
+	stx hposp2
+	sty colpm2
+	DLINEW dli13 1 1 1
+
+dli13
+	sta regA
+	stx regX
+	sty regY
+
+	sta wsync		;line=152
+c92	lda #$C4
+s10	ldx #$01
+x19	ldy #$BE
+	sta wsync		;line=153
+	sta color2
+	stx sizep1
+	sty hposp1
+c93	lda #$08
+	sta wsync		;line=154
+	sta color0
+	sta wsync		;line=155
+	sta wsync		;line=156
+x20	lda #$8A
+	sta wsync		;line=157
+	sta hposp2
+	DLINEW dli4 1 1 1
+
+dli4
+	sta regA
+	stx regX
+	sty regY
+	lda >fnt+$400*$06
+	sta wsync		;line=160
+	sta chbase
+c94	lda #$18
+s11	ldx #$00
+x21	ldy #$79
+	sta wsync		;line=161
+	sta color3
+	stx sizem
+	sty hposp0
+x22	lda #$9D
+	sta hposm0
+c95	lda #$0A
+	sta colpm0
+c96	lda #$16
+	sta wsync		;line=162
+	sta color3
+	sta wsync		;line=163
+c97	lda #$18
+s12	ldx #$00
+x23	ldy #$AA
+	sta wsync		;line=164
+	sta color3
+	stx sizep1
+	sty hposp1
+c98	lda #$E6
+	sta colpm1
+x24	lda #$A8
+	sta wsync		;line=165
+	sta hposm1
+c99	lda #$16
+	sta wsync		;line=166
+	sta color3
+c100	lda #$E4
+c101	ldx #$18
+x25	ldy #$B2
+	sta wsync		;line=167
+	sta color0
+	stx color3
+	sty hposp0
+c102	lda #$E8
+	sta colpm0
+	sta wsync		;line=168
+	lda #$02
+x26	ldx #$5C
+c103	ldy #$C8
+	sta wsync		;line=169
+	sta gtictl
+	stx hposp2
+	sty colpm2
+	sta wsync		;line=170
+	sta wsync		;line=171
+	sta wsync		;line=172
+x27	lda #$C8
+c104	ldx #$E8
+	sta wsync		;line=173
+	sta hposp3
+	stx colpm3
+	DLINEW dli14 1 1 1
+
+dli14
+	sta regA
+	stx regX
+	sty regY
+
+	sta wsync		;line=176
+	sta wsync		;line=177
+s13	lda #$00
+x28	ldx #$C0
+c105	ldy #$E6
+	sta wsync		;line=178
+	sta sizep2
+	stx hposp2
+	sty colpm2
+	sta wsync		;line=179
+	sta wsync		;line=180
+	sta wsync		;line=181
+	sta wsync		;line=182
+s14	lda #$01
+x29	ldx #$8E
+c106	ldy #$1A
+	sta wsync		;line=183
+	sta sizep0
+	stx hposp0
+	sty colpm0
+	lda >fnt+$400*$07
+	sta wsync		;line=184
+	sta chbase
+	sta wsync		;line=185
+	sta wsync		;line=186
+	sta wsync		;line=187
+s15	lda #$03
+x30	ldx #$A8
+c107	ldy #$16
+	sta wsync		;line=188
+	sta sizep1
+	stx hposp1
+	sty colpm1
+	sta wsync		;line=189
+	sta wsync		;line=190
+c108	lda #$94
+	sta wsync		;line=191
+	sta color0
+	sta wsync		;line=192
+	sta wsync		;line=193
+	lda #$08
+	sta wsync		;line=194
+	sta gtictl
+c109	lda #$C8
+s16	ldx #$03
+x31	ldy #$78
+	sta wsync		;line=195
+	sta color1
+	stx sizep2
+	sty hposp2
+c110	lda #$C6
+	sta colpm2
+c111	lda #$96
+	sta wsync		;line=196
+	sta color0
+	sta wsync		;line=197
+s17	lda #$00
+x32	ldx #$72
+c112	ldy #$0C
+	sta wsync		;line=198
+	sta sizep0
+	stx hposp0
+	sty colpm0
+	sta wsync		;line=199
+	sta wsync		;line=200
+c113	lda #$98
+s18	ldx #$00
+x33	ldy #$97
+	sta wsync		;line=201
+	sta color3
+	stx sizep1
+	sty hposp1
+c114	lda #$E4
+	sta colpm1
+c115	lda #$98
+	sta wsync		;line=202
+	sta color0
+c116	lda #$9A
+x34	ldx #$33
+c117	ldy #$F6
+	sta wsync		;line=203
+	sta color3
+	stx hposp3
+	sty colpm3
+	DLINEW dli5 1 1 1
+
+dli5
+	sta regA
+	stx regX
+	sty regY
+	lda >fnt+$400*$08
+	sta wsync		;line=208
+	sta chbase
+	sta wsync		;line=209
+s19	lda #$00
+x35	ldx #$97
+c118	ldy #$1A
+	sta wsync		;line=210
+	sta sizep2
+	stx hposp2
+	sty colpm2
+	sta wsync		;line=211
+	sta wsync		;line=212
+	sta wsync		;line=213
+c119	lda #$9C
+	sta wsync		;line=214
+	sta color3
+	DLINEW dli15 1 1 1
+
+dli15
+	sta regA
+	stx regX
+	sty regY
+
+	sta wsync		;line=224
+	lda #$04
+	sta wsync		;line=225
+	sta gtictl
+s20	lda #$03
+x36	ldx #$40
+c120	ldy #$CA
+	sta wsync		;line=226
+	sta sizep0
+	stx hposp0
+	sty colpm0
+c121	lda #$9A
+	sta wsync		;line=227
+	sta color0
+	sta wsync		;line=228
+	sta wsync		;line=229
+	sta wsync		;line=230
+c122	lda #$9E
+	sta wsync		;line=231
+	sta color3
+	lda >fnt+$400*$09
+	sta wsync		;line=232
+	sta chbase
 
 	lda regA
+	ldx regX
+	ldy regY
 	rti
 
 .endl
@@ -595,7 +744,7 @@ FADECHR	= 0
 
 .proc	NMI
 
-	bit $D40F
+	bit nmist
 	bpl VBL
 
 	jmp DLI.dli2
@@ -606,58 +755,64 @@ VBL
 	stx regX
 	sty regY
 
-	sta $D40F		;reset NMI flag
+	sta nmist		;reset NMI flag
 
-	mwa #ant $D402		;ANTIC address program
+	mwa #ant dlptr		;ANTIC address program
 
-	mva #%00111110 $D400	;set new screen width
+	mva #scr40 dmactl	;set new screen width
 
 	inc cloc		;little timer
 
 ; Initial values
 
 	lda >fnt+$400*$00
-	sta $D409
+	sta chbase
 c0	lda #$00
-	sta $D01A
+	sta colbak
 c1	lda #$70
-	sta $D016
+	sta color0
 c2	lda #$1A
-	sta $D017
+	sta color1
 c3	lda #$0C
-	sta $D018
-c4	lda #$04
-	sta $D019
-	lda #$02
-	sta $D401
+	sta color2
+c4	lda #$02
+	sta color3
+	sta chrctl
 	lda #$04
-	sta $D01B
+	sta gtictl
 s0	lda #$00
-	sta $D008
+	sta sizep0
 x0	lda #$5D
-	sta $D000
+	sta hposp0
 c5	lda #$7A
-	sta $D012
+	sta colpm0
 s1	lda #$00
-	sta $D009
+	sta sizep1
 x1	lda #$46
-	sta $D001
+	sta hposp1
 c6	lda #$7A
-	sta $D013
-s2	lda #$01
-	sta $D00C
-x2	lda #$70
-	sta $D004
-x3	lda #$00
-	sta $D002
-	sta $D003
-	sta $D005
-	sta $D006
-	sta $D007
-	sta $D00A
-	sta $D00B
-	sta $D014
-	sta $D015
+	sta colpm1
+s2	lda #$04
+	sta sizem
+x2	lda #$CA
+	sta hposm1
+s3	lda #$00
+	sta sizep3
+x3	lda #$A4
+	sta hposp3
+c7	lda #$E6
+	sta colpm3
+x4	lda #$70
+	sta hposm0
+s4	lda #$00
+	sta sizep2
+x5	lda #$C4
+	sta hposp2
+c8	lda #$0A
+	sta colpm2
+x6	lda #$00
+	sta hposm2
+	sta hposm3
 
 	mwa #DLI.dli2 dliv	;set the first address of DLI interrupt
 	mwa #DLI.dli1 null+1	;synchronization for the first screen line
@@ -687,11 +842,11 @@ missiles
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 03 03 03 03 03 03 00 02 03 01 01 03 03 02 02
+	.he 00 08 08 08 08 08 08 00 08 00 0C 0C 0C 04 0C 04
+	.he 04 03 03 03 03 03 03 00 02 0F 0D 0D 0F 0F 0E 00
 	.he 01 03 03 03 03 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 03 03 03 03 03 04 04
+	.he 04 0C 0C 0C 0C 0C 0C 0C 0C 04 04 04 04 04 04 04
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -699,41 +854,71 @@ missiles
 player0
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 08 08 08 08 08 18 1C
+	.he 00 00 00 00 00 00 00 00 00 08 00 08 08 08 08 18
 	.he 1C 1C 1C 3C 3C 3C 3C 3E 7E 7E 7E 7E FE FF FF FF
-	.he 1F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 1F 1F 1F 1F 1F 1F 1F 0F 0F 07 02
+	.he 1F BF DF 6F 77 3B 3D 1E 9E 8E 8E 00 00 00 00 00
+	.he 00 00 00 87 87 87 87 87 87 87 87 80 87 1F 7F FF
+	.he FF FF FF FF 00 1F 1F 1F 1F 1F 1F 1F 0F 0A 05 02
 	.he 00 00 00 00 00 00 00 FF FF FF FF FF FF FF FF FF
 	.he FF FF FF DF ED FC FE FF FF FF 7E BF DF DF FF DF
-	.he BF FE 7E FE BE 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 F0
-	.he 7C 5C 4E 66 77 FF FF 7F 7F 3F 3F 3F 3F 3F 1F 0E
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he BF FE 7E FE BE 00 00 FE FF FF FF FF FE FD FB F7
+	.he 00 00 00 00 00 00 00 00 00 7B F9 FC FD FD 00 B0
+	.he 78 4C 44 64 74 FC FC 78 78 3C 3C 3C 3C 1C 1C 08
+	.he 00 3C 1E 7F 3F FE FE 7C 38 10 00 00 00 00 80 1C
+	.he BE 7E 7F FF FF FF 7F 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF FF
+	.he FF FF FF FF FF FF FF FF 00 00 00 00 00 00 00 00
 player1
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 	.he 00 00 08 08 08 08 08 1C 1C 1C 1C 3E 3E 3E 3E 7E
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF
+	.he FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF
+	.he 00 7F 3F BF 9F DF DF CF 6F 6B 6B 6B 6F 6B 0F 0B
+	.he CF F3 FB FD FC FE FE FE 7F 7F 7F 3F 3F 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 04 00 00 01
-	.he 82 86 EE EE F3 57 17 1F 3E 3E BE BE FE FC FC F8
-	.he F8 F0 C0 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 FD FD FD FD FD FD FD 00 00 00 00 00 40 10 41
+	.he 53 46 EE F6 EB 67 D7 5F 9F 37 A7 E6 B6 FE FC FC
+	.he F8 F0 E0 00 00 00 00 04 0E 1F 1F 3F 7F 7F 3F 1F
+	.he 09 FF EF EF DF DF DF DF 5D DF F7 F7 F6 F6 B6 BE
+	.he B7 BE FF DB DB EB E3 73 00 00 00 00 00 00 00 00
 	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 player2
-	.ds $100
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 F0 FF FF FF FF 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 FF FF FF FF FF
+	.he FF FF FF FF 7F FF 87 FF FF FF FF FF FF FF 7F 7F
+	.he 3F FF FF FF FF FF FF FF FF FF C0 C0 81 13 17 15
+	.he 45 57 17 17 1F 0D 06 06 00 00 00 FC FE FE 1F 3F
+	.he BF BF BF 00 00 00 00 00 00 00 FF FF FF FF FF FF
+	.he FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 player3
-	.ds $100
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 DF 6F 61 35 BA DA 9F 2E
+	.he FF FE 1E 4F 7F 6F 33 00 FF FF FF FF FF FF FF FF
+	.he FF FF FF FF FE 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 3C 7C 7E 7E DE D1 E3 F3 FB FD
+	.he FF DF DB 5F 5D 7D 7E 6F 6F 37 1E 28 78 77 37 76
+	.he 34 22 10 BB 7B 7B 7B 7B 63 6B 7B 7B 7B 7B 7B 7B
+	.he 7B 3D BF BF DE DA D2 D2 90 00 00 00 00 00 00 00
+	.he 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 .ENDM
 
 USESPRITES = 1

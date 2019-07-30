@@ -62,6 +62,8 @@ sbarmax	equ $c1 ;status bar - max line index to select
 sbarmin	equ $c2 ;status bar - min line index to select
 stick	equ $c3 ;stick status (no repeat)
 trig	equ $c4 ;trig status (no repeat)
+vsynccount	equ $c5 ;some original counter
+spritefilenumber	equ $c6 ;some original counter
 ;$cb-$de RMT player
 ;$f0-$ff G2F
 
@@ -94,7 +96,7 @@ splashlogoscr	equ leveldata		;to $0930: 1200 bytes
 ;watch out!, music is still inplace from $1000-$14ff
 splashlogofnt	equ gamevram
 
-code2	equ $6400 ;$6100 ;continue of code
+code2	equ $6800 ;continue of code
 
 ;space until $ab00
 
@@ -253,7 +255,13 @@ copykeytab
         	dey
         	bpl copykeytab
 
-gameloop	;title_screen
+	pause 1
+	sei
+	mva #$00 nmien
+	sta irqen 	;disable interupts (keyboard)
+	mva #$fe portb	;turn off osrom and basicrom	
+
+gameloop	title_screen
 	game_init
 	
 	;; Turn sound on/off for attract mode
@@ -629,8 +637,8 @@ finishloadsprites
 
 	;Print enemy health values
 	
-	lda #%00001111
-	sta textcolour 
+;	lda #%00001111
+;	sta textcolour 
 	lda #4 ;8
 	sta $70
 	lda #27
@@ -685,8 +693,8 @@ finishloadsprites
 ; }         
 
 	; Print enemy shield values
-	lda #%11111111
-	sta textcolour 
+;	lda #%11111111
+;	sta textcolour 
 	lda #10 ;#11
 	sta $70
 	;lda #27:sta $77
@@ -2714,11 +2722,11 @@ sbarcontrols
 	cmp #"x" ;DEBUG
 	jeq nextlevel
 
-	cmp #"c" ;DEBUG color
-	jeq color.fade_in_from_black
+;	cmp #"c" ;DEBUG color
+;	jeq color.fade_in_from_black
 	
-	cmp #"v" ;DEBUG color
-	jeq color.fade_out_to_black2
+;	cmp #"v" ;DEBUG color
+;	jeq color.fade_out_to_black2
 	
 ;joystick controls
 	lda #$01
@@ -2889,6 +2897,9 @@ movesoundparams
 	dta 1,0	; Duration
 */
 errorsound
+;TODO: implement this sound effect
+	rts
+/*
 	lda #7
 	ldx #<(errorsoundparams)
 	ldy #>(errorsoundparams)
@@ -2902,7 +2913,7 @@ errorsoundparams
 	.word -15	; Envelope
 	dta 10,0	; Pitch
 	dta 8,0	; Duration
-/*
+
 
 loselifesound
 	txa
@@ -3864,13 +3875,14 @@ showstatus
 	; Also expects number location in $74,$75
 	; Uses 70 and 71 as font location and 72 $ 73 as screen location
 
+/*
 numberplot
 	tya
 	pha
-/*atari remove
-	lda textcolour
-	sta $76
-*/
+;atari remove
+;	lda textcolour
+;	sta $76
+
 ;atari add {
 	lda $70
 	and #$01
@@ -3879,9 +3891,9 @@ numberplot
 	txa
 	asl @
 	adc $70          ;Add the length * 2 to the x coordinate
-/*atari remove
-	asl @
-*/	
+;atari remove
+;	asl @
+	
 	asl @     ; Multiply by 4 (%00111111 to %11111100)
 	sta $72         ; Store in screen location
 	lda #$20        ; screen start / 2
@@ -3890,9 +3902,9 @@ numberplot
 	rol @   ; Multiply by 2 (total 8)
 	sta $73
 	lda $77
-/*atari remove
-	asl @           ; Multiply by 2 to make 512
-*/
+;atari remove
+;	asl @           ; Multiply by 2 to make 512
+
 	adc $73
 	sta $73 ; Add to screen address and save
 ;.if codeoffset=$900
@@ -3931,15 +3943,14 @@ digit1loop
 	asl @ ; shift into location
 	and #%01111000 ; mask out unused high bits
 	sta $70         ; Store loop byte location
-/* atari remove
-	lda $72
-	clc
-	adc #8      ; Update screen location
-	sta $72
-	lda $73
-	adc #0  ; screen high
-	sta $73
-*/         
+; atari remove
+;	lda $72
+;	clc
+;	adc #8      ; Update screen location
+;	sta $72
+;	lda $73
+;	adc #0  ; screen high
+;	sta $73 
 	ldy #7
 digit2loop
 	lda ($70),Y     ; Get byte
@@ -4051,7 +4062,7 @@ digit2loop
 	rts
 
 .endl
-
+*/
 	;Game over prety picture
 
 	golscreenaddress = $70
@@ -4850,21 +4861,11 @@ endage
 ;initialization for the game
 .proc	game_init
 
-	pause 1
-	sei
-	mva #$00 nmien
-	sta irqen 	;disable interupts (keyboard)
-
-	mva #$fe portb	;turn off osrom and basicrom	
 	mwa #NMI $fffa
-
-	jsr rmt.rmt_silence
-
+	
 	mwa #dl dlistl
 	mwa #gameDli.dli1 dli_ptr ;vdslst
 	mwa #gameVbi.vbi vbi_ptr
-	mva #1+12+32 dmactl ;d400 = 559
-	mva #$c0 nmien ;80 dli, 40 vbi
 	;clean up memory areas
 	ldx #0
 	txa
@@ -4884,6 +4885,12 @@ x1	sta mypmbase-$100,x
 	jsr inflater.inflate
 
 	preshift_explosion_sprites
+
+	lda #$01	;initialize rmt player with silence
+	jsr sfx.init
+	
+	mva #$c0 nmien ;80 dli, 40 vbi
+	mva #1+12+32 dmactl ;d400 = 559
 	
 	rts
 .endp
@@ -4936,24 +4943,7 @@ num09	sub #"P"
 x0	lda #0
 	rts
 .endp
-	
-.align $100,0
-vram
-:128	dta #
 
-dl	dta $50
-	dta $c2,a(vram),2,2,$82
-:2	dta $42,a(vram),2,2,$82
-	dta $42,a(vram),$82,2,$82
-:3	dta $42,a(vram),2,2,$82
-;:6	dta $42,a(vram),2,2,$82
-	dta $42,a(vram)
-	dta $41,a(dl)
-
-NMI	bit nmist
-	bpl nmi_vbi	;vbi
-	jmp (dli_ptr)	;dli
-nmi_vbi	jmp (vbi_ptr)
 
 ;set no status bar
 .proc	set_status0
@@ -5269,6 +5259,8 @@ codeoffset
 ;atari off
 ;	jmp initinterrupts
 
+/* atari off
+
 clearscreen
 	; Routine to clear the screen data block ($3000 to $7fff)
 	; Makes the mode change look better
@@ -5288,7 +5280,6 @@ clearscreenloop
 	cpx #$80
 	bne clearscreenloop
 	rts
-/* atari off
 	; Interrupt routine
 initinterrupts
 	;lda #19
@@ -5410,7 +5401,7 @@ set_palette_colour
 	eor #$10
 	sta $fe21
 	rts
-*/
+
 palt
 	dta $26
 	dta $a1
@@ -5436,7 +5427,7 @@ vsynccount
 
 intflag
 	dta 0
-/* atari remove
+
 gamewinsoundpitches
 	dta 116,124,116,108,116,128,148
 gamewinsounddurations
@@ -5466,7 +5457,7 @@ eventend
 	;.towerdistance
 	;  dta 100
 
-
+/*
 spritefilename
 	dta "S."
 spritefilenumber
@@ -5478,7 +5469,7 @@ screenfilename
 screenfilenumber
 	dta "1"
 	dta $0d
-
+*/
 printleft
 
 ; atari add {
@@ -5946,23 +5937,29 @@ lowcodeend
 ;	ins 'towers\notower_shifted.fnt'
 	;ins 'towers\towers_shifted.fnt'
 temp	dta 0
-
-inflate_data	.ds 764 ;inflate buffer
-
-	guard gamevram ;do not allow code reaching the videoram area
-
-	org code2
-
-towers	ins 'towers\towers_shifted.fnt' ;4x3 chars	
 notower	ins 'towers\notower_shifted.fnt'
+
 towermask	
 .rept 3
 :8	dta $f0
 :16	dta $00
 :8	dta $0f
 .endr
-towers2	ins 'towers\towers.fnt'  ;3x3 chars
+
+
+
+inflate_data ;	.ds 764 ;inflate buffer
+:764	dta 0
+	
+	guard gamevram ;do not allow code reaching the videoram area
+
+	org code2
 notower2	ins 'towers\notower.fnt'
+towers	ins 'towers\towers_shifted.fnt' ;4x3 chars	
+towers2	ins 'towers\towers.fnt'  ;3x3 chars
+
+
+
 
 spritelowtable
   ;for x,0,nosprites-1
@@ -6729,8 +6726,8 @@ boxtopright
 
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
-.proc	title_screen
-	mwa #packed_music inflater.inputPointer
+.proc	splash_screen
+	mwa #title_screen.packed_music inflater.inputPointer
 	mwa #music-6 inflater.outputPointer ;-6 => "skipping" the header
 	jsr inflater.inflate
 	;$1000->$14ff
@@ -6743,7 +6740,13 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	jsr rmt.rmt_init	;initialize the music	
 	
 	jsr g2fsplash.main
+	jsr rmt.rmt_silence
+	mva #0 559 ;black screen
+	rts
+.endp
 
+.proc	title_screen
+	
 	;inflate the title screen stuff
 	mwa #packed_text inflater.inputPointer
 	mwa #title_scroll inflater.outputPointer
@@ -6754,10 +6757,16 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	mwa #titlefont inflater.outputPointer
 	jsr inflater.inflate
 	;$5400->$5800
-
+	
+	jsr rmt.set_stereo
+	ldx #<music
+	ldy #>music
+	lda #0
+	jsr rmt.rmt_init	;initialize the music
 	jsr g2ftitle.main
 	rts
 
+;logic after title logo is displayed
 continue	
 	mva #15 counter
 	
@@ -6773,14 +6782,19 @@ xx1	stx vscrol
 	dec counter	;scroll 15 lines
 	bne xx3
 	
+	pause 1
+	mva #0 nmien
+	sta dmactl
+	jsr rmt.rmt_silence
 	rts
 counter	dta 15
 
+/*
 titleVbi	phr
 	inc 20
 	plr
 titleDli	rti
-
+*/
 	
 /*dl2	dta $70
 	dta $44
@@ -6911,18 +6925,24 @@ init	ldx #<music2
 channel	dta 0
 .endl
 
+	
+.align $100
+vram
+:128	dta #
 
+dl	dta $50
+	dta $c2,a(vram),2,2,$82
+:2	dta $42,a(vram),2,2,$82
+	dta $42,a(vram),$82,2,$82
+:3	dta $42,a(vram),2,2,$82
+;:6	dta $42,a(vram),2,2,$82
+	dta $42,a(vram)
+	dta $41,a(dl)
 
-g2ftitle_org
-
-.local	g2ftitle
-	icl "title\cd_title\cd_title_adjusted.asm"
-.endl
-
-g2fsplash_org
-.local	g2fsplash
-	icl "title\splash\splash_adjusted.asm"
-.endl
+NMI	bit nmist
+	bpl nmi_vbi	;vbi
+	jmp (dli_ptr)	;dli
+nmi_vbi	jmp (vbi_ptr)
 
 
 	.align $100
@@ -6931,6 +6951,20 @@ PLAYER	equ *+$400
 	icl "msx\rmtplayr.a65"
 .endl
 
+g2fsplash_org
+.local	g2fsplash
+	icl "title\splash\splash_adjusted.asm"
+.endl
+
+	ini splash_screen
+	;unfortunately after updating of picture it did not fit into memory
+
+	org g2fsplash
+g2ftitle_org
+
+.local	g2ftitle
+	icl "title\cd_title\cd_title_adjusted.asm"
+.endl
 	
 music2	equ $a529
 	guard music2
