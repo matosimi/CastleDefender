@@ -138,6 +138,7 @@ title_static
 	dta d"                                "
 	dta d"                                "
 	dta d"   http://matosimi.atari.org    "
+	dta d"                                "
 title_end
 
 .print "title_scroll: ",title_scroll

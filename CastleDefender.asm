@@ -2420,17 +2420,19 @@ press3
 
 escape			;Escape has been pressed.
 ;TODO: fix this (crash)
+/*atari remove
 	jsr readshift
 	jvc notescape ; Escape pressed - but not shift.
+*/
 	pla
 	pla			; Pull return address off stack
 	jmp gameover
-
+/*
 readshift
 	clv
 	clc
 	jmp ($228)
-
+*/
 upgradetower
 	; Tower upgrade routine.
 	ldx currentlocation
@@ -2528,8 +2530,8 @@ keyswitch
 	cmp #"u"
 	beq upgradetower
 	
-	cmp #";" ;ESC
-	beq escape
+	;cmp #";" ;ESC
+	;beq escape
 
 	ldx sbarvisib
 	jne sbarcontrols	;if status bar is visible handle controls differently
@@ -2560,6 +2562,9 @@ keyswitch
 	beq moveright
 	lda trig
 	jeq returnpressed
+	
+	lda consol
+	jeq escape ;start+select+option pressed 
 ; }
 
 notescape
@@ -6207,7 +6212,7 @@ loop_x	mva #10 sy
 	jmp *
 	rts
 .endp
-*/
+
 
 ;wait until start button is pressed and released
 .proc	waittostart
@@ -6219,6 +6224,7 @@ x2     	lda consol
      	beq x2
 	rts
 .endp
+*/
 
 .proc	level_pmg
 	;mva #1+16 prior
@@ -6749,6 +6755,8 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 .endp
 
 .proc	title_screen
+	;hide pmgs (when back from game)
+	mva #$00 $d01d ;pmcntl		;PMG disabled
 	
 	;inflate the title screen stuff
 	mwa #packed_text inflater.inputPointer
