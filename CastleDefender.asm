@@ -973,12 +973,14 @@ returntobasic
 
 ;atari add {
 ;TODO: go to title screen
+	music_init
 	jmp gameloop
 ;}
 
 winner
 	;We've won.
 	jsr showwinlogo
+	music_init
 	jmp gameloop
 
 flashcursor
@@ -4907,7 +4909,7 @@ keypressed
 	beq readkey
 	bne stillpressed
 	dta 2 ;code cannot get here
-	
+	jmp *
 keynotpressed
 	mva #0 keystat
 	
@@ -6740,7 +6742,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	lda #0
 	jsr rmt.rmt_init	;initialize the music	
 	
-	jsr g2fsplash.main
+	;jsr g2fsplash.main
 	jsr rmt.rmt_silence
 	mva #0 559 ;black screen
 	rts
@@ -6759,22 +6761,94 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	jsr inflater.inflate
 	;$5400->$5800
 	
-	jsr rmt.set_stereo
-	ldx #<music
-	ldy #>music
-	lda #0
-	jsr rmt.rmt_init	;initialize the music
 	jsr g2ftitle.main
 	rts
 
+dlcont	dta $80
+	dta $42+32
+tcptr	dta a(title_scroll)
+:12	dta 2+32
+:3	dta 2+32+$80
+:4	dta 2+32
+	dta 2+$80,$42,a(title_scroll)
+	;dta $44,a(title_logo+96)
+	dta $41,a(g2ftitle.ant)
+
 ;logic after title logo is displayed
 continue	
-	mva #15 counter
+	;static screen
+	mwa #title_static tcptr
+	mva #0 vscrol
+	mva #$50 tclr0
+	mva #$12 tclr1
+	mva #1 selected
+	
+control_loop
+	handle_joystick
+	getkeypressed
+	
+	cmp #"w"
+	beq moveup
+	cmp #"s"
+	beq movedown
+	cmp #";"* ;return
+	beq execute
+	;joystick
+	lda #$01
+	bit stick
+	beq moveup
+	asl @
+	bit stick
+	beq movedown
+	lda trig
+	beq execute
+	jmp control_loop
+
+moveup	
+	mva #0 selected
+	mva #$12 tclr0
+	mva #$50 tclr1
+	pause 5
+	jmp control_loop
+
+movedown	
+	mva #1 selected
+	mva #$50 tclr0
+	mva #$12 tclr1
+	pause 5
+	jmp control_loop
+
+execute
+	pause 10
+	mva #$50 tclr0
+	sta tclr1
+	lda selected
+	beq run_scroll
+	
+	;start game
+	pause 1
+	mva #0 nmien
+	sta dmactl
+	jsr rmt.rmt_silence
+	rts
+
+run_scroll
+
+	mwa #title_scroll tcptr	
+	mva #127 counter
 	
 xx3	ldx #0
 	;jmp *
 xx1	stx vscrol
-	pause 5
+	stx scroltmp
+	getkeypressed
+	cmp #";" ;esc
+	jeq continue
+	spacepressed
+	bne xx2
+	pause 6
+xx2	pause 2
+	ldx scroltmp
 	inx
 	cpx #8
 	bne xx1
@@ -6782,34 +6856,13 @@ xx1	stx vscrol
 	
 	dec counter	;scroll 15 lines
 	bne xx3
+	jmp continue
 	
-	pause 1
-	mva #0 nmien
-	sta dmactl
-	jsr rmt.rmt_silence
-	rts
-counter	dta 15
+counter	dta 0
+selected	dta 0
+scroltmp	dta 0
 
-/*
-titleVbi	phr
-	inc 20
-	plr
-titleDli	rti
-*/
-	
-/*dl2	dta $70
-	dta $44
-	dta a(title_logo)
-:2	dta 4
-	dta 4 */
-dlcont	dta $80
-	dta $42+32
-tcptr	dta a(title_scroll)
-:19	dta 2+32
-	dta 2+$80,$42,a(title_scroll)
-	;dta $44,a(title_logo+96)
-	dta $41,a(g2ftitle.ant)
-	
+
 ;dli under g2f	
 dlix1	pha
 	
@@ -6826,10 +6879,29 @@ dlix1	pha
 	mva #$00 colpf0+1 
 	sta wsync
 	mva #$0c colpf0+1 
-	mwa #dlix2 g2ftitle.NMI.dliv
+	mwa #dlixa0 g2ftitle.NMI.dliv
 	pla
 	rti
 	
+
+
+.rept 3,#,#+1
+dlixa:1	pha
+	sta wsync
+	lda #$50 
+tclr:1	equ *-1	
+	sta colpf0+2
+	
+	ift :1 < 2
+	mwa #dlixa:2 g2ftitle.NMI.dliv
+	els
+	mwa #dlix2 g2ftitle.NMI.dliv
+	eif
+	
+	pla
+	rti	
+.endr
+
 dlix2	pha
 	sta wsync
 	mva #$50 colpf0+2 	 
@@ -6841,17 +6913,14 @@ dlix2	pha
 	mva #$04 colpf0+1 	;text luminance
 	sta wsync
 	mva #$00 colpf0+2
-	sta colpf0+1	
+	sta colpf0+1
 	pla
 	rti
-
 	
 packed_text
 	ins "title\scrolltext.xex.deflate"
 packed_titlefont
 	ins "title\title.fnt.deflate"
-packed_music
-	ins "msx\menu_stripped_1000.rmt.deflate"
 .endp
 
 
@@ -6925,6 +6994,15 @@ init	ldx #<music2
 	
 channel	dta 0
 .endl
+
+.proc	music_init
+	jsr rmt.set_stereo
+	ldx #<music
+	ldy #>music
+	lda #0
+	jsr rmt.rmt_init	;initialize the music
+	rts
+.endp
 
 	
 .align $100
