@@ -316,7 +316,7 @@ setup
 	sta enemieskilled
 	sta enemieskilled+1
 
-	lda #$a5
+	lda #$a1 ;debug a5
 	sta wave
 	lda #$a1
 	sta level	; Level set by basic (not anymore)
@@ -363,7 +363,7 @@ ttypeclear
 	sta lives
 
 ;atari add {
-	mva #$99 gold+1 ;debug - lot of gold
+	;mva #$99 gold+1 ;debug - lot of gold
 
 	lda level
 	sub #$a1
@@ -2726,7 +2726,7 @@ sbarcontrols
 	cmp #";"* ;return
 	jeq returnpressed
 	
-	cmp #"x" ;DEBUG
+	cmp #$58 ;DEBUG - shift+x
 	jeq nextlevel
 
 ;	cmp #"c" ;DEBUG color
@@ -5734,10 +5734,6 @@ ptr:1	equ *-2
 	rts
 .endp
 
-.proc	level
-	
-	rts
-.endp
 
 /*
 .proc	fade_out_to_black
@@ -6747,7 +6743,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	lda #0
 	jsr rmt.rmt_init	;initialize the music	
 	
-	;jsr g2fsplash.main
+	jsr g2fsplash.main
 	jsr rmt.rmt_silence
 	mva #0 559 ;black screen
 	rts
