@@ -2,7 +2,6 @@
 ;TODO: remove intflag references - acorn leftover
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
-;TODO: implement title screen + instructions
 ;TODO: recalculate final score after game... for title screen
  
 hposp0	equ $d000
@@ -89,7 +88,7 @@ titlelogofnt	equ leveldata+$380		;$0800-$0fff
 
 title_scroll	equ gamevram
 title_static	equ title_scroll+$1000
-titlefont		equ title_scroll+$1400	;to $57ff
+titlefont		equ title_scroll+$1800	;to $57ff+$400
 
 ;3rd data rewrite (splash screen)
 ;splashlogoscr	equ leveldata		;to $0930: 1200 bytes
@@ -6757,6 +6756,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 .proc	title_screen
 	;hide pmgs (when back from game)
 	mva #$00 $d01d ;pmcntl		;PMG disabled
+	sta nmien
 	
 	;inflate the title screen stuff
 	mwa #packed_text inflater.inputPointer
@@ -6769,6 +6769,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	jsr inflater.inflate
 	;$5400->$5800
 	
+	calculate_score	
 	jsr g2ftitle.main
 	rts
 
@@ -6870,6 +6871,59 @@ counter	dta 0
 selected	dta 0
 scroltmp	dta 0
 
+;for title screen
+.proc	calculate_score
+	ldx #0
+	ldy #0
+x1	lda score,x
+	and #$f0
+:4	lsr @
+	sta last_score,y
+	iny
+	lda score,x
+	and #$0f
+	sta last_score,y
+	iny
+	inx
+	cpx #4
+	bne x1
+	
+	;compare with high
+	ldx #0
+x4	lda last_score,x
+	a_lt high_score,x x2
+	beq x3
+	;save high score
+x5	mva last_score,x high_score,x
+	inx
+	cpx #8
+	bne x5
+	jmp x2
+	
+x3	;next digit
+	inx
+	cpx #8
+	beq x2
+	jmp x4
+	;NO new high score or continue
+
+x2	ldx #7
+x6	lda last_score,x
+	ora #$10
+	sta title_static+7*32+19,x
+	
+	lda high_score,x
+	ora #$10
+	sta title_static+2*32+19,x
+	
+	dex
+	bpl x6
+	rts
+	;score (4)
+	;enemieskilled (2)
+last_score	dta 0,0,0,0,0,0,0,0
+high_score	dta 0,0,0,0,0,0,0,0
+.endp
 
 ;dli under g2f	
 dlix1	pha
