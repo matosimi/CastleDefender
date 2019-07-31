@@ -84,7 +84,7 @@ scorebrd	equ gamevram+$1c00
 ;different code loop with data on same spot at gamevram
 titlelogoscr	equ leveldata		;280 bytes
 titlelogofnt	equ leveldata+$380		;$0800-$0fff 
-music		equ $1000			;$1000-$14ff
+;music		equ $1000			;$1000-$14ff
 
 
 title_scroll	equ gamevram
@@ -92,11 +92,12 @@ title_static	equ title_scroll+$1000
 titlefont		equ title_scroll+$1400	;to $57ff
 
 ;3rd data rewrite (splash screen)
-splashlogoscr	equ leveldata		;to $0930: 1200 bytes
+;splashlogoscr	equ leveldata		;to $0930: 1200 bytes
 ;watch out!, music is still inplace from $1000-$14ff
 splashlogofnt	equ gamevram
 
-code2	equ $6800 ;continue of code
+code2	equ $6880 ;continue of code
+;splash picture reaches 67ff, its deflated part goes to 687f
 
 ;space until $ab00
 
@@ -6727,9 +6728,9 @@ boxtopright
 atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 .proc	splash_screen
-	mwa #title_screen.packed_music inflater.inputPointer
-	mwa #music-6 inflater.outputPointer ;-6 => "skipping" the header
-	jsr inflater.inflate
+	;mwa #title_screen.packed_music inflater.inputPointer
+	;mwa #music-6 inflater.outputPointer ;-6 => "skipping" the header
+	;jsr inflater.inflate
 	;$1000->$14ff
 	;$5b00->$5fxx (old)
 	
@@ -6954,24 +6955,46 @@ PLAYER	equ *+$400
 g2fsplash_org
 .local	g2fsplash
 	icl "title\splash\splash_adjusted.asm"
+	
+	guard $9600
+	org $9600
+splashlogoscr
+	ins "title\splash\splash.scr"
+	
+	guard $9b00
+	org $9b00
+splashlogopmg
+	ins "title\splash\splash.pmg"
+	guard music
+	
+	;$ab00 guard deflated data
+	guard datareloc.moveto2 	
+	;5047 is the size of deflated font
+	org gamevram+$2800-5000 ;i left 47 bytes out of overlap
+fontpack	ins "title\splash\splash.fnt.deflate"
 .endl
 
+music	equ $a071 ;to $a528	
+music2	equ $a529 ;to $aaff
+	
+	org music
+	ins "msx\menu_stripped_a071.rmt",+6
+	
+	org music2
+	;does not make sense to deflate
+	ins "msx\game_stripped_a529.rmt",+6 ;until $aaff
+
+	
 	ini splash_screen
+	;ini splash_screen
 	;unfortunately after updating of picture it did not fit into memory
 
-	org g2fsplash
+	;part that rewrites the splashscreen with title screen
+	org g2fsplash_org
 g2ftitle_org
 
 .local	g2ftitle
 	icl "title\cd_title\cd_title_adjusted.asm"
 .endl
-	
-music2	equ $a529
-	guard music2
 
-	org music2
-	;does not make sense to deflate
-	ins "msx\game_stripped_a529.rmt",+6 ;until $aaff
-	
-	;$ab00 guard deflated data
-	guard datareloc.moveto2 
+

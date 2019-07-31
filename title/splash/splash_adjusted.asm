@@ -31,16 +31,17 @@ ant	dta $44,a(scr)
 	dta $04,$84,$84,$04,$84,$04,$04,$04,$84,$04,$84,$04,$04
 	dta $41,a(ant)
 
-scrdef	ins "splash.scr.deflate"
+;scrdef	ins "splash.scr.deflate" ;inserted outside
 
 	;.ALIGN $0400
-fntdef	ins "splash.fnt.deflate"
+fntdef	equ fontpack
+	;ins "splash.fnt.deflate" ;inserted outside
 
-pmgdef	ins "splash.pmg.deflate"
+;pmgdef	ins "splash.pmg.deflate" ;inserted outside 
 
 	ift USESPRITES
 	;.ALIGN $0800
-pmg	equ mypmbase-$100
+pmg	equ splashlogopmg
 	;.ds $0300
 	ift FADECHR = 0
 	;SPRITES
@@ -67,9 +68,9 @@ main
 	mwa #NMI $fffa		;new NMI handler
 
 	;inflate fnt and scr
-	mwa #scrdef inflater.inputPointer
-	mwa #scr inflater.outputPointer
-	jsr inflater.inflate
+	;mwa #scrdef inflater.inputPointer
+	;mwa #scr inflater.outputPointer
+	;jsr inflater.inflate
 	;$0480->$092f
 
 	mwa #fntdef inflater.inputPointer
@@ -78,9 +79,9 @@ main
 	;$4000->$67ff
 	
 	;inflate pmg
-	mwa #pmgdef inflater.inputPointer
-	mwa #mypmbase-$100 inflater.outputPointer
-	jsr inflater.inflate
+	;mwa #pmgdef inflater.inputPointer
+	;mwa #mypmbase-$100 inflater.outputPointer
+	;jsr inflater.inflate
 	;$1b00->$1fff
 
 	mva #$c0 nmien		;switch on NMI+DLI again
@@ -113,7 +114,7 @@ stop
 	sta:rne hposp0,x+
 
 	mva #$ff portb		;ROM switch on
-	;mva #$40 nmien		;only NMI interrupts, DLI disabled
+	mva #$40 nmien		;only NMI interrupts, DLI disabled
 	cli			;IRQ enabled
 
 	rts			;return to ... DOS
