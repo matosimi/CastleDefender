@@ -1,8 +1,7 @@
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
 ;TODO: recalculate final score after game... for title screen
-;TODO: fix pmg glitch when banner shown on level change
-;
+;TODO: tune up the SFX (sound of hits, not allowed sound when tower cannot be upgraded or built)
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -875,6 +874,7 @@ enemiesremain
 
 wavefinished
 	; Wave finished - add gold * 100 to score
+	set_status0	;hide status bar if shown
 	ldx #3
 addgoldtoscoreloop
 	lda gold-1,x
