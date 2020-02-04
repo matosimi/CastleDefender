@@ -1,9 +1,8 @@
-;TODO: remove attract mode references/conditions - acorn leftover
-;TODO: remove intflag references - acorn leftover
 ;TODO: fix hitsprite glitch
 ;TODO: fix tower3 bullet leftover
 ;TODO: recalculate final score after game... for title screen
- 
+;TODO: fix pmg glitch when banner shown on level change
+;
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -138,7 +137,7 @@ score		.ds 4
 wave		.ds 1
 level		.ds 1
 enemieskilled	.ds 2
-attractmode	.ds 1
+;attractmode	.ds 1
 lives		.ds 1
 gold		.ds 3
 enemystart 	.ds 1
@@ -221,11 +220,9 @@ loading	mva #>lofont 756
 	mva #$b6 color0+1
 	mva #$cc color0+2
 	mva #$00 color0+4
-	;lda $d014 ;pal/ntsc
-	;and #$0e
-	;cmp #$0e
-	;beq je_to_ntsc
+	mva #$ff portb	;turn off basicrom	
 	mwa #lodl sdlstl
+	pause 1
 	rts
 	ini loading
 
@@ -860,8 +857,8 @@ wait
 	lda lives
 	beq gameover		; If there are zero lives then game over
 
-	lda attractmode
-	beq notgameover		; Don't check for a key if we're not in attract mode
+	;lda attractmode
+	;beq notgameover		; Don't check for a key if we're not in attract mode
 	lda $ec
 	bne gameover		; If a key is pressed exit immediatly
 
