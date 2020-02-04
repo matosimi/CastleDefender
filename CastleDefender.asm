@@ -1,5 +1,4 @@
 ;TODO: fix hitsprite glitch
-;TODO: fix tower3 bullet leftover
 ;TODO: recalculate final score after game... for title screen
 ;TODO: tune up the SFX (sound of hits, not allowed sound when tower cannot be upgraded or built)
 hposp0	equ $d000
@@ -1865,12 +1864,13 @@ towerfireloop
 ;	asl $70               ; Multiply by 2 -> 512 bytes/line
 ;	rol $71               ; Seems much simpler???
 ; }
-/* ;atari remove - idk what it does
+; this part of code places the bullet into the target (enemy)
+; so next redraw of target will also clear the bullet sprite leftovers
 	lda tftargety,X
 	and #%10		; Take component of y and add it to the target offset (0 or 2 - avoids very top and bottom)
 	adc $70
 	sta $70
-*/
+
 	;lda #0:adc $70:sta $70
 	;inc $70:inc $70:inc $70
 	lda tftargety,X       ; Get y coordinate
@@ -5664,7 +5664,7 @@ levcolourmap
 
 */
 
-firetypes
+firetypes		;bullet types data
 /*atari remove
 	dta %00000000
 	dta %00000110
