@@ -81,6 +81,7 @@ readkey	lda #1
 	sta keystat
 
 	ldx kbcode
+	stx $bc40+120 ;actual raw keyboard code
 	lda keytable,x
 	sta keypres
 	rts

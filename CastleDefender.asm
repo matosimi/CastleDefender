@@ -1,4 +1,3 @@
-;TODO: fix hitsprite glitch
 ;TODO: recalculate final score after game... for title screen
 ;TODO: tune up the SFX (sound of hits, not allowed sound when tower cannot be upgraded or built)
 hposp0	equ $d000
@@ -127,7 +126,7 @@ tftargetx	.ds towrno	; Location of tower fire target x position table
 tftargety	.ds towrno	; Location of tower fire target y position table
 sprites	.ds nosprites*spritesiz ;Location of preshifted sprites
 expl	.ds 4*spritesiz	; Location of preshifted explosions
-tempsprit .ds 3*sprows	; Location of tempsprite (hit sprite)
+tempsprit .ds 6*sprows	; Location of tempsprite (hit sprite)
 
 leveldata_end
 
@@ -594,8 +593,8 @@ nopixelmatch
 finishloadsprites
 	;sprite_preshift
 ;atari add {
-	;sprite_test
-	;jmp *
+;	sprite_test
+;	jmp *
 ;}
 
 	;draw wave sprites
@@ -4384,7 +4383,8 @@ createhitsprite
 	; We can now copy this sprite to the temporary sprite table
 ;atari replace {
 ;	ldy #14*4-1
-	ldy #sprows*3-1
+	
+	ldy #sprows*6-1	;6 chars (incl possible 3rd shifts)
 ; }
 /* atari remove
 hitspriteloop
@@ -4418,12 +4418,12 @@ hitspriteloop
 	sta tempsprit,y
 	dey
 	bmi alreadydonehit
-	
 	lda (zsoff),y
 	and #%10101010	;alter the mask to get "checkerboard"
 	sta tempsprit,y
 	dey
 	bpl hitspriteloop
+
 ;}
 
 alreadydonehit
@@ -6154,7 +6154,7 @@ x1     	lda sprite_shift.data,y
 /*	
 .proc	sprite_test
 	
-	mva #0 temp
+	mva #3 temp
 xloop33	ldy #enemyno-1
 	lda temp
 	sta etype,Y
@@ -6177,7 +6177,13 @@ loop_x	mva #10 sy
 	mva temp sx
 
 	ldy #enemyno-1
-	lda #1
+	;enemytypes
+	;1..4 - enemies
+	;5,6,7 - explosion
+	
+	;+32 - dying enemies
+	
+	lda #$01+32
 	sta etype,y
 	sty $8d
 
@@ -6190,7 +6196,7 @@ loop_x	mva #10 sy
 	bne loop_x
 
 .rept 10,#
-	lda #1
+	lda #$01 
 	ldy #enemyno-1
 	sta etype,Y
 	sty $8d
@@ -6199,6 +6205,18 @@ loop_x	mva #10 sy
 	lda #8+:1*20
 	sta sy
 	jsr plotter
+	
+	;show hit ones as well
+	lda #$01+32 
+	ldy #enemyno-1
+	sta etype,Y
+	sty $8d
+	lda #28+:1+32
+	sta sx
+	lda #8+:1*20
+	sta sy
+	jsr plotter
+
 	pause 50
 .endr
 	jmp *
