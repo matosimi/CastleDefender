@@ -30,6 +30,8 @@ ant	dta $F0
 
 scr	ins "cd_title.scr"
 
+	.ds 23*40
+
 	.ALIGN $0400
 fnt	ins "cd_title.fnt"
 
@@ -254,6 +256,8 @@ dli3
 CHANGES = 1
 FADECHR	= 0
 
+SCHR	= 127
+
 ; ---
 
 .proc	NMI
@@ -273,7 +277,7 @@ VBL
 
 	mwa #ant dlptr		;ANTIC address program
 
-	mva #scr40 dmactl	;set new screen width
+	mva #@dmactl(standard|dma|lineX1|players|missiles) dmactl	;set new screen width
 
 	inc cloc		;little timer
 
