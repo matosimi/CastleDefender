@@ -1,5 +1,4 @@
 ;TODO: recalculate final score after game... for title screen
-;TODO: tune up the SFX (sound of hits, not allowed sound when tower cannot be upgraded or built)
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -1778,7 +1777,7 @@ towerdrawloop
 
 	;add dot offset
 	lda ttype,X
-	beq nodotstodraw	; Don't draw dots for no tower
+	beq notoweratall	; Don't draw dots for no tower
 	and #3			; Find out tower level
 	beq nodotstodraw		; Don't draw dots for level zero
 	sec
@@ -1821,10 +1820,17 @@ towerdrawloop
 	iny
 	sta ($70),y
 
+	ldy #sfx.TOWER_UPG
+	sfx.do
+	jmp printgold
 ; }
 
 nodotstodraw
 
+	ldy #sfx.TOWER_BLD
+	sfx.do
+
+notoweratall	
 	jmp printgold		; implied RTS
 
 	;rts
@@ -2440,11 +2446,11 @@ upgradetower
 	jsr erasebox             ; Erase box
 	
 	;jsr upgradesound	; Upgrade Sound
-	phr
+/*	phr
 	ldy #sfx.TOWER_UPG
 	sfx.do
 	plr
-	
+*/	
 	jsr plottower           ; Upgrade tower
 	ldx currentlocation
 	jsr plotbox            ; redraw box
@@ -2650,10 +2656,11 @@ maketower
 	jsr erasebox             ; Erase box
 	;jsr buildsound		; Make tower being built sound (will be cancelled if not afforadable)
 ;atari add {
-	phr
+/*	phr
 	ldy #sfx.TOWER_BLD
 	sfx.do
 	plr
+*/
 	jsr showwave.restore
 	ldx currentlocation
 ; }
@@ -2900,7 +2907,8 @@ movesoundparams
 	dta 1,0	; Duration
 */
 errorsound
-;TODO: implement this sound effect
+	ldy #sfx.ERRSND
+	sfx.do
 	rts
 /*
 	lda #7
@@ -7001,6 +7009,7 @@ packed_titlefont
 .local	sfx
 
 .proc	next_level
+	mva #0 channel
 	jsr rmt.set_stereo
 	lda #$f0					;initial value
 	sta rmt.RMTSFXVOLUME	
@@ -7025,13 +7034,13 @@ packed_titlefont
 	jmp init
 .endp
 
+ERRSND	equ $01*2
 CURSOR	equ $08*2
 TOWER_UPG	equ $09*2
 TOWER_BLD	equ $0a*2
 FIRESND	equ $0b*2
 ENEMY_KIL	equ $0c*2
 ENEMY_RCH equ $0d*2
-;TODO: errorsound
 
 ;expects Y=instrument(*2)
 .proc	do
