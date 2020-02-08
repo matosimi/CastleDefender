@@ -1,0 +1,78 @@
+>L.
+   10HIMEM=&1B00
+   20CN$="CDCODE"
+   30IF M%=TRUE THEN CN$="CDCODEM"
+   40OSCLI("LOAD "+CN$+" 1B00")
+   50hs$="00000000"
+   60hsc%=0
+   70hek=0
+   80lc%=0
+   90hec%=0
+  100sc=&3012
+  110wa=sc+4
+  120le=sc+5
+  130ek=sc+6
+  140at=sc+8
+  150REPEAT
+  160VDU 22,7,23;8202;0;0;0;
+  170PROCt
+  180IF F%=TRUE OR N%=-1 THEN GOTO 300
+  190lc%=((?le) AND 15)-1
+  200lc%=lc%*5+((?wa-1) AND 15)
+  210lc%=(lc%*100)/20
+  220ekp=?ek+(ek?1)*256
+  230ekp=ekp*100/941
+  240IF VAL(FNbcd(sc,4))>VAL(hs$) AND L%=&A1 THEN hs$=FNbcd(sc,4):hsc%=lc%:hek=ekp
+  250PROCcp("Last score : "+FNbcd(sc,4),15)
+  260PROCcp("Progress : "+STR$(lc%)+"%",17)
+  270@%=&0102010A
+  280PROCcp("Enemies killed : "+STR$(ekp)+"%",16)
+  290@%=&90A
+  300PROCcp("‚High score : "+hs$,8)
+  310PROCcp("‚Progress : "+STR$(hsc%)+"%",10)
+  320@%=&0102010A
+  330PROCcp("‚Enemies killed : "+STR$(hek)+"%",9)
+  340@%=&90A
+  350PROCcp("ˆ†Press any key to play...‰",22)
+  360*FX 15
+  370N%=INKEY(3000)
+  380L%=&A1
+  390IF N%>&31 AND N%<&35 THEN L%=N%+&70
+  400CALL C%
+  410VDU 22,1,23;8202;0;0;0;
+  420PRINTTAB(0,8);
+  430VDU 23;1,64;0;0;0
+  440VDU 23;2,90;0;0;0
+  450VDU 23;12,8;0;0;0;
+  460VDU19,1,0;0;19,2,0;0;19,3,0;0;
+  470*LOAD SCOREB 7800
+  480VDU19,1,7;0;19,2,2;0;19,3,3;0;
+  490IF N%=-1 THEN L%=&A0+RND(4):?at=1
+  500?le=L%
+  510CALL &1B00
+  520IF N%<>-1 THEN F%=FALSE
+  530UNTIL FALSE
+  540DEFFNbcd(P%,Z%)
+  550N$=""
+  560FOR X%=0TO Z%-1
+  570N$=N$+RIGHT$("00"+STR$~P%?X%,2)
+  580NEXT
+  590=N$
+  600DEFPROCcp(A$,Z%)
+  610PRINTTAB(20-LEN(A$)/2,Z%);A$;
+  620ENDPROC
+  630DEFPROCt
+  640FOR Y%=6 TO 24
+  650PRINTTAB(0,Y%);CHR$(151);CHR$(53);CHR$(135);
+  660PRINTTAB(37,Y%);CHR$(151);CHR$(106);
+  670NEXT
+  680PRINTTAB(1,6)CHR$(56);STRING$(36,CHR$(96));CHR$(100);
+  690PRINTTAB(1,24)CHR$(169);STRING$(36,CHR$(112));CHR$(38);
+  700T$=CHR$(141)+CHR$(132)+CHR$(157)+"†Castle Defender  "+CHR$(156)
+  710PROCcp(T$,0)
+  720PROCcp(T$,1)
+  730PROCcp("ƒ(C) 2017 Chris Bradburne",3)
+  740PROCcp("ƒGraphics by John Blythe",4)
+  750ENDPROC
+>*SPOOL
+

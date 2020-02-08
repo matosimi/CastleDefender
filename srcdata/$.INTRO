@@ -1,0 +1,141 @@
+>LIST
+   10 *FX 200,3
+   20*TV 0,1
+   30 M%=FALSE
+   40 C%=&903
+   50 A%=0:X%=1
+   60 R%=USR &FFF4
+   70 R%=R% AND &FF00
+   80 IF R%>&200 AND R%<&600 THEN M%=TRUE:C%=&E03
+   90 IF R%=0 THEN PRINT"I can't run on an Electron":REPEATUNTIL0
+  100 IF R%>&500 THEN PRINT"I don't know what machine this is...":REPEATUNTIL0
+  110CLS:MODE1
+  120VDU23;8202;0;0;0;
+  130VDU19,1,0;0;19,2,0;0;19,3,0;0;
+  140*LOAD TITLE 3000
+  150VDU 19,1,1;0;19,2,2;0;19,3,6;0;
+  160ENVELOPE 1,4,0,0,0,0,0,0,0,-10,-10,-20,126,0
+  170ENVELOPE 2,128,-2,-2,-2,3,3,3,0,0,0,-127,126,0
+  180ENVELOPE 3,2,1,-1,0,1,1,0,0,-3,0,-5,126,100
+  190 ENVELOPE 4,2,1,-1,1,1,2,1,10,-3,0,-5,120,100
+  200IF M%=TRUE THEN OSCLI("LOAD LOWCODM E00") ELSE OSCLI("LOAD LOWCODE 900")
+  210*FX15
+  220K=INKEY(800)
+  230 CALL C%-3
+  240VDU22,7
+  250VDU23;8202;0;0;0;
+  260PROCt
+  270PROCcp("‚Would you like instructions?",10)
+  280N$=GET$
+  290IF N$="Y" OR N$="y" THEN PROCinstruct
+  300 F%=TRUE
+  310 L%=&A1
+  320 PROCcp("…ˆLoading ...‰",15)
+  330 N%=ABS(RND(-TIME))
+  340 CHAIN"CastleD"
+  350END
+  360 DEFPROCcp(A$,L%)
+  370 PRINTTAB(20-LEN(A$)/2,L%);A$;
+  380 ENDPROC
+  390 DEFPROCt
+  400 FOR Y%=4 TO 24
+  410 PRINTTAB(0,Y%);CHR$(151);CHR$(53);CHR$(130);
+  420 PRINTTAB(37,Y%);CHR$(151);CHR$(106);
+  430 NEXT
+  440 PRINTTAB(1,4)CHR$(56);STRING$(36,CHR$(96));CHR$(100);
+  450 PRINTTAB(1,24)CHR$(169);STRING$(36,CHR$(112));CHR$(38);
+  460 T$=CHR$(141)+CHR$(132)+CHR$(157)+"†Castle Defender  "+CHR$(156)
+  470PROCcp(T$,0)
+  480PROCcp(T$,1)
+  490PROCcp("ƒ(C) 2017 Chris Bradburne",2)
+  500PROCcp("ƒGraphics by John Blythe",3)
+  510 V$="3"
+  520 IF M%=TRUE THEN V$=V$+"M"
+  530PROCcp("„Version "+V$+" - 29/05/2017",22)
+  540PROCcp("„Comment on www.stardot.org.uk",23)
+  550ENDPROC
+  560DEFPROCinstruct
+  570VDU28,3,23,36,5,12
+  580PRINT"The hordes are coming! Wave after"
+  590PRINT"wave of goblins, skeletons,"
+  600PRINT"zombies, snakes, wizards and all"
+  610PRINT"manner of creatures from the"
+  620PRINT"nether dimensions are attacking"
+  630PRINT"our castle. It is up to you to"
+  640PRINT"save us from the onslaught using"
+  650PRINT"our defensive towers!"
+  660PRINT'"Enemies will emerge from the"
+  670PRINT"portal and move along the path to"
+  680PRINT"our castle. Place different tower"
+  690PRINT"types that automatically attack"
+  700PRINT"anything that gets within their"
+  710PRINT"range."
+  720PROCp
+  730PRINT" ƒControls:"
+  740PRINT'"Arrow keys move your cursor."
+  750PRINT'"Number keys 1,2 and 3 build a"
+  760PRINT"tower of that type in a vacant"
+  770PRINT"space."
+  780PRINT'"U upgrades an existing tower."
+  790PRINT'"<Space> speeds the game up whilst"
+  800PRINT"held."
+  810PRINT'"<Shift><Escape> Quit."
+  820PROCp
+  830PRINT" ƒTowers:"
+  840PRINT'"Each tower has various attributes"
+  850PRINT"which are shown in the status bar."
+  860PRINT"Lvl  - Tower level (0-3)."
+  870PRINT"Dmg  - Amount of physical damage"
+  880PRINT"       each shot inflicts."
+  890PRINT"Shld - Amount of shield damage"
+  900PRINT"       each shot inflicts."
+  910PRINT"Rng  - Tower range."
+  920PRINT"Rate - Rate of fire."
+  930PRINT"Cost - Cost of tower or upgrade."
+  940PROCp
+  950PRINT" ƒStatus Area:"
+  960PRINT'"When an empty space is selected"
+  970PRINT"the centre area shows information"
+  980PRINT"for all available towers. If a"
+  990PRINT"tower is selected the current and"
+ 1000PRINT"upgrade values are shown."
+ 1010PRINT'"The left area shows your lives and";
+ 1020PRINT"available gold."
+ 1030PRINT'"The right area shows the current"
+ 1040PRINT"health and shield of the enemy"
+ 1050PRINT"nearest the castle. 'Left' is the"
+ 1060PRINT"number of enemies left to destroy."
+ 1070PROCp
+ 1080PRINT" ƒEnemies:"
+ 1090PRINT'"Each enemy has a startingstrength";
+ 1100PRINT"and†shield‚value shown above the"
+ 1110PRINT"status area."
+ 1120PRINT'"If an enemy has a shield then any"
+ 1130PRINT"damage will be reduced by the"
+ 1140PRINT"shield amount."
+ 1150PRINT'"Destroying an enemy gives you a"
+ 1160PRINT"little gold but letting one reach"
+ 1170PRINT"the castle will cost you one life."
+ 1180PRINT"   …Good Luck!"
+ 1190PROCp
+ 1200PRINT" ƒThanks..."
+ 1210PRINT'"A huge thank you to the incredibly";
+ 1220PRINT"talented John Blythe without whom"
+ 1230PRINT"this game would look very plain."
+ 1240PRINT"Please visit his website at:"
+ 1250PRINT'"† http://johnblythe5.wixsite.com"
+ 1260PRINT"† /rucksackgames"
+ 1270PRINT'"Thanks also to the members of"
+ 1280PRINT"StarDot for their advice, support"
+ 1290PRINT"and tools."
+ 1300PRINT'"Lastly thank you to my family for"
+ 1310PRINT"putting up with my little project!"
+ 1320PROCp
+ 1330 VDU26
+ 1340ENDPROC
+ 1350DEFPROCp
+ 1360PRINT'"Press any key to continue";
+ 1370 N=GET:CLS
+ 1380ENDPROC
+>*SPOOL
+

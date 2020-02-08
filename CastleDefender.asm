@@ -1,4 +1,4 @@
-;TODO: recalculate final score after game... for title screen
+;TODO: recalculate final score after game... for title screen - look into $.CASTLED
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -6907,7 +6907,76 @@ x1	lda score,x
 	cpx #4
 	bne x1
 	
-	;compare with high
+	;calculate enemies killed percentage
+	lda #0
+:6	sta enem_killed_bcd+:1	;clear ekp,clear prp
+	
+	lda enemieskilled
+	bne x21
+	lda enemieskilled+1
+	beq x00 ;0 killed enemies, do not count	
+
+x21	clc
+	ldx #3
+	sed
+x31	lda enem_killed_bcd,x
+	adc num,x
+	sta enem_killed_bcd,x	
+	dex
+	bpl x31
+	
+	cld
+	
+	dec enemieskilled
+	lda enemieskilled
+	bne x21
+	dec enemieskilled+1
+	lda enemieskilled+1
+	bpl x21
+	
+	;calculate progress percentage
+	ldx level
+	dex
+	txa
+	and #$0f
+	beq x52 ;zero
+	tay
+	
+	sed ;start decimal mode
+	clc
+x51	ldx #1
+x50	lda progress_bcd,x
+	adc #$20
+	sta progress_bcd,x
+	dex
+	bpl x50
+	dey
+	bpl x51
+x52
+.local	
+	ldx wave
+	dex
+	txa
+	and #$0f
+	beq x52
+	tay
+	
+	sed
+	clc
+x51	ldx #1
+x50	lda progress_bcd,x
+	adc #$05
+	sta progress_bcd,x
+	dex
+	bpl x50
+	dey
+	bpl x51
+x52	
+	cld ;close decimal mode
+.endl	
+
+x00
+	;compare score with high
 	ldx #0
 x4	lda last_score,x
 	a_lt high_score,x x2
@@ -6917,6 +6986,11 @@ x5	mva last_score,x high_score,x
 	inx
 	cpx #8
 	bne x5
+	;save also progress and enemkilled
+	ldx #5
+x8	mva enem_killed_bcd,x enem_killed_bcd_hi,x
+	dex
+	bpl x8
 	jmp x2
 	
 x3	;next digit
@@ -6937,13 +7011,107 @@ x6	lda last_score,x
 	
 	dex
 	bpl x6
+	
+	;write progress
+	mwa #progress_bcd w1
+	mwa #title_static+9*32+19 w2
+	write_progress
+	mwa #progress_bcd_hi w1
+	mwa #title_static+4*32+19 w2
+	write_progress	
+	
+	;write enemies killed percentage
+	mwa #enem_killed_bcd w1
+	mwa #title_static+8*32+19 w2
+	write_enem_killed
+	
+	mwa #enem_killed_bcd_hi w1
+	mwa #title_static+3*32+19 w2
+	write_enem_killed
 	rts
-	;score (4)
-	;enemieskilled (2)
+		
 last_score	dta 0,0,0,0,0,0,0,0
 high_score	dta 0,0,0,0,0,0,0,0
+enem_killed_bcd	dta 0,0,0,0
+progress_bcd	dta 0,0
+enem_killed_bcd_hi	dta $00,$00,$00,$00
+progress_bcd_hi	dta 0,0
+num		dta $00,$00,$10,$63  ; (1/941 * 1000000)
+tmp		dta 0
 .endp
 
+;expects w1=source BCD, w2=target vram
+.proc	write_progress
+	ldy #0
+	lda (w1),y
+	beq x1 ;its less than 100
+	mva #$11 (w2),y
+	iny
+	mva #$10 (w2),y
+	jmp x4 ;jump to last digit
+	
+x1	inw w1
+	lda (w1),y
+:4	lsr @
+	bne x2
+	;its zero
+	dew w2
+	jmp x3
+x2	ora #$10
+	sta (w2),y
+x3	lda (w1),y
+	and #$0f
+	ora #$10
+x4	iny
+	sta (w2),y
+	iny
+	lda #"%"
+	sta (w2),y
+	rts
+.endp
+
+;expects w1=bcd source, w2=vram
+.proc	write_enem_killed
+	ldy #0
+	lda (w1),y
+	bne x1 ;its 100,00%
+	
+	inw w1
+	lda (w1),y
+:4	lsr @	;tens
+	beq x3
+	ora #$10
+	sta (w2),y
+	inw w2	
+x3	lda (w1),y
+	and #$0f	;ones
+	ora #$10
+	sta (w2),y
+	inw w2
+	mva #"." (w2),y
+	inw w2
+	inw w1
+	lda (w1),y
+:4	lsr @	;tenths
+	ora #$10
+	sta (w2),y
+	lda (w1),y
+	and #$0f	;hundreth
+	ora #$10
+	iny
+	sta (w2),y
+	lda #"%"
+	iny
+	sta (w2),y
+	rts
+	;100,00%	
+x1	ldy #6
+x2	mva sto,y (w2),y
+	dey
+	bpl x2
+	rts
+sto	dta "100.00%"
+.endp
 ;dli under g2f	
 dlix1	pha
 	
@@ -7085,6 +7253,29 @@ channel	dta 0
 	jsr rmt.rmt_init	;initialize the music
 	rts
 .endp
+
+/*
+Score + progress
+sc	score=&3012
+wa	wave=sc+4
+le	level=sc+5
+ek	enemieskilled=sc+6
+
+at=sc+8
+
+lc%=((?le) AND 15)-1
+lc%=lc%*5+((?wa-1) AND 15)
+lc%=(lc%*100)/20
+ekp=?ek+(ek?1)*256
+ekp=ekp*100/941
+
+"ÅProgress : "+STR$(lc%)+"%",17)
+"ÅEnemies killed : "+STR$(ekp)+"%",16)
+
+enemies killed percent = 1063*ek;
+
+
+*/
 
 	
 .align $100
