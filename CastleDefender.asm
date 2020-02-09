@@ -6939,42 +6939,34 @@ x31	lda enem_killed_bcd,x
 	dex
 	txa
 	and #$0f
-	beq x52 ;zero
-	tay
-	
-	sed ;start decimal mode
-	clc
-x51	ldx #1
-x50	lda progress_bcd,x
-	adc #$20
-	sta progress_bcd,x
-	dex
-	bpl x50
-	dey
-	bpl x51
-x52
-.local	
+	sta tmp
+	asl @
+	asl @
+	add tmp
+	sta tmp	;tmp = (zero_based)level*5
 	ldx wave
 	dex
 	txa
 	and #$0f
-	beq x52
+	add tmp
+	sta tmp	;tmp = (zb)level*5+(zb)wave
+	beq x00   ;tmp == 0 -> go out
 	tay
 	
-	sed
-	clc
-x51	ldx #1
-x50	lda progress_bcd,x
+	sed ;start decimal mode
+x51	clc
+	ldx #1
+	lda progress_bcd,x
 	adc #$05
 	sta progress_bcd,x
 	dex
-	bpl x50
+	lda progress_bcd,x
+	adc #$00
+	sta progress_bcd,x
+	
 	dey
-	bpl x51
-x52	
+	bne x51
 	cld ;close decimal mode
-.endl	
-
 x00
 	;compare score with high
 	ldx #0
