@@ -965,7 +965,6 @@ returntobasic
 */
 
 ;atari add {
-;TODO: go to title screen
 	music_init
 	jmp gameloop
 ;}
@@ -4901,8 +4900,11 @@ x1	sta mypmbase-$100,x
 	lda #$01	;initialize rmt player with silence
 	jsr sfx.init
 	
+	lda #0
+	cmp:rne vcount	;removes glitch on endgame
+	
 	mva #$c0 nmien ;80 dli, 40 vbi
-	mva #1+12+32 dmactl ;d400 = 559
+	;mva #1+12+32 dmactl ;d400 = 559
 	
 	rts
 .endp
@@ -6774,8 +6776,10 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 
 .proc	title_screen
 	;hide pmgs (when back from game)
+	
 	mva #$00 $d01d ;pmcntl		;PMG disabled
 	sta nmien
+	color.black
 	
 	;inflate the title screen stuff
 	mwa #packed_text inflater.inputPointer
