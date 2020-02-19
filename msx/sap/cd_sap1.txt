@@ -1,0 +1,9 @@
+SAP
+AUTHOR "Michal Radecki (stRing)"
+NAME "Castle Defender"
+DATE "2019"
+SONGS 1
+STEREO
+TYPE B
+INIT 2801
+PLAYER 25EB

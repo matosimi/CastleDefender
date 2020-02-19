@@ -1,4 +1,4 @@
-;TODO: recalculate final score after game... for title screen - look into $.CASTLED
+
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
