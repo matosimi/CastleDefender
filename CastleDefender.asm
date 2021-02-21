@@ -1,3 +1,4 @@
+;TODO: adjust ntsc speed everywhere
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -58,6 +59,9 @@ stick	equ $c3 ;stick status (no repeat)
 trig	equ $c4 ;trig status (no repeat)
 vsynccount	equ $c5 ;some original counter
 spritefilenumber	equ $c6 ;some original counter
+ntsctimer	equ $c7 ;0-5 frame counter of NTSC->PAL speed
+pal	equ $c8 ;0-pal, 1-ntsc
+mono	equ $c9 ;0-mono, $ff-stereo
 ;$cb-$de RMT player
 ;$f0-$ff G2F
 
@@ -209,7 +213,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "cd.gr5"
-lotext	dta d"      ABBUC Software Contest 2019       "
+lotext	dta d"    Castle Defender v1.2 - 21.2.2021    "
 
 loading	mva #>lofont 756
 	mva #$a2 color0
@@ -219,6 +223,42 @@ loading	mva #>lofont 756
 	mva #$ff portb	;turn off basicrom	
 	mwa #lodl sdlstl
 	pause 1
+	
+;detect_stereo
+	; By Draco
+	; http://drac030.krap.pl/en-si-info.php
+	sei
+	mvx #0 SKCTL
+	stx SKCTL+$10
+	mvy #3 SKCTL+$10
+	:2 sta WSYNC
+	lda RANDOM
+detect_loop
+	and RANDOM
+	inx
+	bne detect_loop
+	sty SKCTL
+	cmp #$FF
+	beq stereo_detected
+	mva #0 mono
+stereo_detected
+	sta mono
+;detect video system
+	mva #0 pal
+	sta ntsctimer
+	ldx 20
+	inx
+	inx
+x1	lda vcount
+	a_lt pal x2
+	sta pal
+x2	cpx 20
+	bne x1
+	lda pal
+	a_lt #140 sys_ntsc
+	mva #0 pal
+	rts
+sys_ntsc	mva #1 pal
 	rts
 	ini loading
 
@@ -228,10 +268,9 @@ lofont	ins "title\title.fnt"
 .endl
 	
 	icl "data_relocator.asm"
-
+	
 	run maincode
 	org maincode
-
 ;  GUARD $3000-40	; So we can load code without losing it between screen modes.
 ;atari remove	codeoffset=$0900
 ;.print "Assembling for ",codeoffset
