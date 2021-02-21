@@ -258,6 +258,7 @@ c44	ldx #$2A
 	sta wsync		;line=33
 	sta gtictl
 	mwa #null null+1
+	jsr rmt.rmt_play ;music plays between line 33-56, no glitch on NTSC!
 	jmp null
 
 	eif
@@ -841,7 +842,7 @@ x6	lda #$00
 	mwa #DLI.dli1 null+1	;synchronization for the first screen line
 
 ;this area is for yours routines
-	jsr rmt.rmt_play
+	;jsr rmt.rmt_play	;moved to DLI (line 33)
 quit
 	lda regA
 	ldx regX
