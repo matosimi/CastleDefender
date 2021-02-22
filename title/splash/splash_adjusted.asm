@@ -258,8 +258,13 @@ c44	ldx #$2A
 	sta wsync		;line=33
 	sta gtictl
 	mwa #null null+1
+	
+	;ntsc 1/6 frame skip
+	lda ntsctimer
+	cmp #5
+	beq @+
 	jsr rmt.rmt_play ;music plays between line 33-56, no glitch on NTSC!
-	jmp null
+@	jmp null
 
 	eif
 
@@ -843,6 +848,14 @@ x6	lda #$00
 
 ;this area is for yours routines
 	;jsr rmt.rmt_play	;moved to DLI (line 33)
+	lda palsystem
+	beq quit
+	;ntsc part
+	inc ntsctimer
+	lda ntsctimer
+	cmp #6
+	bne quit
+	mva #0 ntsctimer
 quit
 	lda regA
 	ldx regX

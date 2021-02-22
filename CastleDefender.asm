@@ -1,5 +1,5 @@
-;TODO: adjust ntsc speed everywhere
-
+;fix: perform cursor hide on next phase
+;fix: instruction scroll stops for a while on ntsc
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -60,7 +60,7 @@ trig	equ $c4 ;trig status (no repeat)
 vsynccount	equ $c5 ;some original counter
 spritefilenumber	equ $c6 ;some original counter
 ntsctimer	equ $c7 ;0-5 frame counter of NTSC->PAL speed
-pal	equ $c8 ;0-pal, 1-ntsc
+palsystem	equ $c8 ;0-pal, 1-ntsc
 mono	equ $c9 ;0-mono, $ff-stereo
 ;$cb-$de RMT player
 ;$f0-$ff G2F
@@ -244,21 +244,21 @@ detect_loop
 stereo_detected
 	sta mono
 ;detect video system
-	mva #0 pal
+	mva #0 palsystem
 	sta ntsctimer
 	ldx 20
 	inx
 	inx
 x1	lda vcount
-	a_lt pal x2
-	sta pal
+	a_lt palsystem x2
+	sta palsystem
 x2	cpx 20
 	bne x1
-	lda pal
+	lda palsystem
 	a_lt #140 sys_ntsc
-	mva #0 pal
+	mva #0 palsystem
 	rts
-sys_ntsc	mva #1 pal
+sys_ntsc	mva #1 palsystem
 	rts
 	ini loading
 
@@ -455,7 +455,6 @@ skipblanktowers
 newwave
 	; Clear sprite row
 	jsr deletestatusrows
-
 	lda #15
 	sta remaincounter
 	lda #$ff
@@ -5071,8 +5070,18 @@ pc01	equ *-1
 	mva #$a6 colpf0+3	;missile color
 	mva #$14 prior
 	
-	jsr rmt.rmt_play
-	plr
+xplay	lda palsystem
+	beq play
+	;ntsc part
+	inc ntsctimer
+	lda ntsctimer
+	cmp #6
+	bne play
+	mva #0 ntsctimer
+	jmp quit
+	
+play	jsr rmt.rmt_play
+quit	plr
 	rti
 
 ; no top textline
@@ -5085,9 +5094,7 @@ pc03	equ *-1
 :4	sta colpm0+:1
 	mva #$a6 colpf0+3	;missile color
 	mva #$11 prior
-	jsr rmt.rmt_play
-	plr
-	rti
+	jmp xplay	
 	
 .endl
 
