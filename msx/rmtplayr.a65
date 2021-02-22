@@ -1355,72 +1355,72 @@ v_audctl equ *-1
 	sty $d218
 	sty $d208
 ; my added stuff {
-	ELI STEREOMODE==4		;* L1 B2 B3 R4
-	ldy #$ff
+	ELI STEREOMODE==4		;if mono!=0 play on second pokey
+	ldy #$ff			;with 1 frame delay - pseudo stereo
 v_audctl equ *-1
 	lda MONO
-	beq SetPokeyMONO
+	beq playMONO
 	
+	;play pseudo stereo
+	
+	;play delayed sound in second pokey
+	ldx #0
+@	mva pokeybuffer,x $d210,x
+	inx
+	cpx #9
+	bne @-
+	;play first pokey
 	lda trackn_audf+0
 	ldx trackn_audc+0
 	sta $d200
 	stx $d201
+	sta pokeybuffer+0
+	stx pokeybuffer+1
 	lda trackn_audf+1
 	ldx trackn_audc+1
 	sta $d200+2
 	stx $d201+2
-	sta $d210+2
-	stx $d211+2
+	sta pokeybuffer+2
+	stx pokeybuffer+3
 	lda trackn_audf+2
 	ldx trackn_audc+2
-	sta $d210+4
-	stx $d211+4
 	sta $d200+4
 	stx $d201+4
+	sta pokeybuffer+4
+	stx pokeybuffer+5
 	lda trackn_audf+3
 	ldx trackn_audc+3
-	sta $d210+6
-	stx $d211+6
-	sty $d218
-	sty $d208
-; }
-	EIF
-	rts
-
-;my added stuff {
-SetPokeyMONO ;B1 B2 B3 B4
-	lda trackn_audf+0
-	ldx trackn_audc+0
-	sta $d200
-	stx $d201
-	sta $d210
-	stx $d211
-	lda trackn_audf+1
-	ldx trackn_audc+1
-	sta $d200+2
-	stx $d201+2
-	sta $d210+2
-	stx $d211+2
-	lda trackn_audf+2
-	ldx trackn_audc+2
-	sta $d210+4
-	stx $d211+4
-	sta $d200+4
-	stx $d201+4
-	lda trackn_audf+3
-	ldx trackn_audc+3
-	sta $d210+6
-	stx $d211+6
 	sta $d200+6
 	stx $d201+6
-	sty $d218
+	sta pokeybuffer+6
+	stx pokeybuffer+7
+	sty $d208
+	sty pokeybuffer+8
+	rts
+
+playMONO ;L1 L2 L3 L4
+	lda trackn_audf+0
+	ldx trackn_audc+0
+	sta $d200
+	stx $d201
+	lda trackn_audf+1
+	ldx trackn_audc+1
+	sta $d200+2
+	stx $d201+2
+	lda trackn_audf+2
+	ldx trackn_audc+2
+	sta $d200+4
+	stx $d201+4
+	lda trackn_audf+3
+	ldx trackn_audc+3
+	sta $d200+6
+	stx $d201+6
 	sty $d208
 	rts
-MONO	dta 0	;0=go mono, other=go stereo
-set_mono	mva #0 MONO
-	rts
-set_stereo
-	mva #1 MONO
-	rts
+	
+pokeybuffer	
+:9	dta 0
+ 
+	EIF
 ; }	
 RMTPLAYEREND

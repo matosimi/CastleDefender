@@ -6801,7 +6801,6 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;$1000->$14ff
 	;$5b00->$5fxx (old)
 	
-	jsr rmt.set_stereo
 	ldx #<music
 	ldy #>music
 	lda #0
@@ -7213,7 +7212,6 @@ packed_titlefont
 
 .proc	next_level
 	mva #0 channel
-	jsr rmt.set_stereo
 	lda #$f0					;initial value
 	sta rmt.RMTSFXVOLUME	
 	;sfx note volume * 16 (0,16,32,...,240)
@@ -7221,18 +7219,15 @@ packed_titlefont
 	jmp init
 .endp
 .proc	next_phase
-	jsr rmt.set_mono
 	mva #0 channel
 	lda #$3
 	jmp init
 .endp
 .proc	victory
-	jsr rmt.set_stereo
 	lda #$06
 	jmp init
 .endp
 .proc	defeat
-	jsr rmt.set_stereo
 	lda #$08
 	jmp init
 .endp
@@ -7281,7 +7276,6 @@ channel	dta 0
 .endl
 
 .proc	music_init
-	jsr rmt.set_stereo
 	ldx #<music
 	ldy #>music
 	lda #0
