@@ -4966,12 +4966,25 @@ x1	sta mypmbase-$100,x
 	lda #$01	;initialize rmt player with silence
 	jsr sfx.init
 	
-	lda #0
-	cmp:rne vcount	;removes glitch on endgame
+	;lda #0
+	;cmp:rne vcount	;removes glitch on endgame
+	hide_enemybar
 	
 	mva #$c0 nmien ;80 dli, 40 vbi
 	;mva #1+12+32 dmactl ;d400 = 559
-	
+	;level_pmg
+	rts
+.endp
+
+.proc	show_enemybar
+	mva #$32 gameDli.ebc1
+	mva #$0f gameDli.ebc2
+	rts
+.endp
+
+.proc	hide_enemybar
+	mva #$00 gameDli.ebc1
+	sta gameDli.ebc2
 	rts
 .endp
 
@@ -5281,7 +5294,9 @@ ptr:2l	equ *-1
 
 :20	sta wsync
 	mva #$32 colpf0+2 ;enemybar color
+ebc1	equ *-4
 	mva #$0f colpf0+1 ;white lum
+ebc2	equ *-4
 	mva #4+16 prior
 	pla
 	rti
@@ -5793,6 +5808,13 @@ firetypes_right
 :2	dta %00001001
 	dta %00001111
 
+;set black for color registers
+.proc	PitchBlack
+	lda #0
+:5	sta colpf0+:1
+	rts
+.endp
+
 ;manipulation with level colors
 .local 	color
 
@@ -5867,6 +5889,7 @@ x5	dex
 	lda flag
 	bne x3	;repeat until change	
 	black
+	hide_enemybar
 	rts
 
 x2	lda (w1),y
@@ -5874,8 +5897,6 @@ x2	lda (w1),y
 	sta (w1),y
 	inc flag
 	jmp x5
-	
-	rts
 .endp
 
 ;set black colors
@@ -5931,6 +5952,7 @@ x4	dey
 	
 	lda flag
 	bne x5	;repeat until no change
+	show_enemybar
 	rts
 
 ;update color
@@ -6866,8 +6888,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	;$5400->$5800
 	
 	calculate_score	
-	jsr g2ftitle.main
-	rts
+	jmp g2ftitle.main
 
 dlcont	dta $80
 	dta $42+32
@@ -6933,8 +6954,9 @@ execute
 	;start game
 	pause 1
 	mva #0 nmien
-	sta dmactl
+	;sta dmactl
 	jsr rmt.rmt_silence
+	PitchBlack
 	rts
 
 run_scroll
