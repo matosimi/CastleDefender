@@ -110,6 +110,8 @@ null	jmp DLI.dli1		;CPU is busy here, so no more routines allowed
 
 stop
 	mva #$00 pmcntl		;PMG disabled
+	sta dmactl		;disable playfield
+	
 	tax
 	sta:rne hposp0,x+
 

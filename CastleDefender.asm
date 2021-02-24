@@ -1,5 +1,8 @@
-;fix: perform cursor hide on next phase
+;fix: 1st level starts very soon (when music is still playing)
 ;fix: instruction scroll stops for a while on ntsc
+;check keypresses during load and transitions -? crash
+;fix: allows start+select+option only after wavetext disappears
+;todo: add level complete jingle
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -12,6 +15,7 @@ prior	equ $d01b
 vdelay	equ $d01c ;shift PM by 1 scanline, first missiles,then players(bits)
 gractl	equ $d01d ;BIT1-ACTIV.PMG
 consol	equ $d01f
+audctl	equ $d208
 kbcode	equ $d209
 random	equ $d20a
 irqen	equ $d20e
@@ -213,7 +217,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "cd.gr5"
-lotext	dta d"    Castle Defender v1.2 - 21.2.2021    "
+lotext	dta d"    Castle Defender v1.2 - 24.2.2021    "
 
 loading	mva #>lofont 756
 	mva #$a2 color0
@@ -257,8 +261,10 @@ x2	cpx 20
 	lda palsystem
 	a_lt #140 sys_ntsc
 	mva #0 palsystem
+	cli
 	rts
 sys_ntsc	mva #1 palsystem
+	cli
 	rts
 	ini loading
 
@@ -278,7 +284,7 @@ lofont	ins "title\title.fnt"
 	;38.12
 
 start
-
+	sei
 	;keyboard init
 	ldy #$7f
 copykeytab
@@ -288,11 +294,22 @@ copykeytab
         	bpl copykeytab
 
 	pause 1
-	sei
+	
 	mva #$00 nmien
 	sta irqen 	;disable interupts (keyboard)
 	mva #$fe portb	;turn off osrom and basicrom	
-
+	
+	lda #0		;init pokey(s) to continue playing 
+			;music without additional rmt.init after loading
+	sta audctl
+	sta audctl + $10
+	ldy #3
+	sty skctl
+	sty skctl + $10
+	
+	mva #8 consol	;reset consol
+	gameparams_init
+	
 gameloop	title_screen
 	game_init
 	
@@ -336,17 +353,18 @@ setup
 */
 	color.black
 	
+	/* already initialized to 0
 	;Reset score
 	lda #0
 	sta score
 	sta score+1
 	sta score+2
 	sta score+3
-	;:sta score+4
 
 	; Reset enemies killed
 	sta enemieskilled
 	sta enemieskilled+1
+*/
 
 	lda #$a1 ;debug a5
 	sta wave
@@ -831,11 +849,11 @@ skippopulatehs
 	;jmp gameover       ; this will be removed in normal operation
 
 mainloop             ;Main processing loop
-	lDA #0
+	lda #0
 	sta vsynccount       ; Reset frame counter
 	sta leftupdaterequired	; Reset if we need up date the number left
-	sTA lastplotidx       ; Reset the last plotted index position
-	sTA lastplot          ; Reset the last plotted position
+	sta lastplotidx       ; Reset the last plotted index position
+	sta lastplot          ; Reset the last plotted position
 	sta enemyatend        ; index of an enemy that has reached the end
 
 	ldx startdelay		; Pause before we get going
@@ -4906,6 +4924,16 @@ wavetext	;2ce2
 
 endage
 
+;initialize game parameters
+.proc	gameparams_init
+	ldx #wavedata-leveldata_end
+	lda #0
+x1	sta leveldata_end,x
+	dex
+	bne x1
+	sta leveldata_end
+	rts
+.endp
 
 ;initialization for the game
 .proc	game_init
@@ -6822,7 +6850,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 .proc	title_screen
 	;hide pmgs (when back from game)
 	
-	mva #$00 $d01d ;pmcntl		;PMG disabled
+	mva #$00 gractl		;PMG disabled
 	sta nmien
 	color.black
 	
@@ -7227,7 +7255,7 @@ packed_titlefont
 .endp
 .proc	next_phase
 	mva #0 channel
-	lda #$3
+	lda #$03
 	jmp init
 .endp
 .proc	victory

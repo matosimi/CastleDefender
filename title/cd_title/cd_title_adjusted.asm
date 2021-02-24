@@ -56,7 +56,7 @@ main
 */
 	;lda:cmp:req $14		;wait 1 frame
 
-	sei			;stop IRQ interrupts
+	;sei			;stop IRQ interrupts
 	mva #$00 nmien		;stop NMI interrupts
 	sta dmactl
 	;mva #$fe portb		;switch off ROM to get 16k more ram
