@@ -1,8 +1,9 @@
-;fix: 1st level starts very soon (when music is still playing)
-;fix: instruction scroll stops for a while on ntsc
+;ok:fix: 1st level starts very soon (when music is still playing)
+;ok np anymore:fix: instruction scroll stops for a while on ntsc
 ;check keypresses during load and transitions -? crash
-;fix: allows start+select+option only after wavetext disappears
-;todo: add level complete jingle
+;endgame to title crash (sometimes)
+;ok:fix: allows start+select+option only after wavetext disappears
+;todo: add level complete jingle - find the way to fit in memory
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -2619,6 +2620,8 @@ keyswitch
 	lda trig
 	jeq returnpressed
 	
+	lda startdelay ;allow quit couple seconds after game starts
+	bne notescape
 	lda consol
 	jeq escape ;start+select+option pressed 
 ; }
@@ -2784,9 +2787,11 @@ sbarcontrols
 	cmp #";"* ;return
 	jeq returnpressed
 	
+	ldy startdelay
+	bne @+
 	cmp #$58 ;DEBUG - shift+x
 	jeq nextlevel
-
+@
 ;	cmp #"c" ;DEBUG color
 ;	jeq color.fade_in_from_black
 	
@@ -4215,7 +4220,9 @@ showlevlogo
 	jsr delay
 
 ;atari add {
+	sfx.level_complete
 	logo.show_level_complete
+	pause 250
 	rts
 ;}
 
@@ -4799,12 +4806,6 @@ x1
 	
 	;set color of the logo
 	mva #$62 gameDli.pc15
-	
-	;TODO: play jingle
-	pause 100
-	
-	;TODO: fade out (to white)
-	
 	rts
 .endp
 
@@ -7275,6 +7276,11 @@ packed_titlefont
 	lda #$00
 	jmp init
 .endp
+.proc	level_complete
+	mva #0 channel
+	lda #$0b
+	jmp init
+.endp
 .proc	next_phase
 	mva #0 channel
 	lda #$03
@@ -7425,7 +7431,7 @@ music2	equ $a529 ;to $aaff
 	ini splash_screen
 	;ini splash_screen
 	;unfortunately after updating of picture it did not fit into memory
-
+	
 	;part that rewrites the splashscreen with title screen
 	org g2fsplash_org
 g2ftitle_org
