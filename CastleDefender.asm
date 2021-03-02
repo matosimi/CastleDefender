@@ -1,9 +1,4 @@
-;ok:fix: 1st level starts very soon (when music is still playing)
-;ok np anymore:fix: instruction scroll stops for a while on ntsc
-;check keypresses during load and transitions -? crash
-;endgame to title crash (sometimes)
-;ok:fix: allows start+select+option only after wavetext disappears
-;ok: add level complete jingle - find the way to fit in memory
+;Castle Defender v1.2 - Martin Simecek, http://matosimi.atari.org
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -6408,29 +6403,32 @@ x5	missile_drawchar
 	lda #2
 	missile_drawchar
 	lda #0
-	missile_drawchar
+	missile_drawchar 
 	
 	lda #11 ;G
 	ldy #56+5*8+shift
 	missile_drawchar
 	
-	mva #6 tmp
+	/*mva #6 tmp
 	ldy #56+(6)*8+shift
 x2	lda #0
 	missile_drawchar
 	dec tmp
-	bne x2
+	bne x2 */
+	jsr printgold
 
 	lda #12 ;S
 	ldy #56+(6+6+2)*8+shift
 	missile_drawchar
 
-	mva #8 tmp
+	/*mva #8 tmp
 	ldy #56+(6+6+3)*8+shift
 x3	lda #0
 	missile_drawchar
 	dec tmp
 	bne x3
+	*/
+	jsr printscore
 
 	;right column
 	mva #$f0 missile_drawchar.mask2
