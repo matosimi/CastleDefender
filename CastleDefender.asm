@@ -3,7 +3,7 @@
 ;check keypresses during load and transitions -? crash
 ;endgame to title crash (sometimes)
 ;ok:fix: allows start+select+option only after wavetext disappears
-;todo: add level complete jingle - find the way to fit in memory
+;ok: add level complete jingle - find the way to fit in memory
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -218,7 +218,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "cd.gr5"
-lotext	dta d"    Castle Defender v1.2 - 24.2.2021    "
+lotext	dta d"    Castle Defender v1.2 - 2.3.2021     "
 
 loading	mva #>lofont 756
 	mva #$a2 color0
@@ -4963,7 +4963,12 @@ x1	sta mypmbase-$100,x
 	jsr inflater.inflate
 
 	preshift_explosion_sprites
-
+	
+	;inflate ingame music
+	mwa #ingamemusic inflater.inputPointer
+	mwa #music2-6 inflater.outputPointer ;-6 because deflated file contains header
+	jsr inflater.inflate
+	
 	lda #$01	;initialize rmt player with silence
 	jsr sfx.init
 	
@@ -7395,6 +7400,7 @@ PLAYER	equ *+$400
 	icl "msx\rmtplayr.a65"
 .endl
 
+;these blocks are splash screen - could be rewritten after game starts
 g2fsplash_org
 .local	g2fsplash
 	icl "title\splash\splash_adjusted.asm"
@@ -7418,19 +7424,17 @@ fontpack	ins "title\splash\splash.fnt.deflate"
 .endl
 
 music	equ $a071 ;to $a528	
-music2	equ $a529 ;to $aaff
+music2	equ $9600 ;to $9cbc   - inflated during game init
 	
 	org music
-	ins "msx\menu_stripped_a071.rmt",+6
+	ins "msx\menu_stripped_a071.rmt",+6	;until $a528
 	
-	org music2
-	;does not make sense to deflate
-	ins "msx\game_stripped_a529.rmt",+6 ;until $aaff
+ingamemusic ;deflated
+	ins "msx\game_stripped_9600.rmt.deflate" ;until $a8b5
 
+	guard datareloc.moveto2 ;ab00
 	
 	ini splash_screen
-	;ini splash_screen
-	;unfortunately after updating of picture it did not fit into memory
 	
 	;part that rewrites the splashscreen with title screen
 	org g2fsplash_org
