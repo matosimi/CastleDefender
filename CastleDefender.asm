@@ -2594,13 +2594,21 @@ keyswitch
 	jne sbarcontrols	;if status bar is visible handle controls differently
 
 	cmp #"w"
-	beq moveup
+	jeq moveup
+	cmp #45 ;"-"
+	jeq moveup
 	cmp #"a"
-	beq moveleft
+	jeq moveleft
+	cmp #43 ;"+"
+	jeq moveleft
 	cmp #"s"
 	jeq movedown
+	cmp #61 ;"="
+	jeq movedown
 	cmp #"d"
-	beq moveright
+	jeq moveright
+	cmp #42 ;"*"
+	jeq moveright
 	cmp #";"* ;return
 	jeq returnpressed
 
@@ -2778,14 +2786,17 @@ sbarcontrols
 .local	sbarcontrols_local
          	cmp #"w"
 	beq moveup
-	;cmp #"a"
-	;beq moveleft
+	cmp #45 ;"-"
+	beq moveup
 	cmp #"s"
 	beq movedown
-	;cmp #"d"
-	;beq moveright
+	cmp #61 ;"="
+	beq movedown
 	cmp #";"* ;return
 	jeq returnpressed
+	
+	cmp #";" ;ESC
+	jeq sps3	;hide statusbar
 	
 	ldy startdelay
 	bne @+
@@ -6394,7 +6405,7 @@ x5	missile_drawchar
 	missile_drawchar
 	
 	ldy #56+1*8+shift
-	lda #0
+	lda #2
 	missile_drawchar
 	lda #0
 	missile_drawchar
@@ -6921,7 +6932,11 @@ control_loop
 	
 	cmp #"w"
 	beq moveup
+	cmp #45 ;"-"
+	beq moveup
 	cmp #"s"
+	beq movedown
+	cmp #61 ;"="
 	beq movedown
 	cmp #";"* ;return
 	beq execute
@@ -6934,6 +6949,12 @@ control_loop
 	beq movedown
 	lda trig
 	beq execute
+	;consol
+	lda consol
+	cmp #$06
+	beq execute
+	cmp #$05
+	beq alter
 	jmp control_loop
 
 moveup	
@@ -6949,6 +6970,11 @@ movedown
 	mva #$12 tclr1
 	pause 5
 	jmp control_loop
+
+alter	pause 10
+	lda selected
+	beq movedown
+	bne moveup
 
 execute
 	pause 10
