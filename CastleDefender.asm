@@ -1,6 +1,5 @@
 ;Castle Defender v1.2 - Martin Simecek, http://matosimi.atari.org
 
-;8.11.2021: todo - ntsc instruction+space - sometimes stops scrolling
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -224,7 +223,7 @@ loading	mva #>lofont 756
 	mva #$00 color0+4
 	mva #$ff portb	;turn off basicrom	
 	mwa #lodl sdlstl
-y
+	pause 1
 	
 ;detect_stereo
 	; By Draco
@@ -1835,6 +1834,7 @@ towerdrawloop
 	beq nodotstodraw		; Don't draw dots for level zero
 	sec
 	sbc #1		; Subtract 1 to give 0-2 index.
+	asl @
 	asl @
 	asl @
 /*atari remove
@@ -7256,6 +7256,24 @@ dlix1	pha
 	sta wsync
 	mva #$0c colpf0+1 
 	mwa #dlixa0 g2ftitle.NMI.dliv
+	
+	phr
+	lda palsystem
+	beq play
+	;ntsc part
+	inc ntsctimer
+	lda ntsctimer
+	cmp #6
+	bne play
+	mva #0 ntsctimer
+	jmp quit
+	
+play	;mva #$0f colpf0+4
+	jsr rmt.rmt_play
+	;mva #$00 colpf0+4
+quit
+	plr
+	
 	pla
 	rti
 	

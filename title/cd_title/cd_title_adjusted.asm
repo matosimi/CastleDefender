@@ -302,9 +302,9 @@ VBL
 	mwa #ant dlptr		;ANTIC address program
 
 	mva #scr40 dmactl	;set new screen width
-
-	inc cloc		;little timer
 	inc 20
+	;inc cloc		;little timer
+	
 	
 ; Initial values
 
@@ -349,7 +349,8 @@ x1	lda #$00
 	mwa #DLI.dli_start dliv	;set the first address of DLI interrupt
 
 ;this area is for yours routines
-	lda palsystem
+
+/*	lda palsystem
 	beq play
 	;ntsc part
 	inc ntsctimer
@@ -359,9 +360,12 @@ x1	lda #$00
 	mva #0 ntsctimer
 	jmp quit
 	
-play	jsr rmt.rmt_play
-
+play	;inc 20
+;	mva #$0f colpf0+4
+;	jsr rmt.rmt_play
+;	mva #$00 colpf0+4
 quit
+*/
 	lda regA
 	ldx regX
 	ldy regY
