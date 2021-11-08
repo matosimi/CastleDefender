@@ -24,7 +24,19 @@ fnt	equ titlelogofnt
 ant	dta $F0
 	dta $C4,a(scr),$84,$84,$04,$84,$84,$04
 	
-	dta $1,a(title_screen.dlcont)
+	;dta $1,a(title_screen.dlcont)
+	
+	dta $80
+	dta $42+32
+tcptr	dta a(title_scroll)
+:12	dta 2+32
+:3	dta 2+32+$80
+:4	dta 2+32
+	dta 2+$80,$42,a(title_scroll)
+	;dta $44,a(title_logo+96)
+	dta $41,a(g2ftitle.ant)
+	
+	
 	;dta $70,$70,$70,$70,$70,$70,$70,$70,$70
 	;dta $70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70,$70
 	;dta $41,a(ant)
@@ -55,14 +67,14 @@ main
 	eif
 */
 	;lda:cmp:req $14		;wait 1 frame
-
+	
 	;sei			;stop IRQ interrupts
 	mva #$00 nmien		;stop NMI interrupts
 	sta dmactl
 	;mva #$fe portb		;switch off ROM to get 16k more ram
 
 	mwa #NMI $fffa		;new NMI handler
-
+	
 	;inflate fnt and scr
 	mwa #scrdef inflater.inputPointer
 	mwa #scr inflater.outputPointer
@@ -74,8 +86,9 @@ main
 	jsr inflater.inflate
 	;$0800->$0fff
 
+	mva #$40 nmien ;prevents crashing
+	lda:cmp:req 20 
 	mva #$c0 nmien		;switch on NMI+DLI again
-
 	jmp title_screen.continue
 /*
 	ift CHANGES		;if label CHANGES defined

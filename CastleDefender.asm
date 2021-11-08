@@ -1,4 +1,6 @@
 ;Castle Defender v1.2 - Martin Simecek, http://matosimi.atari.org
+
+;8.11.2021: todo - ntsc instruction+space - sometimes stops scrolling
 hposp0	equ $d000
 hposm0	equ $d004
 sizep0	equ $d008
@@ -222,7 +224,7 @@ loading	mva #>lofont 756
 	mva #$00 color0+4
 	mva #$ff portb	;turn off basicrom	
 	mwa #lodl sdlstl
-	pause 1
+y
 	
 ;detect_stereo
 	; By Draco
@@ -1008,8 +1010,8 @@ noopenfile
 	bne returntobasic	; Skip "game over" message for attract mode
 */
 	jsr showloselogo
-returntobasic
 /* atari remove
+returntobasic
 	lda #0
 	sta intflag
 
@@ -1833,7 +1835,6 @@ towerdrawloop
 	beq nodotstodraw		; Don't draw dots for level zero
 	sec
 	sbc #1		; Subtract 1 to give 0-2 index.
-	asl @
 	asl @
 	asl @
 /*atari remove
@@ -6887,9 +6888,14 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 .proc	title_screen
 	;hide pmgs (when back from game)
 	
-	mva #$00 gractl		;PMG disabled
-	sta nmien
+	mva #$00 nmien		
+	sta gractl ;PMG disabled
+	ldx #7
+@	sta hposp0,x
+	dex
+	bpl @-
 	color.black
+	
 	
 	;inflate the title screen stuff
 	mwa #packed_text inflater.inputPointer
@@ -6904,7 +6910,7 @@ atrnfont	ins "scoreboard/numbers_atari.fnt",0,14*8
 	
 	calculate_score	
 	jmp g2ftitle.main
-
+/*
 dlcont	dta $80
 	dta $42+32
 tcptr	dta a(title_scroll)
@@ -6914,11 +6920,11 @@ tcptr	dta a(title_scroll)
 	dta 2+$80,$42,a(title_scroll)
 	;dta $44,a(title_logo+96)
 	dta $41,a(g2ftitle.ant)
-
+*/
 ;logic after title logo is displayed
 continue	
 	;static screen
-	mwa #title_static tcptr
+	mwa #title_static g2ftitle.tcptr
 	mva #0 vscrol
 	mva #$50 tclr0
 	mva #$12 tclr1
@@ -6991,7 +6997,7 @@ execute
 
 run_scroll
 
-	mwa #title_scroll tcptr	
+	mwa #title_scroll g2ftitle.tcptr	
 	mva #127 counter
 	
 xx3	ldx #0
@@ -7009,7 +7015,7 @@ xx2	pause 2
 	inx
 	cpx #8
 	bne xx1
-	add16 #32 tcptr
+	add16 #32 g2ftitle.tcptr
 	
 	dec counter	;scroll 15 lines
 	bne xx3
