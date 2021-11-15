@@ -213,18 +213,17 @@ lodl	dta $70
 :5	dta $4f,a($ab00+:1*$800)
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
-lodata	ins "cd.gr5"
-lotext	dta d"    Castle Defender v1.2 - 2.3.2021     "
+lodata	ins "uh6.gr5",0,20*50 ;"cd.gr5"
+lotext	dta d"    Castle Defender v1.2 - 9.11.2021    "
 
 loading	mva #>lofont 756
-	mva #$a2 color0
-	mva #$b6 color0+1
-	mva #$cc color0+2
+	mva #$0e color0
+	mva #$94 color0+1
+	mva #$9a color0+2
 	mva #$00 color0+4
 	mva #$ff portb	;turn off basicrom	
 	mwa #lodl sdlstl
 	pause 1
-	
 ;detect_stereo
 	; By Draco
 	; http://drac030.krap.pl/en-si-info.php
