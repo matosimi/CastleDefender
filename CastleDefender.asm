@@ -42,6 +42,8 @@ lastplotidx	equ $82
 lastplot	equ $83
 
 inflate_zp	equ $a0	;10 bytes for inflater
+starting_level	equ $ae
+unlocked_level	equ $af	
 vbi_ptr	equ $b0 ;vbi vector
 dli_ptr	equ $b2 ;dli vector
 w1	equ $b4 
@@ -215,7 +217,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "uh6.gr5",0,20*50 ;"cd.gr5"
-lotext	dta d"    Castle Defender v1.2a - 10.12.2021  "
+lotext	dta d"    Castle Defender v1.3 - 10.12.2021   "
 
 loading	mva #>lofont 756
 	mva #$0e color0
@@ -365,7 +367,8 @@ setup
 
 	lda #$a1 ;debug a5
 	sta wave
-	lda #$a1
+	lda #$a0
+	ora starting_level
 	sta level	; Level set by basic (not anymore)
 	;TODO:check the level stuff from acorn basic
 	
@@ -906,7 +909,7 @@ wait
 	bcc wait              ; overall speed <= no. of frames
 
 	lda lives
-	beq gameover		; If there are zero lives then game over
+	jeq gameover		; If there are zero lives then game over
 
 	;lda attractmode
 	;beq notgameover		; Don't check for a key if we're not in attract mode
@@ -989,8 +992,15 @@ nextlevel
 	stx level		; Store level before compare to allow highscore to work.
 	cpx #$a5
 	beq winner
-	;color.fade_out_to_black
-	color.fade_out_to_black2
+	x_lt #$a2 @+
+	;unlock level
+	txa 
+	and #$0f
+	a_lt unlocked_level @+
+	;perform unlock
+	sta unlocked_level
+		
+@	color.fade_out_to_black2
 	jmp newlevel
 
 gameover
@@ -4931,6 +4941,9 @@ x1	sta leveldata_end,x
 	dex
 	bne x1
 	sta leveldata_end
+	mva #0 unlocked_level
+	inx
+	stx starting_level
 	rts
 .endp
 
@@ -6113,6 +6126,58 @@ neighbor_ptrs
 	dta a(neighbors:1)	
 .endr	
 
+;add starting level option to game menu
+.proc	add_starting_level
+	ldx #0
+@	lda txt,x 
+	bmi x1
+	sta title_static+16*32+8,x
+	inx
+	bne @-
+x1	lda starting_level
+	ora #$10
+	sta title_static+16*32+8+1,x
+	mva #2 update_selection.max
+	rts
+txt	dta d"Starting Level",$ff
+.endp
+
+;loop through available starting level values
+.proc	change_starting_level
+	lda starting_level
+	cmp unlocked_level
+	beq x1
+	inc starting_level
+x2	add_starting_level
+	rts
+x1	mva #1 starting_level
+	jmp x2
+.endp
+
+;highlight selected option in menu
+.proc	update_selection
+	ldx max
+loop	txa
+	asl @
+	tay
+	mwa colrs,y ptr
+	cpx title_screen.selected
+	bne x1
+	lda #$12
+	bne x2 ;shorter than jmp
+x1	lda #$50
+x2	sta title_screen.tclr0
+ptr	equ *-2
+	dex
+	bpl loop
+p5	pause 5
+	jmp title_screen.control_loop
+max	dta 1
+colrs
+:3	dta a(title_screen.tclr:1)
+
+.endp
+
 .print	"end of maincode: ",*,"  free bytes:",gamevram-*
 	guard gamevram ;do not allow code reaching the videoram area
 
@@ -6985,6 +7050,10 @@ continue
 	mva #$12 tclr1
 	mva #1 selected
 	
+	lda unlocked_level
+	beq control_loop
+	add_starting_level
+	
 control_loop
 	handle_joystick
 	getkeypressed
@@ -7017,28 +7086,37 @@ control_loop
 	jmp control_loop
 
 moveup	
-	mva #0 selected
-	mva #$12 tclr0
-	mva #$50 tclr1
-	pause 5
-	jmp control_loop
+	lda selected
+	bne @+
+pause5	jmp update_selection.p5
+@	dec selected
+	jmp update_selection
 
 movedown	
-	mva #1 selected
-	mva #$50 tclr0
-	mva #$12 tclr1
-	pause 5
-	jmp control_loop
-
+	lda selected
+	cmp update_selection.max
+	beq pause5
+	inc selected
+	jmp update_selection
+	
 alter	pause 10
 	lda selected
-	beq movedown
-	bne moveup
+	cmp update_selection.max
+	bne movedown
+	mva #$ff selected
+	bne movedown	;shorter than jmp
 
 execute
 	pause 10
-	mva #$50 tclr0
+	lda selected
+	cmp #2
+	bne @+
+	change_starting_level
+	jmp control_loop
+	
+@	mva #$50 tclr0
 	sta tclr1
+	sta tclr2
 	lda selected
 	beq run_scroll
 	
@@ -7336,14 +7414,14 @@ quit
 	
 
 
-.rept 3,#,#+1
+.rept 4,#,#+1
 dlixa:1	pha
 	sta wsync
 	lda #$50 
 tclr:1	equ *-1	
 	sta colpf0+2
 	
-	ift :1 < 2
+	ift :1 < 3
 	mwa #dlixa:2 g2ftitle.NMI.dliv
 	els
 	mwa #dlix2 g2ftitle.NMI.dliv
@@ -7459,6 +7537,8 @@ channel	dta 0
 ;tower neighboring matrix for controls - for current level
 neighbors	.ds 32
 
+
+
 /*
 Score + progress
 sc	score=&3012
@@ -7556,6 +7636,7 @@ g2ftitle_org
 .local	g2ftitle
 	icl "title\cd_title\cd_title_adjusted.asm"
 .endl
+
 
 
 

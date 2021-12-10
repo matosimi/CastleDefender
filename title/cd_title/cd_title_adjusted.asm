@@ -30,8 +30,8 @@ ant	dta $F0
 	dta $42+32
 tcptr	dta a(title_scroll)
 :12	dta 2+32
-:3	dta 2+32+$80
-:4	dta 2+32
+:4	dta 2+32+$80
+:3	dta 2+32
 	dta 2+$80,$42,a(title_scroll)
 	;dta $44,a(title_logo+96)
 	dta $41,a(g2ftitle.ant)
@@ -416,4 +416,5 @@ USESPRITES = 0
 
 	.def ?old_dli = *
 .ENDM
+
 
