@@ -39,8 +39,10 @@ title_scroll
 	dta d"                                "
 	dta d"^U"*,d" upgrades an existing tower.  "
 	dta d"                                "
-	dta d"^Space"*,d" speeds the game up       "
-	dta d" whilst held.                   "
+	dta d"^Space"*,d" or",d"^Fire"*,d" speeds the game  "
+	dta d" up whilst held.                "
+;	dta d"^Space"*,d" speeds the game up       "
+;	dta d" whilst held.                   "
 	dta d"                                "
 	dta d"^Start"*,d" +",d"^Select"*,d" +",d"^Option"*," Quit.  "
 	dta d"                                "
@@ -144,3 +146,4 @@ title_end
 .print "title_scroll: ",title_scroll
 .print "title_static: ",title_static
 .print "end: ",title_end
+

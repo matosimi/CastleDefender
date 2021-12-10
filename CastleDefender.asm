@@ -63,6 +63,7 @@ spritefilenumber	equ $c6 ;some original counter
 ntsctimer	equ $c7 ;0-5 frame counter of NTSC->PAL speed
 palsystem	equ $c8 ;0-pal, 1-ntsc
 mono	equ $c9 ;0-mono, $ff-stereo
+fastloop	equ $ca ;if fire is held 20 cycles -> same as space pressed
 ;$cb-$de RMT player
 ;$f0-$ff G2F
 
@@ -385,6 +386,8 @@ newlevel
 	; Clear tower types structures
 	ldx #towrno-1
 	lda #0
+	sta fastloop
+	sta handle_joystick.repeat
 
 ttypeclear
 	sta ttype,X
@@ -2514,13 +2517,17 @@ keyboard
 	; Keyboard input routine and tower plot/update
 	lda #2
 	sta gamespeed
+	
+	lda fastloop ;allow holding fire to speed up
+	bne gofast 
+	
 ;atari replace {
 ;	lda $ec ;atari note: $EC is supposed to be code of key just pressed
 	spacepressed
 ; }
 	cmp #1		; Is Space being pressed?
 	bne nospacepressed	
-	lda #0
+gofast	lda #0
 	sta gamespeed
 nospacepressed
 /* atari remove
@@ -2638,7 +2645,6 @@ notescape
 	rts                   ; Exit to prevent update of tower information.
 
 moveleft
-	;jsr movesound
 	lda currentlocation
 	asl @
 	tax
@@ -2658,39 +2664,14 @@ movegeneric
 	ldy #sfx.CURSOR
 	sfx.do
 	jmp finishkeyboard
-/*	ldx currentlocation
-	jsr erasebox     ; Erase current box
-	dex
-	bpl knotzero
-	ldx maxlocation
-knotzero
-	stx currentlocation
-	jsr plotbox     ; Re-draw box
-	jmp finishkeyboard
-	*/
 
 moveright
-	;jsr movesound
 	lda currentlocation
 	asl @
 	tax
 	lda neighbors,x
 	jmp movegeneric2
-/*
-	ldy #sfx.CURSOR
-	sfx.do
-	ldx currentlocation
-	jsr erasebox     ; Erase current box
-	inx
-	cpx maxlocation
-	bcc knotmax
-	beq knotmax
-	ldx #0
-knotmax
-	stx currentlocation
-	jsr plotbox     ; Re-draw box
-	jmp finishkeyboard
-*/
+
 moveup
 	lda currentlocation
 	asl @
@@ -2699,50 +2680,14 @@ moveup
 movegeneric3
 :4	lsr @
 	jmp movegeneric
-	;jsr movesound
-/*	ldy #sfx.CURSOR
-	sfx.do
-	ldx currentlocation
-	jsr erasebox     ; Erase current box
-	lda txpos,x     ; Get current tower x position.
-kfindhigher
-	dex
-	bpl kmoveupnotzero  ; Move backwards through the towers
-	ldx maxlocation
-kmoveupnotzero
-	cmp txpos,x     ; See if the current location is the same as this one
-	bne kfindhigher         ; Loop back if not
-	; No need to check total number of loops as we know that the current = current
-	stx currentlocation     ; Store the new location
-	jsr plotbox
-	jmp finishkeyboard
-*/
+
 movedown
 	lda currentlocation
 	asl @
 	tax
 	lda neighbors+1,x
 	jmp movegeneric3
-	/*ldy #sfx.CURSOR
-	sfx.do
-	;jsr movesound
-	ldx currentlocation
-	jsr erasebox     ; Erase current box
-	lda txpos,x     ; Get current tower x position.
-kfindlower
-	inx
-	cpx maxlocation ; move forwards
-	bcc kmovedownnotzero
-	beq kmovedownnotzero
-	ldx #0
-kmovedownnotzero
-	cmp txpos,x     ; See if the current location is the same as this one
-	bne kfindlower         ; Loop back if not
-	; No need to check total number of loops as we know that the current = current
-	stx currentlocation     ; Store the new location
-	jsr plotbox
-	jmp finishkeyboard
-*/
+
 maketower
 	ldx currentlocation
 	lda ttype,x
@@ -4635,6 +4580,17 @@ loadscreen
 	mwa #mypmbase inflater.outputPointer
 	jsr inflater.inflate
 	
+	;copy tower neighboring schema
+	ldx tmpx
+	mwa neighbor_ptrs,x neicopy
+	ldx #31
+@	lda neighbors1,x
+neicopy	equ *-2
+	sta neighbors,x
+	dex
+	bpl @-
+	
+	
 	jmp deletestatusrows
 	
 levelptr	dta a(datareloc.l1f+datareloc.moveto-datareloc.loadarea)
@@ -6105,19 +6061,57 @@ towermask
 inflate_data ;	.ds 764 ;inflate buffer
 :764	dta 0
 
-;up,right,down,left
-neighbors	
+;up,right,down,left - tower neighboring data (2 directions 0-f in single byte)
+neighbors1	
 	dta $02,$51
-	dta $10,$31
-	dta $22,$40
+	dta $10,$33
+	dta $24,$40
 	dta $15,$63
 	dta $24,$75
 	dta $04,$93
-	dta $35,$86
-	dta $47,$a5
+	dta $35,$88
+	dta $4a,$a5
 	dta $69,$88
 	dta $5a,$98
 	dta $7a,$a9
+
+neighbors2
+	dta $01,$32
+	dta $14,$50
+	dta $00,$62
+	dta $05,$86
+	dta $17,$95
+	dta $14,$83
+	dta $23,$86
+	dta $47,$94
+	dta $39,$86
+	dta $47,$98
+	
+neighbors3
+	dta $02,$31
+	dta $03,$44
+	dta $02,$53
+	dta $05,$66
+	dta $16,$77
+	dta $22,$83
+	dta $33,$74
+	dta $48,$77
+	dta $55,$87
+	
+neighbors4
+	dta $01,$42
+	dta $13,$50
+	dta $20,$44
+	dta $35,$51
+	dta $25,$64
+	dta $35,$74
+	dta $47,$64
+	dta $55,$76
+	
+neighbor_ptrs
+.rept 4,#+1
+	dta a(neighbors:1)	
+.endr	
 
 .print	"end of maincode: ",*,"  free bytes:",gamevram-*
 	guard gamevram ;do not allow code reaching the videoram area
@@ -6690,6 +6684,11 @@ x2	lda trig0
 	cmp old+1
 	bne x3
 	mva #$01 trig ;simulate no fire
+	lda trig0
+	bne x0
+	lda repeat
+	a_ge #20 x4 ;fastloop
+	inc repeat
 	rts
 	
 x1	sta old	;set direction
@@ -6698,9 +6697,15 @@ x1	sta old	;set direction
 	
 x3	sta old+1 ;fire pressed/released
 	sta trig
-	
+x0	mva #0 repeat
+	sta fastloop
 	rts
+	
+x4	mva #1 fastloop
+	rts
+	
 old	dta 0,0
+repeat	dta 0
 .endp
 
 ;modified plottower procedure for non-shifted towers
@@ -7059,6 +7064,8 @@ xx1	stx vscrol
 	jeq continue
 	spacepressed
 	bne xx2
+	lda trig0 ;fire
+	beq xx2
 	pause 6
 xx2	pause 2
 	ldx scroltmp
@@ -7449,6 +7456,9 @@ channel	dta 0
 	rts
 .endp
 
+;tower neighboring matrix for controls - for current level
+neighbors	.ds 32
+
 /*
 Score + progress
 sc	score=&3012
@@ -7472,6 +7482,8 @@ enemies killed percent = 1063*ek;
 
 */
 
+.print "space before vram: ",vram-*
+	guard $7e00 ;vram start
 	
 .align $100
 vram
@@ -7504,7 +7516,7 @@ PLAYER	equ *+$400
 g2fsplash_org
 .local	g2fsplash
 	icl "title\splash\splash_adjusted.asm"
-.print	"end of code2: ",*," free bytes:",music2-*
+.print	"end of code2: ",*," free bytes(not sure):",music2-*
 	
 	guard $9600
 	org $9600
