@@ -214,7 +214,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "uh6.gr5",0,20*50 ;"cd.gr5"
-lotext	dta d"    Castle Defender v1.2 - 9.11.2021    "
+lotext	dta d"    Castle Defender v1.2a - 10.12.2021  "
 
 loading	mva #>lofont 756
 	mva #$0e color0
@@ -2610,16 +2610,16 @@ keyswitch
 ;joystick controls
 	lda #$01
 	bit stick
-	beq moveup
+	jeq moveup
 	asl @
 	bit stick
-	beq movedown
+	jeq movedown
 	asl @
 	bit stick
-	beq moveleft
+	jeq moveleft
 	asl @
 	bit stick
-	beq moveright
+	jeq moveright
 	lda trig
 	jeq returnpressed
 	
@@ -2639,9 +2639,26 @@ notescape
 
 moveleft
 	;jsr movesound
+	lda currentlocation
+	asl @
+	tax
+	lda neighbors+1,x
+movegeneric2
+	and #$0f
+movegeneric
+	cmp currentlocation
+	jeq finishkeyboard
+	pha
+	ldx currentlocation
+	jsr erasebox
+	pla
+	tax
+	stx currentlocation
+	jsr plotbox
 	ldy #sfx.CURSOR
 	sfx.do
-	ldx currentlocation
+	jmp finishkeyboard
+/*	ldx currentlocation
 	jsr erasebox     ; Erase current box
 	dex
 	bpl knotzero
@@ -2650,9 +2667,16 @@ knotzero
 	stx currentlocation
 	jsr plotbox     ; Re-draw box
 	jmp finishkeyboard
+	*/
 
 moveright
 	;jsr movesound
+	lda currentlocation
+	asl @
+	tax
+	lda neighbors,x
+	jmp movegeneric2
+/*
 	ldy #sfx.CURSOR
 	sfx.do
 	ldx currentlocation
@@ -2666,10 +2690,17 @@ knotmax
 	stx currentlocation
 	jsr plotbox     ; Re-draw box
 	jmp finishkeyboard
-
+*/
 moveup
+	lda currentlocation
+	asl @
+	tax
+	lda neighbors,x
+movegeneric3
+:4	lsr @
+	jmp movegeneric
 	;jsr movesound
-	ldy #sfx.CURSOR
+/*	ldy #sfx.CURSOR
 	sfx.do
 	ldx currentlocation
 	jsr erasebox     ; Erase current box
@@ -2685,9 +2716,14 @@ kmoveupnotzero
 	stx currentlocation     ; Store the new location
 	jsr plotbox
 	jmp finishkeyboard
-
+*/
 movedown
-	ldy #sfx.CURSOR
+	lda currentlocation
+	asl @
+	tax
+	lda neighbors+1,x
+	jmp movegeneric3
+	/*ldy #sfx.CURSOR
 	sfx.do
 	;jsr movesound
 	ldx currentlocation
@@ -2706,7 +2742,7 @@ kmovedownnotzero
 	stx currentlocation     ; Store the new location
 	jsr plotbox
 	jmp finishkeyboard
-
+*/
 maketower
 	ldx currentlocation
 	lda ttype,x
@@ -6068,7 +6104,22 @@ towermask
 
 inflate_data ;	.ds 764 ;inflate buffer
 :764	dta 0
-	
+
+;up,right,down,left
+neighbors	
+	dta $02,$51
+	dta $10,$31
+	dta $22,$40
+	dta $15,$63
+	dta $24,$75
+	dta $04,$93
+	dta $35,$86
+	dta $47,$a5
+	dta $69,$88
+	dta $5a,$98
+	dta $7a,$a9
+
+.print	"end of maincode: ",*,"  free bytes:",gamevram-*
 	guard gamevram ;do not allow code reaching the videoram area
 
 	org code2
@@ -7435,22 +7486,25 @@ dl	dta $50
 	dta $42,a(vram)
 	dta $41,a(dl)
 
+
 NMI	bit nmist
 	bpl nmi_vbi	;vbi
 	jmp (dli_ptr)	;dli
 nmi_vbi	jmp (vbi_ptr)
 
-
 	.align $100
+
 .local	rmt
 PLAYER	equ *+$400
 	icl "msx\rmtplayr.a65"
 .endl
 
+
 ;these blocks are splash screen - could be rewritten after game starts
 g2fsplash_org
 .local	g2fsplash
 	icl "title\splash\splash_adjusted.asm"
+.print	"end of code2: ",*," free bytes:",music2-*
 	
 	guard $9600
 	org $9600
@@ -7490,5 +7544,6 @@ g2ftitle_org
 .local	g2ftitle
 	icl "title\cd_title\cd_title_adjusted.asm"
 .endl
+
 
 
