@@ -1,5 +1,4 @@
 ;Castle Defender v1.3 - Martin Simecek, http://matosimi.atari.org
-;todo: fix glitching when start+select+option pressed during phase text
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -871,10 +870,10 @@ mainloop             ;Main processing loop
 	jsr forceprinttowerinfo
 
 	jmp instartdelay
-	cpx #1		; Are we on the last frame?
-	bne instartdelay
-	ldx #0
-	stx startdelay			; and set delay to zero
+;	cpx #1		; Are we on the last frame?
+;	bne instartdelay
+;	ldx #0
+;	stx startdelay			; and set delay to zero
 notinstartdelay
 	jsr showwave.restore
 	jSR plotlots          ; Plot all the visible sprites
@@ -2485,6 +2484,7 @@ press3
 	jmp maketower
 
 escape			;Escape has been pressed.
+	jsr showwave.restore	;prevents glitches on fast quit
 ;TODO: fix this (crash)
 /*atari remove
 	jsr readshift
@@ -7637,6 +7637,7 @@ g2ftitle_org
 .local	g2ftitle
 	icl "title\cd_title\cd_title_adjusted.asm"
 .endl
+
 
 
 
