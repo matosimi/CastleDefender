@@ -1,4 +1,5 @@
-;Castle Defender v1.2 - Martin Simecek, http://matosimi.atari.org
+;Castle Defender v1.3 - Martin Simecek, http://matosimi.atari.org
+;todo: fix glitching when start+select+option pressed during phase text
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -7636,6 +7637,8 @@ g2ftitle_org
 .local	g2ftitle
 	icl "title\cd_title\cd_title_adjusted.asm"
 .endl
+
+
 
 
 

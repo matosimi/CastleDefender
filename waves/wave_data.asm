@@ -157,7 +157,7 @@ enemystrengths		;BCD
 enemyshields		;BCD
 	dta $15,$20,$25,$35
 enemyspeed
-	dta 38,74			; distance between enemies in frames
+	dta 38,76 ;74 -error in original game	; distance between enemies in frames
 spritenumbers  ; Types of enemy
 	dta "cmhp"
 enemynumber
@@ -410,4 +410,5 @@ enemynumber
 ;             1 2 3 4 5 6 7 8 910 1 2 3 4 5 6 7 8 920 1 2 3 4 5 6 7 8 930 1 2 3 4 5 6 7 8 940 1 2 3 4 5 6 7 8 950 1 2 3 4 5 6 7 8 960 1 2 3 4
 	dta 0,1,1,1,1,0,0,2,0,0,2,0,0,3,0,0,3,0,0,2,0,2,0,3,0,3,0,0,2,2,3,3,0,0,1,1,1,4,4,1,1,1,0,0,4,0,4,0,4,4,4,0,0,2,3,4,2,3,4,2,3,4,4,0
 .endl
+
 
