@@ -217,7 +217,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "uh6.gr5",0,20*50 ;"cd.gr5"
-lotext	dta d"    Castle Defender v1.3 - 10.12.2021   "
+lotext	dta d"    Castle Defender v1.3 - 19.12.2021   "
 
 loading	mva #>lofont 756
 	mva #$0e color0
