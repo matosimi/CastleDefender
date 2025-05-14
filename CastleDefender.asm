@@ -5908,6 +5908,7 @@ x5	dex
 	bne x3	;repeat until change	
 	black
 	hide_enemybar
+	pause 0	;to be sure that the black is applied 
 	rts
 
 x2	lda (w1),y

@@ -1,0 +1,465 @@
+[Config]
+Compilator.SaveAll=0
+Compilator.Capture=0
+Compilator.CompileOnBackground=0
+Compilator.ProgSaveAll=0
+Compilator.ProgRunSelection=0
+Compilator.LogType=0
+Compilator.LogEncoding=0
+DefaultDir=C:\!atari\prg\CastleDefender
+DefaultCP=0
+LogtoEnd=1
+DontOpen=0
+AbsolutePath=0
+FileFormat=0
+ProjectFilesOnly=0
+HTServer=localhost
+Extensions=*.*
+[Project tree]
+CastleDefender
+	+CastleDefender
+		-levels
+			-l4
+				levels\l4\L4.fnt
+				levels\l4\L4_final_edit.fnt
+				levels\l4\L4_trees.fnt
+			-test
+				levels\test\L1.fnt
+				levels\test\L1.fnt.deflate
+				levels\test\L1.shk
+				levels\test\L2.fnt
+				levels\test\L2.fnt.deflate
+				levels\test\L2.shk
+				levels\test\L3.fnt
+				levels\test\L3.fnt.deflate
+				levels\test\L3.shk
+				levels\test\L41.fnt
+				levels\test\L41.fnt.deflate
+				levels\test\L41.shk
+			levels\L1.fnt
+			levels\L1.fnt.deflate
+			levels\L1.shk
+			levels\L1data.bin
+			levels\L1data.bin.deflate
+			levels\L2.fnt
+			levels\L2.fnt.deflate
+			levels\L2.shk
+			levels\L2data.bin
+			levels\L2data.bin.deflate
+			levels\L3.fnt
+			levels\L3.fnt.deflate
+			levels\L3.shk
+			levels\L3data.bin
+			levels\L3data.bin.deflate
+			levels\L4.fnt
+			levels\L4.fnt.deflate
+			levels\L41.fnt
+			levels\L41.fnt.deflate
+			levels\L41.shk
+			levels\L4data.bin
+			levels\L4data.bin.deflate
+			levels\level_generator.php
+			levels\level_packer.php
+		-leveltext
+			leveltext\leveltext.fnt
+			leveltext\leveltext_convert.php
+		-logos
+			logos\levcomp_acorn.dat.fnt
+			logos\levcomp2.fnt
+			logos\levcomp2.fnt.deflate
+			logos\levlogo.fnt.deflate
+			logos\levlogo_acorn.dat
+			logos\levlogo_acorn.dat.fnt
+			logos\logos_convert.php
+			logos\logos_packer.php
+			logos\loselogo_acorn.dat.fnt
+			logos\windef.fnt
+			logos\windef.fnt.deflate
+			logos\winlogo_acorn.dat.fnt
+		-msx
+			-sap
+				msx\sap\Castle Defender Ingame.sap
+				msx\sap\Castle Defender.sap
+				msx\sap\cd_sap.cmd
+				msx\sap\cd_sap1.asm
+				msx\sap\cd_sap1.lab
+				msx\sap\cd_sap1.lst
+				msx\sap\cd_sap1.txt
+				msx\sap\cd_sap1.xex
+				msx\sap\cd_sap2.asm
+				msx\sap\cd_sap2.lab
+				msx\sap\cd_sap2.lst
+				msx\sap\cd_sap2.txt
+				msx\sap\cd_sap2.xex
+			msx\castle menu v3.rmt
+			msx\castle rest v2.rmt
+			msx\game_rmtfeat.asm
+			msx\game_stripped_a529.rmt
+			msx\menu_rmtfeat.asm
+			msx\menu_stripped_a071.rmt
+			msx\musicpack.php
+			msx\rmt_feat.a65
+			msx\rmtplayr.a65
+		-pmg
+			-.vs
+				-CastleDefenderPMG
+					-v15
+						-Server
+							-sqlite3
+								pmg\.vs\CastleDefenderPMG\v15\Server\sqlite3\db.lock
+								pmg\.vs\CastleDefenderPMG\v15\Server\sqlite3\storage.ide
+								pmg\.vs\CastleDefenderPMG\v15\Server\sqlite3\storage.ide-shm
+								pmg\.vs\CastleDefenderPMG\v15\Server\sqlite3\storage.ide-wal
+						pmg\.vs\CastleDefenderPMG\v15\.suo
+			-CastleDefenderPMG
+				-bin
+					-Debug
+						pmg\CastleDefenderPMG\bin\Debug\CastleDefenderPMG.exe
+						pmg\CastleDefenderPMG\bin\Debug\CastleDefenderPMG.exe.config
+						pmg\CastleDefenderPMG\bin\Debug\CastleDefenderPMG.pdb
+					-Release
+						pmg\CastleDefenderPMG\bin\Release\CastleDefenderPMG.exe
+						pmg\CastleDefenderPMG\bin\Release\CastleDefenderPMG.exe.config
+						pmg\CastleDefenderPMG\bin\Release\CastleDefenderPMG.pdb
+				-obj
+					-Debug
+						-TempPE
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.csproj.CoreCompileInputs.cache
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.csproj.FileListAbsolute.txt
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.csproj.GenerateResource.cache
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.csprojAssemblyReference.cache
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.exe
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.Form1.resources
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.pdb
+						pmg\CastleDefenderPMG\obj\Debug\CastleDefenderPMG.Properties.Resources.resources
+						pmg\CastleDefenderPMG\obj\Debug\DesignTimeResolveAssemblyReferences.cache
+						pmg\CastleDefenderPMG\obj\Debug\DesignTimeResolveAssemblyReferencesInput.cache
+						pmg\CastleDefenderPMG\obj\Debug\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+						pmg\CastleDefenderPMG\obj\Debug\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+						pmg\CastleDefenderPMG\obj\Debug\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+					-Release
+						-TempPE
+							pmg\CastleDefenderPMG\obj\Release\TempPE\Properties.Resources.Designer.cs.dll
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.csproj.CoreCompileInputs.cache
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.csproj.FileListAbsolute.txt
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.csproj.GenerateResource.cache
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.csprojAssemblyReference.cache
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.exe
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.Form1.resources
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.pdb
+						pmg\CastleDefenderPMG\obj\Release\CastleDefenderPMG.Properties.Resources.resources
+						pmg\CastleDefenderPMG\obj\Release\DesignTimeResolveAssemblyReferences.cache
+						pmg\CastleDefenderPMG\obj\Release\DesignTimeResolveAssemblyReferencesInput.cache
+						pmg\CastleDefenderPMG\obj\Release\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs
+						pmg\CastleDefenderPMG\obj\Release\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs
+						pmg\CastleDefenderPMG\obj\Release\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs
+				-Properties
+					pmg\CastleDefenderPMG\Properties\AssemblyInfo.cs
+					pmg\CastleDefenderPMG\Properties\Resources.Designer.cs
+					pmg\CastleDefenderPMG\Properties\Resources.resx
+					pmg\CastleDefenderPMG\Properties\Settings.Designer.cs
+					pmg\CastleDefenderPMG\Properties\Settings.settings
+				pmg\CastleDefenderPMG\App.config
+				pmg\CastleDefenderPMG\CastleDefenderPMG.csproj
+				pmg\CastleDefenderPMG\Form1.cs
+				pmg\CastleDefenderPMG\Form1.Designer.cs
+				pmg\CastleDefenderPMG\Form1.resx
+				pmg\CastleDefenderPMG\Program.cs
+			pmg\CastleDefenderPMG.sln
+			pmg\ccc.pmg
+			pmg\level1.png
+			pmg\level2.png
+			pmg\level3.png
+			pmg\level4.png
+			pmg\level4_1.png
+			pmg\lvl1.pmg
+			pmg\lvl1.pmg.deflate
+			pmg\lvl2.pmg
+			pmg\lvl2.pmg.deflate
+			pmg\lvl2_test.pmg
+			pmg\lvl3.pmg
+			pmg\lvl3.pmg.deflate
+			pmg\lvl3_test.pmg
+			pmg\lvl3_test2.pmg
+			pmg\lvl4_1.pmg
+			pmg\lvl4_1.pmg.deflate
+			pmg\pmg_packer.php
+			pmg\poop.pmg
+			pmg\poop.png
+		-reverse engineered attempt
+			reverse engineered attempt\bbc_mode1_to_atari_0f.php
+			reverse engineered attempt\build.bat
+			reverse engineered attempt\CDcode.asm
+			reverse engineered attempt\CDCode.obx
+			reverse engineered attempt\L1.fnt
+			reverse engineered attempt\level2.bmp
+			reverse engineered attempt\level3.bmp
+			reverse engineered attempt\level4.bmp
+			reverse engineered attempt\notower.fnt
+			reverse engineered attempt\numbers.fnt
+			reverse engineered attempt\obxBuild.php
+			reverse engineered attempt\towers.fnt
+		-scoreboard
+			scoreboard\numbers_atari.fnt
+			scoreboard\scoreboard.fnt
+			scoreboard\scoreboard.fnt.deflate
+			scoreboard\scoreboard_generator.php
+			scoreboard\scoreboard_packer.php
+		-sprites
+			sprites\allsprites.fnt
+			sprites\allsprites.fnt.deflate
+			sprites\E1.fnt
+			sprites\E2.fnt
+			sprites\E3.fnt
+			sprites\E4.fnt
+			sprites\S1.fnt
+			sprites\S1b.fnt
+			sprites\S1c.fnt
+			sprites\S2.fnt
+			sprites\S2b.fnt
+			sprites\S2c.fnt
+			sprites\S3.fnt
+			sprites\S3b.fnt
+			sprites\S4.fnt
+			sprites\S4a.fnt
+			sprites\S4b.fnt
+			sprites\S4c.fnt
+			sprites\S4d.fnt
+			sprites\S5.fnt
+			sprites\S5b.fnt
+			sprites\S6.fnt
+			sprites\S6b.fnt
+			sprites\S7.fnt
+			sprites\S7b.fnt
+			sprites\S8.fnt
+			sprites\S8a.fnt
+			sprites\sprite.vf2
+			sprites\sprite_convert.php
+			sprites\sprite_cut.php
+			sprites\spritenames.PNG
+		-srcdata
+			srcdata\$.CASTLED
+			srcdata\$.Explode
+			srcdata\$.INTRO
+			srcdata\$.ScoreB
+			srcdata\L.1
+			srcdata\L.2
+			srcdata\L.3
+			srcdata\L.4
+			srcdata\leveltext.bin
+			srcdata\numbers.bin
+			srcdata\S.1
+			srcdata\S.2
+			srcdata\S.3
+			srcdata\S.4
+			srcdata\S.5
+			srcdata\S.6
+			srcdata\S.7
+			srcdata\S.8
+		+title
+			+cd_title
+				title\cd_title\cd_title.asm
+				title\cd_title\cd_title.fad
+				title\cd_title\cd_title.fnt
+				title\cd_title\cd_title.fnt - Copy.deflate
+				title\cd_title\cd_title.fnt.deflate
+				title\cd_title\cd_title.h
+				title\cd_title\cd_title.pmf
+				title\cd_title\cd_title.scr
+				title\cd_title\cd_title.scr.deflate
+				title\cd_title\cd_title_adjusted.asm
+				title\cd_title\g2fpack.php
+			+splash
+				title\splash\g2fpack.php
+				title\splash\splash.asm
+				title\splash\splash.fnt
+				title\splash\splash.fnt.deflate
+				title\splash\splash.h
+				title\splash\splash.pmg
+				title\splash\splash.pmg.deflate
+				title\splash\splash.scr
+				title\splash\splash.scr.deflate
+				title\splash\splash_adjusted.asm
+				title\splash\splash_adjusted.lab
+				title\splash\splash_adjusted.lst
+			title\castle_defender_titlescreen.g2f
+			title\cd_title.g2f
+			title\cd_title.png
+			title\cd_title.rdw
+			title\cd_title_4c.png
+			title\scrolltext.asm
+			title\scrolltext.lab
+			title\scrolltext.lst
+			title\scrolltext.php
+			title\scrolltext.xex
+			title\scrolltext.xex.deflate
+			title\title.fnt
+			title\title.fnt.deflate
+		-tools
+			tools\zopfli.exe
+		-towers
+			towers\notower.fnt
+			towers\notower_shifted.fnt
+			towers\tow.vf2
+			towers\towers.fnt
+			towers\towers_convert.php
+			towers\towers_shifted.fnt
+		-waves
+			waves\build.cmd
+			waves\deflater.exe
+			waves\gzip2deflate.exe
+			waves\L1W1.bin
+			waves\L1W1.bin.deflate
+			waves\L1W1.bin.deflated
+			waves\L1W1.bin.gz
+			waves\L1W1.bin.gz.defl
+			waves\L1W1.bin.gzAuto
+			waves\L1W1_new.bin
+			waves\L1W1_old.bin
+			waves\L1W2.bin
+			waves\L1W2.bin.deflate
+			waves\L1W3.bin
+			waves\L1W3.bin.deflate
+			waves\L1W4.bin
+			waves\L1W4.bin.deflate
+			waves\L1W5.bin
+			waves\L1W5.bin.deflate
+			waves\L1W5.bin.deflated
+			waves\L1W5.bin.gz
+			waves\L1W5.bin.gz.defl
+			waves\L2W1.bin
+			waves\L2W1.bin.deflate
+			waves\L2W2.bin
+			waves\L2W2.bin.deflate
+			waves\L2W3.bin
+			waves\L2W3.bin.deflate
+			waves\L2W4.bin
+			waves\L2W4.bin.deflate
+			waves\L2W5.bin
+			waves\L2W5.bin.deflate
+			waves\L3W1.bin
+			waves\L3W1.bin.deflate
+			waves\L3W2.bin
+			waves\L3W2.bin.deflate
+			waves\L3W3.bin
+			waves\L3W3.bin.deflate
+			waves\L3W4.bin
+			waves\L3W4.bin.deflate
+			waves\L3W5.bin
+			waves\L3W5.bin.deflate
+			waves\L4W1.bin
+			waves\L4W1.bin.deflate
+			waves\L4W2.bin
+			waves\L4W2.bin.deflate
+			waves\L4W3.bin
+			waves\L4W3.bin.deflate
+			waves\L4W4.bin
+			waves\L4W4.bin.deflate
+			waves\L4W5.bin
+			waves\L4W5.bin.deflate
+			waves\wave_data.asm
+			waves\wave_data.asm_cnt.txt
+			waves\wave_data.deflated
+			waves\wave_data.lab
+			waves\wave_data.lst
+			waves\wave_data.xex
+			waves\wave_data.xex.deflate
+			waves\wave_data.xex.gz
+			waves\wave_data_new.asm
+			waves\wave_data_packer.php
+			waves\wave_data_splitter.php
+			waves\waves and enemies.xlsx
+			waves\zopfli_old.exe
+		atadim.cfg
+		atadim.exe
+		CastleDefender.asm
+		CastleDefender.asm_cnt.txt
+		CastleDefender.lab
+		CastleDefender.lst
+		CastleDefender.xex
+		Castle-Defender.xex
+		cd.gr5
+		cd_r140.png
+		cd_r72.png
+		cdcode.lab
+		cdcode.lst
+		cdcode.xex
+		cdicon.png
+		data_relocator.asm
+		data_relocator.asm_cnt.txt
+		data_relocator.lab
+		data_relocator.lst
+		data_relocator.xex
+		Default.fnt
+		Dos 2.5.atr
+		headercode.asm_cnt.txt
+		headercode.lab
+		headercode.lst
+		headercode.xex
+		inflate.asm
+		keyboard_test.asm
+		keyboard_test.asm_cnt.txt
+		keyboard_test.lab
+		keyboard_test.lst
+		keyboard_test.xex
+		matosimi_macros.asx
+		sbar_design.png
+		screen.png
+		screen_mockup.pdn
+		screen+pmg.png
+		screen+status.png
+		status.fnt
+		status.vf2
+		status_missiles.fnt
+		td.asm
+		xxx.pmg
+[Open project files]
+0=title\scrolltext.asm
+1=data_relocator.asm
+2=title\cd_title\cd_title_adjusted.asm
+3=matosimi_macros.asx
+4=msx\rmtplayr.a65
+5=title\splash\splash_adjusted.asm
+6=CastleDefender.asm
+7=..\..\..\Apps\Celeste Farewell\error_log.txt
+[Selected Project Files]
+Main=CastleDefender.asm
+Selected=CastleDefender.asm
+[title\scrolltext.asm]
+TopLine=113
+Caret=33,139
+[data_relocator.asm]
+TopLine=75
+Caret=12,87
+[title\cd_title\cd_title_adjusted.asm]
+TopLine=19
+Caret=3,34
+Mark1=13,89
+Mark2=8,307
+Mark3=15,356
+[matosimi_macros.asx]
+TopLine=114
+Caret=1,133
+[msx\rmtplayr.a65]
+TopLine=286
+Caret=1,305
+[title\splash\splash_adjusted.asm]
+TopLine=254
+Caret=8,267
+[CastleDefender.asm]
+TopLine=67
+Caret=40,76
+Mark1=9,4946
+Mark2=7,7540
+Mark3=7,6130
+Mark4=10,7093
+Mark5=14,7417
+Mark6=22,2647
+Mark7=7,2487
+Mark8=14,885
+Mark9=19,878
+Mark10=10,873
+Mark11=8,3625
+[..\..\..\Apps\Celeste Farewell\error_log.txt]
+TopLine=1
+Caret=1,1

@@ -67,6 +67,9 @@ main
 	eif
 */
 	;lda:cmp:req $14		;wait 1 frame
+	lda #0			;prevents VSYNC signal being shaved (by switching off DMACTL fetch midscreen)
+@	cmp vcount
+	bne @-
 	
 	;sei			;stop IRQ interrupts
 	mva #$00 nmien		;stop NMI interrupts
