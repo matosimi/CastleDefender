@@ -268,7 +268,7 @@ CastleDefender
 				title\cd_title\cd_title.scr
 				title\cd_title\cd_title.scr.deflate
 				title\cd_title\cd_title_adjusted.asm
-				title\cd_title\g2fpack.php
+				title\cd_title\g2fpack.ps1
 			+splash
 				title\splash\g2fpack.php
 				title\splash\splash.asm
@@ -416,12 +416,11 @@ CastleDefender
 [Open project files]
 0=title\scrolltext.asm
 1=data_relocator.asm
-2=title\cd_title\cd_title_adjusted.asm
+2=CastleDefender.asm
 3=matosimi_macros.asx
 4=msx\rmtplayr.a65
 5=title\splash\splash_adjusted.asm
-6=CastleDefender.asm
-7=..\..\..\Apps\Celeste Farewell\error_log.txt
+6=title\cd_title\cd_title_adjusted.asm
 [Selected Project Files]
 Main=CastleDefender.asm
 Selected=CastleDefender.asm
@@ -431,12 +430,20 @@ Caret=33,139
 [data_relocator.asm]
 TopLine=75
 Caret=12,87
-[title\cd_title\cd_title_adjusted.asm]
-TopLine=19
-Caret=3,34
-Mark1=13,89
-Mark2=8,307
-Mark3=15,356
+[CastleDefender.asm]
+TopLine=205
+Caret=11,213
+Mark1=9,4948
+Mark2=7,7543
+Mark3=7,6132
+Mark4=10,7095
+Mark5=14,7420
+Mark6=22,2649
+Mark7=7,2489
+Mark8=14,887
+Mark9=19,880
+Mark10=10,875
+Mark11=8,3627
 [matosimi_macros.asx]
 TopLine=114
 Caret=1,133
@@ -444,22 +451,13 @@ Caret=1,133
 TopLine=286
 Caret=1,305
 [title\splash\splash_adjusted.asm]
-TopLine=254
-Caret=8,267
-[CastleDefender.asm]
-TopLine=67
-Caret=40,76
-Mark1=9,4946
-Mark2=7,7540
-Mark3=7,6130
-Mark4=10,7093
-Mark5=14,7417
-Mark6=22,2647
-Mark7=7,2487
-Mark8=14,885
-Mark9=19,878
-Mark10=10,873
-Mark11=8,3625
-[..\..\..\Apps\Celeste Farewell\error_log.txt]
-TopLine=1
-Caret=1,1
+TopLine=33
+Caret=6,942
+Mark1=7,893
+[title\cd_title\cd_title_adjusted.asm]
+TopLine=234
+Caret=16,431
+Mark1=13,90
+Mark2=8,305
+Mark3=15,354
+Mark4=11,462

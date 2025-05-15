@@ -195,16 +195,13 @@ c9	lda #$FA
 
 dli8
 	sta regA
-	stx regX
 
 	sta wsync		;line=24
 	sta wsync		;line=25
 c10	lda #$14
-c11	ldx #$2A
 	sta wsync		;line=26
 	sta color1
-	stx color2
-	DLINEW dli9 1 1 0
+	DLINEW dli9 1 0 0
 
 dli9
 	sta regA
@@ -216,11 +213,11 @@ dli9
 	sta wsync		;line=35
 	sta wsync		;line=36
 	sta wsync		;line=37
-c12	lda #$18
+c11	lda #$18
 	sta wsync		;line=38
 	sta color0
-c13	lda #$16
-c14	ldx #$28
+c12	lda #$16
+c13	ldx #$28
 	sta wsync		;line=39
 	sta color0
 	stx color2
@@ -229,50 +226,50 @@ c14	ldx #$28
 	sta wsync		;line=42
 	sta wsync		;line=43
 	sta wsync		;line=44
-c15	lda #$24
+c14	lda #$24
 	sta wsync		;line=45
 	sta color1
-	DLINEW DLI.dli2 1 1 0
+	DLINEW dli10 1 1 0
+
+dli10
+	sta regA
+
+	sta wsync		;line=48
+	sta wsync		;line=49
+c15	lda #$26
+	sta wsync		;line=50
+	sta color2
+c16	lda #$2C
+	sta wsync		;line=51
+	sta color2
+c17	lda #$26
+	sta wsync		;line=52
+	sta color2
+	DLINEW DLI.dli2 1 0 0
 
 dli2
 	sta regA
-	lda >fnt+$400*$01
-	sta wsync		;line=48
-	sta chbase
-	sta wsync		;line=49
-c16	lda #$26
-	sta wsync		;line=50
-	sta color2
-c17	lda #$2C
-	sta wsync		;line=51
-	sta color2
-c18	lda #$26
-	sta wsync		;line=52
-	sta color2
-	DLINEW dli3 1 0 0
-
-dli3
-	sta regA
 	stx regX
 	sty regY
-	;lda >fnt+$400*$00
+	lda >fnt+$400*$01
 	sta wsync		;line=56
-	;sta chbase
+	sta chbase
 	sta wsync		;line=57
 	sta wsync		;line=58
 	sta wsync		;line=59
-c19	lda #$20
+c18	lda #$20
 	sta wsync		;line=60
 	sta color1
 	sta color2
-/*c20	lda #$02
-c21	ldx #$04
-c22	ldy #$06
+/*
+c19	lda #$02
+c20	ldx #$04
+c21	ldy #$06
 	sta wsync		;line=61
 	sta color0
 	stx color1
 	sty color2
-c23	lda #$0A
+c22	lda #$0A
 	sta color3
 */
 	DLINEW title_screen.dlix1 1 1 1
@@ -324,7 +321,7 @@ c1	lda #$F4
 	sta color0
 c2	lda #$F2
 	sta color1
-c3	lda #$28
+c3	lda #$2A
 	sta color2
 c4	lda #$F6
 	sta color3
@@ -448,7 +445,7 @@ getbyte	lda colorindex:colors
 
 colors
 :6	dta a(NMI.c:1 + 1)
-.rept 19-5, #+6
+.rept 18-5, #+6
 	dta a(DLI.c:1 + 1)
 .endr
 :16	dta a(title_screen.c_:1 + 1)
