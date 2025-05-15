@@ -1,8 +1,8 @@
 ![Castle Defender](http://matosimi.websupport.sk/atari/wp-content/uploads/2019/08/cds1.png)
 
-Castle Defender is a tower defense game originally written for BBC Micro. 
+Castle Defender is a tower defense game originally developed for the BBC Micro. 
 
-I got in contact with the original author and used his sources to port the game to Atari XL/XE computers. 
+I contacted the original author and used his source code to port the game to Atari XL/XE computers.
 
 You can read the conversion story [HERE](http://matosimi.websupport.sk/atari/2019/08/the-story-of-castle-defender/).
 
