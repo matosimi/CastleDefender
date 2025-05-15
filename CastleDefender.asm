@@ -1,4 +1,4 @@
-;Castle Defender v1.3 - Martin Simecek, http://matosimi.atari.org
+;Castle Defender v1.4 - Martin Simecek, http://matosimi.atari.org
 
 hposp0	equ $d000
 hposm0	equ $d004
@@ -33,6 +33,8 @@ sdlstl	equ $0230 ;dl vector when osrom is on
 color0	equ $02c4	;color0 when osrom is on
 
 ;zero page:
+ntsccolor	equ $6f ;to store x-register for pal->ntsc recolor (in splash_adjusted.asm)
+                  ;and cd_title_adjusted.asm
 zspos	equ $70 ;8bytes
 zsoff	equ $78 ;8bytes
 zt	equ $80
@@ -217,7 +219,7 @@ lodl	dta $70
 :5	dta $4f,a($d800+:1*$800)
 	dta $41,a(lodl)
 lodata	ins "uh6.gr5",0,20*50 ;"cd.gr5"
-lotext	dta d"    Castle Defender v1.3 - 19.12.2021   "
+lotext	dta d"    Castle Defender v1.4 - 15.05.2025   "
 
 loading	mva #>lofont 756
 	mva #$0e color0
@@ -4727,7 +4729,7 @@ x1
 	logo_pmg_bg
 	
 	;set green color of the logo
-	mva #$c4 gameDli.pc15
+	mva c_0:#$c4 gameDli.pc15
 	sta gameDli.pc14
 	
 	sfx.victory
@@ -4777,7 +4779,7 @@ x1
 	logo_pmg_bg
 	
 	;set red color of the logo
-	mva #$34 gameDli.pc15
+	mva c_0:#$34 gameDli.pc15
 	sta gameDli.pc14
 	
 	;mva #250 animate.delay
@@ -4814,7 +4816,7 @@ x1
 	bpl x1
 	
 	;set color of the logo
-	mva #$62 gameDli.pc15
+	mva c_0:#$62 gameDli.pc15
 	rts
 .endp
 
@@ -4995,7 +4997,7 @@ x1	sta mypmbase-$100,x
 .endp
 
 .proc	show_enemybar
-	mva #$32 gameDli.ebc1
+	mva c_0:#$32 gameDli.ebc1
 	mva #$0f gameDli.ebc2
 	rts
 .endp
@@ -5120,13 +5122,13 @@ ptryl	equ *-1
 	lda showwave.shown
 	beq x1 ;if game started then hide level,phase text
 	
-	mva #$14 colpf0+2
+	mva c_0:#$14 colpf0+2
 	mva #$0c colpf0+1 ;white lum
 pc00	equ *-4
 	lda #$90
 pc01	equ *-1
 :4	sta colpm0+:1
-	mva #$a6 colpf0+3	;missile color
+	mva c_1:#$a6 colpf0+3	;missile color
 	mva #$14 prior
 	
 xplay	lda palsystem
@@ -5151,7 +5153,7 @@ pc02	equ *-4
 	lda #$90
 pc03	equ *-1
 :4	sta colpm0+:1
-	mva #$a6 colpf0+3	;missile color
+	mva c_2:#$a6 colpf0+3	;missile color
 	mva #$11 prior
 	jmp xplay	
 	
@@ -5179,7 +5181,7 @@ dlix	pha
 	mva #>[gamevram+$0400] chbase
 	mwa #dli0 dli_ptr
 :3	sta wsync
-	mva #$2c colpf0+3	;missile
+	mva c_0:#$2c colpf0+3	;missile
 	pla
 	rti
 
@@ -5193,7 +5195,7 @@ dlix3	pha
 	sta wsync
 	mva #$06 colpf0+2
 	
-	lda #$24 
+	lda c_1:#$24 
 :4	sta colpm0+:1
 	sta wsync	
 	
@@ -5202,7 +5204,7 @@ dlix3	pha
 	mva #$04 colpf0+2
 	
 	mwa #dlix2 dli_ptr
-	mva #$2c colpf0+3	;missile
+	mva c_2:#$2c colpf0+3	;missile
 	pla
 	rti
 
@@ -5311,7 +5313,7 @@ ptr:2l	equ *-1
 	sta dli_ptr
 
 :20	sta wsync
-	mva #$32 colpf0+2 ;enemybar color
+	mva c_3:#$32 colpf0+2 ;enemybar color
 ebc1	equ *-4
 	mva #$0f colpf0+1 ;white lum
 ebc2	equ *-4
@@ -5329,7 +5331,7 @@ dli4x	pha
 	mva #$08 colpf0+1
 	sta wsync
 	mva #$06 colpf0+2
-	lda #$24 
+	lda c_4:#$24 
 :4	sta colpm0+:1
 	
 	sta wsync
@@ -5356,7 +5358,7 @@ pc11	equ *-4
 	mwa #dli5 dli_ptr
 
 :20	sta wsync	
-	mva #$32 colpf0+2 ;enemybar color
+	mva c_5:#$32 colpf0+2 ;enemybar color
 	mva #$0f colpf0+1 ;white lum
 	mva #4+16 prior
 	pla
@@ -6165,9 +6167,9 @@ loop	txa
 	mwa colrs,y ptr
 	cpx title_screen.selected
 	bne x1
-	lda #$12
+	lda c_0:#$12
 	bne x2 ;shorter than jmp
-x1	lda #$50
+x1	lda c_1:#$50
 x2	sta title_screen.tclr0
 ptr	equ *-2
 	dex
@@ -7048,8 +7050,8 @@ continue
 	;static screen
 	mwa #title_static g2ftitle.tcptr
 	mva #0 vscrol
-	mva #$50 tclr0
-	mva #$12 tclr1
+c_13	mva #$50 tclr0
+c_14	mva #$12 tclr1
 	mva #1 selected
 	
 	lda unlocked_level
@@ -7116,7 +7118,8 @@ execute
 	change_starting_level
 	jmp control_loop
 	
-@	mva #$50 tclr0
+@
+c_15	mva #$50 tclr0
 	sta tclr1
 	sta tclr2
 	lda selected
@@ -7382,16 +7385,16 @@ dlix1	pha
 	mva #1+12+32 dmactl ;narrow
 	mva #>titlefont chbase
 	sta wsync
-	mva #$54 colpf0+2 	;text background
-	mva #$04 colpf0+1 	;text luminance
+c_0	mva #$54 colpf0+2 	;text background
+c_1	mva #$04 colpf0+1 	;text luminance
 	sta wsync
-	mva #$52 colpf0+2 	
-	mva #$02 colpf0+1 	
+c_2	mva #$52 colpf0+2 	
+c_3	mva #$02 colpf0+1 	
 	sta wsync
-	mva #$50 colpf0+2 	
-	mva #$00 colpf0+1 
+c_4	mva #$50 colpf0+2 	
+c_5	mva #$00 colpf0+1 
 	sta wsync
-	mva #$0c colpf0+1 
+c_6	mva #$0c colpf0+1 
 	mwa #dlixa0 g2ftitle.NMI.dliv
 	
 	phr
@@ -7435,15 +7438,15 @@ tclr:1	equ *-1
 
 dlix2	pha
 	sta wsync
-	mva #$50 colpf0+2 	 
+c_7	mva #$50 colpf0+2 	 
 	sta wsync
-	mva #$52 colpf0+2 	
-	mva #$02 colpf0+1 	
+c_8	mva #$52 colpf0+2 	
+c_9	mva #$02 colpf0+1 	
 	sta wsync
-	mva #$54 colpf0+2 	;text background
-	mva #$04 colpf0+1 	;text luminance
+c_10	mva #$54 colpf0+2 	;text background
+c_11	mva #$04 colpf0+1 	;text luminance
 	sta wsync
-	mva #$00 colpf0+2
+c_12	mva #$00 colpf0+2
 	sta colpf0+1
 	pla
 	rti

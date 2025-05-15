@@ -57,7 +57,7 @@ main
 	mva >pmg pmbase		;missiles and players data address
 	mva #$03 pmcntl		;enable players and missiles
 	eif
-
+	convert_colors_to_ntsc
 	lda:cmp:req $14		;wait 1 frame
 
 	sei			;stop IRQ interrupts
@@ -864,6 +864,81 @@ quit
 	ldy regY
 	rti
 
+.endp
+
+; PAL->NTSC color rewrite routines
+;128 color table that matches PAL colors to NTSC
+ntsccolors128
+:8	dta #*2
+:8	dta #*2+$20	;$10
+:8	dta #*2+$30
+:8	dta #*2+$40
+:8	dta #*2+$50
+:8	dta #*2+$60
+:8	dta #*2+$70
+:8	dta #*2+$80
+:8	dta #*2+$90	;$80
+:8	dta #*2+$a0	;$90 pal
+:8	dta #*2+$b0	;$a0 pal
+:5	dta #*2+$d0+2	;$b0 pal
+:3	dta #*2+$d0+$a	;$b0 pal second part
+:4	dta #*2+$e0+2	;$c0 pal
+:4	dta #*2+$e0+8	;$c0 pal second part
+:4	dta #*2+$12	;$d0 pal
+	dta $e8,$1a,$1c,$1e	;$d0 pal second part 
+:8	dta #*2+$f0	;$e0 pal
+:8	dta #*2+$20	;$f0 pal	
+
+;returns ntsc color in A based on input pal color (in case ntsc is used)
+.proc	getcolor (.byte a) .reg
+pptr	lsr @
+	stx ntsccolor	;save X-register for DLI calls
+	tax
+	lda ntsccolors128,x
+	ldx ntsccolor
+	rts
+
+.proc	setpal
+	mva #{rts} pptr
+	rts	
+.endp
+.endp
+
+.proc	convert_colors_to_ntsc
+	lda palsystem
+	jeq x0
+
+	;recolor for ntsc
+	ldy #0
+colorloop	jsr getbyte
+	sta w1
+	jsr getbyte
+	sta w1+1
+	lda (w1),y
+	getcolor
+	sta (w1),y
+	
+	;check for end of colors
+	lda colorindex
+	cmp <colors_end
+	jne colorloop
+	lda colorindex+1
+	cmp >colors_end
+	jne colorloop
+		
+x0	rts
+
+getbyte	lda colorindex:colors
+	inw colorindex
+	rts
+
+
+colors
+:9	dta a(NMI.c:1 + 1)
+.rept 122-9+1, #+9
+	dta a(DLI.c:1 + 1)
+.endr
+colors_end
 .endp
 
 ; ---

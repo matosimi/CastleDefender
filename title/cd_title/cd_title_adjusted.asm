@@ -66,6 +66,7 @@ main
 	mva #$03 pmcntl		;enable players and missiles
 	eif
 */
+	convert_colors_to_ntsc
 	;lda:cmp:req $14		;wait 1 frame
 	lda #0			;prevents VSYNC signal being shaved (by switching off DMACTL fetch midscreen)
 @	cmp vcount
@@ -374,6 +375,94 @@ quit
 	ldy regY
 	rti
 
+.endp
+
+; PAL->NTSC color rewrite routines
+;128 color table that matches PAL colors to NTSC
+ntsccolors128
+:8	dta #*2
+:8	dta #*2+$20	;$10
+:8	dta #*2+$30
+:8	dta #*2+$40
+:8	dta #*2+$50
+:8	dta #*2+$60
+:8	dta #*2+$70
+:8	dta #*2+$80
+:8	dta #*2+$90	;$80
+:8	dta #*2+$a0	;$90 pal
+:8	dta #*2+$b0	;$a0 pal
+:5	dta #*2+$d0+2	;$b0 pal
+:3	dta #*2+$d0+$a	;$b0 pal second part
+:4	dta #*2+$e0+2	;$c0 pal
+:4	dta #*2+$e0+8	;$c0 pal second part
+:4	dta #*2+$12	;$d0 pal
+	dta $e8,$1a,$1c,$1e	;$d0 pal second part 
+:8	dta #*2+$f0	;$e0 pal
+:8	dta #*2+$20	;$f0 pal	
+
+;returns ntsc color in A based on input pal color (in case ntsc is used)
+.proc	getcolor (.byte a) .reg
+pptr	lsr @
+	stx ntsccolor	;save X-register for DLI calls
+	tax
+	lda ntsccolors128,x
+	ldx ntsccolor
+	rts
+
+.proc	setpal
+	mva #{rts} pptr
+	rts	
+.endp
+.endp
+
+;one time recolor of menu title screen and ingame screen 
+.proc	convert_colors_to_ntsc
+begin	lda palsystem
+	jeq x0
+
+	;recolor for ntsc
+	ldy #0
+colorloop	jsr getbyte
+	sta w1
+	jsr getbyte
+	sta w1+1
+	lda (w1),y
+	getcolor
+	sta (w1),y
+	
+	;check for end of colors
+	lda colorindex
+	cmp <colors_end
+	jne colorloop
+	lda colorindex+1
+	cmp >colors_end
+	jne colorloop
+		
+x0	mva #{rts} begin	;do not run this anymore
+	rts
+
+getbyte	lda colorindex:colors
+	inw colorindex
+	rts
+
+
+colors
+:6	dta a(NMI.c:1 + 1)
+.rept 19-5, #+6
+	dta a(DLI.c:1 + 1)
+.endr
+:16	dta a(title_screen.c_:1 + 1)
+:4	dta a(title_screen.tclr:1)
+:2	dta a(update_selection.c_:1)
+:3	dta a(gameVbi.c_:1)
+:6	dta a(gameDli.c_:1)
+:4	dta a(color.data0 + :1)
+:16	dta a(color.data1 + :1)
+	dta a(show_enemybar.c_0)
+	dta a(logo.show_defeat.c_0)
+	dta a(logo.show_victory.c_0)
+	dta a(logo.show_level_complete.c_0)
+colors_end
 .endp
 
 ; ---
